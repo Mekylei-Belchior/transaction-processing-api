@@ -6,6 +6,7 @@ import com.mekylei.transactionprocessing.infraestrutura.repositorio.TransacaoJpa
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.transacao.repositorio.TransacaoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.Currency;
@@ -50,18 +51,32 @@ public class TransacaoJpaAdapter implements TransacaoRepository {
                 .build();
     }
 
+    @Override
     public Optional<Transacao> findById(String id) {
         return repository.findById(id).map(this::toDomain);
     }
 
+    @Override
     public Optional<Transacao> findByIdCorrelacao(String idCorrelacao) {
         return repository.findById(idCorrelacao).map(this::toDomain);
     }
 
+    @Override
     public Transacao save(Transacao transacao) {
         TransacaoEntity entity = toEntity(transacao);
         TransacaoEntity transacaoSalva = repository.save(entity);
         return toDomain(transacaoSalva);
+    }
+
+    @Override
+    public Transacao update(Transacao transacao) {
+        if (transacao.getId() == null) {
+            throw new IllegalArgumentException("Para atualizar a transação o 'id' não pode ser Nulo.");
+        }
+        if (!repository.existsById(transacao.getId().toString())) {
+            throw new EntityNotFoundException("Transação não encontrada para o id: " + transacao.getId());
+        }
+        return save(transacao);
     }
 
 }

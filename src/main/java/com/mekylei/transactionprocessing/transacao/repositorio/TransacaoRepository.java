@@ -12,4 +12,6 @@ public interface TransacaoRepository {
     Optional<Transacao> findByIdCorrelacao(String idCorrelacao);
 
     Transacao save(Transacao transacao);
+
+    Transacao update(Transacao transacao);
 }
