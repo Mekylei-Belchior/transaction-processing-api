@@ -4,5 +4,3 @@ server:
 spring:
   application:
     name: transaction-processing-api
-  profiles:
-    active: dev
