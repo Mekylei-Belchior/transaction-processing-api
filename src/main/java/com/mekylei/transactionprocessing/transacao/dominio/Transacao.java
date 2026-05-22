@@ -1,9 +1,10 @@
 package com.mekylei.transactionprocessing.transacao.dominio;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class Transacao {
-    private final String id;
+    private final UUID id;
     private final String idCorrelacao;
     private final ValorMonetario valor;
     private final TipoTransacao tipo;
@@ -27,7 +28,7 @@ public class Transacao {
         return new Builder();
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -73,7 +74,7 @@ public class Transacao {
     }
 
     public static final class Builder {
-        private String id;
+        private UUID id;
         private String idCorrelacao;
         private ValorMonetario valor;
         private TipoTransacao tipo;
@@ -82,7 +83,7 @@ public class Transacao {
         private String contaOrigem;
         private String contaDestino;
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
