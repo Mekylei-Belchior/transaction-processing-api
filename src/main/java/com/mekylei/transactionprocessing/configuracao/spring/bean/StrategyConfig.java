@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.configuracao.spring;
+package com.mekylei.transactionprocessing.configuracao.spring.bean;
 
 
 import com.mekylei.transactionprocessing.transacao.estrategia.*;

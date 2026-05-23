@@ -1,10 +1,14 @@
 package com.mekylei.transactionprocessing.compartilhado.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.UUID;
 
 public class CorrelacaoIdUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(CorrelacaoIdUtil.class);
 
     public static final String CORRELACAO_ID_CHAVE = "idCorrelacao";
     public static final String CORRELACAO_HEADER = "X-Id-Correlacao";
@@ -27,6 +31,8 @@ public class CorrelacaoIdUtil {
     }
 
     public static void remover() {
+        String idCorrelacao = get();
         MDC.remove(CORRELACAO_ID_CHAVE);
+        logger.debug("IdCorrelacao ({}) removido do MDC.", idCorrelacao);
     }
 }
