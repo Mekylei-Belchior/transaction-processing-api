@@ -1,9 +1,9 @@
-package com.mekylei.transactionprocessing.transacao.aplicacao;
+package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.infraestrutura.persistencia.TransacaoJpaAdapter;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
-import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
+import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

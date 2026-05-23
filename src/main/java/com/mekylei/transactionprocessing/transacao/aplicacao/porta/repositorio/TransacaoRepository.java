@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.transacao.repositorio;
+package com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio;
 
 
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;

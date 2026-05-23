@@ -1,8 +1,9 @@
-package com.mekylei.transactionprocessing.transacao.estrategia;
+package com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao;
 
 
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 
 import java.util.List;
 

@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.configuracao.spring.bean;
 
 
+import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

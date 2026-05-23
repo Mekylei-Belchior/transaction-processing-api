@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.transacao.aplicacao;
+package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoIdUtil;
 import com.mekylei.transactionprocessing.infraestrutura.persistencia.TransacaoJpaAdapter;

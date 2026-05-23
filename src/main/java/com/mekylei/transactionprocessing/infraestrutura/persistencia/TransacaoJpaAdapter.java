@@ -5,7 +5,7 @@ import com.mekylei.transactionprocessing.infraestrutura.entidade.TransacaoEntity
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.TransacaoJpaRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.ValorMonetario;
-import com.mekylei.transactionprocessing.transacao.repositorio.TransacaoRepository;
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 

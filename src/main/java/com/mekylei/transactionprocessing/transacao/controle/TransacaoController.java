@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.controle;
 
-import com.mekylei.transactionprocessing.transacao.aplicacao.ProcessaTransacaoService;
+import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ProcessaTransacaoService;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoRequisicao;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoResposta;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
