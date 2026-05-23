@@ -126,6 +126,8 @@ public class Transacao {
         public Transacao build() {
             if (valor == null) throw new IllegalStateException("O 'valor' deve ser fornecido");
             if (tipo == null) throw new IllegalStateException("O 'tipo' deve ser fornecido");
+            if (contaOrigem == null || contaOrigem.isBlank()) throw new IllegalStateException("A 'contaOrigem' deve ser fornecido");
+            if (contaDestino == null || contaDestino.isBlank()) throw new IllegalStateException("A 'contaDestino' deve ser fornecido");
 
             if (id == null) id = UUID.randomUUID();
             if (status == null) status = StatusTransacao.PENDENTE;
