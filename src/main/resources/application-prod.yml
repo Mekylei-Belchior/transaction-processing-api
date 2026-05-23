@@ -19,6 +19,12 @@ spring:
           lob:
             non_contextual_creation: true
 
+logging:
+  level:
+    com.mekylei.transactionprocessing: INFO    # Apenas informações importantes
+    org.springframework.web: WARN              # Só alertas e erros
+    org.hibernate: WARN                        # Silencia logs do Hibernate
+
 springdoc:
   api-docs:
     enabled: false

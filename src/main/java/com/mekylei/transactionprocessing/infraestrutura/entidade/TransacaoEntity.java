@@ -18,7 +18,7 @@ public class TransacaoEntity {
     private UUID id;
 
     @Column(name = "id_correlacao", nullable = false, length = 50)
-    private String idCorrelacao;
+    private UUID idCorrelacao;
 
     @Column(name = "valor", nullable = false, precision = 15, scale = 2)
     private BigDecimal valor;
@@ -54,11 +54,11 @@ public class TransacaoEntity {
         this.id = id;
     }
 
-    public String getIdCorrelacao() {
+    public UUID getIdCorrelacao() {
         return idCorrelacao;
     }
 
-    public void setIdCorrelacao(String idCorrelacao) {
+    public void setIdCorrelacao(UUID idCorrelacao) {
         this.idCorrelacao = idCorrelacao;
     }
 

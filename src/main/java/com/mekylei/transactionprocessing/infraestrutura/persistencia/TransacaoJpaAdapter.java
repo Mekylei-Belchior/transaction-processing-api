@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Currency;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class TransacaoJpaAdapter implements TransacaoRepository {
@@ -52,12 +53,12 @@ public class TransacaoJpaAdapter implements TransacaoRepository {
     }
 
     @Override
-    public Optional<Transacao> findById(String id) {
+    public Optional<Transacao> findById(UUID id) {
         return repository.findById(id).map(this::toDomain);
     }
 
     @Override
-    public Optional<Transacao> findByIdCorrelacao(String idCorrelacao) {
+    public Optional<Transacao> findByIdCorrelacao(UUID idCorrelacao) {
         return repository.findById(idCorrelacao).map(this::toDomain);
     }
 
@@ -73,7 +74,7 @@ public class TransacaoJpaAdapter implements TransacaoRepository {
         if (transacao.getId() == null) {
             throw new IllegalArgumentException("Para atualizar a transação o 'id' não pode ser Nulo.");
         }
-        if (!repository.existsById(transacao.getId().toString())) {
+        if (!repository.existsById(transacao.getId())) {
             throw new EntityNotFoundException("Transação não encontrada para o id: " + transacao.getId());
         }
         return save(transacao);

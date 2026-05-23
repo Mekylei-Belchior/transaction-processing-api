@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public class Transacao {
     private final UUID id;
-    private final String idCorrelacao;
+    private final UUID idCorrelacao;
     private final ValorMonetario valor;
     private final TipoTransacao tipo;
     private final StatusTransacao status;
@@ -32,7 +32,7 @@ public class Transacao {
         return id;
     }
 
-    public String getIdCorrelacao() {
+    public UUID getIdCorrelacao() {
         return idCorrelacao;
     }
 
@@ -75,7 +75,7 @@ public class Transacao {
 
     public static final class Builder {
         private UUID id;
-        private String idCorrelacao;
+        private UUID idCorrelacao;
         private ValorMonetario valor;
         private TipoTransacao tipo;
         private StatusTransacao status;
@@ -88,7 +88,7 @@ public class Transacao {
             return this;
         }
 
-        public Builder idCorrelacao(String idCorrelacao) {
+        public Builder idCorrelacao(UUID idCorrelacao) {
             this.idCorrelacao = idCorrelacao;
             return this;
         }
@@ -124,10 +124,10 @@ public class Transacao {
         }
 
         public Transacao build() {
-            if (id == null) throw new IllegalStateException("O 'id' deve ser fornecido");
             if (valor == null) throw new IllegalStateException("O 'valor' deve ser fornecido");
             if (tipo == null) throw new IllegalStateException("O 'tipo' deve ser fornecido");
 
+            if (id == null) id = UUID.randomUUID();
             if (status == null) status = StatusTransacao.PENDENTE;
             if (criadoEm == null) criadoEm = Instant.now();
 

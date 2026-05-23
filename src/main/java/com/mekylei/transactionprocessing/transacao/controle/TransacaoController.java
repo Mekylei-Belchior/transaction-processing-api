@@ -1,0 +1,70 @@
+package com.mekylei.transactionprocessing.transacao.controle;
+
+import com.mekylei.transactionprocessing.transacao.aplicacao.ProcessaTransacaoService;
+import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoRequisicao;
+import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoResposta;
+import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/transacoes")
+@Tag(name = "Transações", description = "Endpoints para processamento de transações bancárias")
+public class TransacaoController {
+
+    private final ProcessaTransacaoService processaTransacaoService;
+
+    public TransacaoController(ProcessaTransacaoService processaTransacaoService) {
+        this.processaTransacaoService = processaTransacaoService;
+    }
+
+    @PostMapping("/pix")
+    @Operation(
+            summary = "Processar PIX",
+            description = "Realiza uma transação PIX. Usa contaDestino como chave PIX.")
+    public ResponseEntity<TransacaoResposta> processaPix(@Valid @RequestBody TransacaoRequisicao requisicao) {
+        Transacao transacao = processaTransacaoService.processa(
+                requisicao.valor(),
+                TipoTransacao.PIX,
+                requisicao.contaOrigem(),
+                requisicao.contaDestino());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
+    }
+
+    @PostMapping("/ted")
+    @Operation(
+            summary = "Processar TED",
+            description = "Realiza uma TED. Disponível apenas em horário bancário (06h-17h BRT).")
+    public ResponseEntity<TransacaoResposta> processaTed(@Valid @RequestBody TransacaoRequisicao requisicao) {
+        Transacao transacao = processaTransacaoService.processa(
+                requisicao.valor(),
+                TipoTransacao.TED,
+                requisicao.contaOrigem(),
+                requisicao.contaDestino());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
+    }
+
+    @PostMapping("/tef")
+    @Operation(
+            summary = "Processar TEF",
+            description = "Realiza uma TEF entre contas do mesmo banco. Requer autorização antifraude.")
+    public ResponseEntity<TransacaoResposta> processaTef(@Valid @RequestBody TransacaoRequisicao requisicao) {
+        Transacao transacao = processaTransacaoService.processa(
+                requisicao.valor(),
+                TipoTransacao.TEF,
+                requisicao.contaOrigem(),
+                requisicao.contaDestino());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
+    }
+}

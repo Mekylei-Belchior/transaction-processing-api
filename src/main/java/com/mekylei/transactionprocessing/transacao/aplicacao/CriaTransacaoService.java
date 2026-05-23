@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class CriaTransacaoService {
@@ -23,7 +24,7 @@ public class CriaTransacaoService {
     }
 
     public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, String contaOrigem, String contaDestino) {
-        String idCorrelacao = CorrelacaoIdUtil.gerar();
+        UUID idCorrelacao = CorrelacaoIdUtil.gerar();
 
         logger.info("Criando transação: tipo={}, valor={}, idCorrelacao={}", tipoTransacao, valor, idCorrelacao);
 

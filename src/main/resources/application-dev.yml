@@ -17,6 +17,33 @@ spring:
           lob:
             non_contextual_creation: true
 
+logging:
+  level:
+    # Pacote da aplicação - nível DEBUG
+    # Exibe logs detalhados do código: entrada/saída de métodos, fluxo de processamento,
+    # valores de variáveis, etc.
+    com.mekylei.transactionprocessing: DEBUG
+    # Framework Spring Web - nível DEBUG
+    # Mostra detalhes das requisições HTTP: mapeamento de endpoints, parâmetros recebidos,
+    # headers, corpo da requisição (se pequeno), e o processo de dispatcher do Spring MVC.
+    org.springframework.web: DEBUG
+    # Hibernate (core) - nível DEBUG
+    # Exibe logs genéricos do Hibernate: abertura/fechamento de sessões, transações,
+    # estatísticas, cache de primeiro nível, etc. Ajuda a monitorar o ciclo de vida da
+    # sessão e o comportamento geral do ORM.
+    org.hibernate: DEBUG
+    # SQL gerado pelo Hibernate - nível DEBUG
+    # Mostra exatamente as instruções SQL que o Hibernate envia ao banco de dados.
+    # Muito útil para validar se as consultas estão eficientes e corretas, e para
+    # detectar problemas como N+1 queries.
+    org.hibernate.SQL: DEBUG
+    # Parâmetros bindados nas consultas SQL - nível TRACE
+    # Exibe os valores que são substituídos nos placeholders (?) das queries SQL.
+    # Como contém dados sensíveis (ex: valores de transações), o nível TRACE é mais
+    # detalhado que DEBUG. Ideal para depurar parâmetros de consultas dinâmicas,
+    # mas deve ser evitado em produção por questões de segurança e volume de logs.
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 springdoc:
   api-docs:
     enabled: true

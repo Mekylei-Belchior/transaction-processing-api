@@ -12,9 +12,9 @@ public class CorrelacaoIdUtil {
     private CorrelacaoIdUtil() {
     }
 
-    public static String gerar() {
-        String idCorrelacao = UUID.randomUUID().toString();
-        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao);
+    public static UUID gerar() {
+        UUID idCorrelacao = UUID.randomUUID();
+        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao.toString());
         return idCorrelacao;
     }
 
@@ -22,8 +22,8 @@ public class CorrelacaoIdUtil {
         return MDC.get(CORRELACAO_ID_CHAVE);
     }
 
-    public static void set(String idCorrelacao) {
-        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao);
+    public static void set(UUID idCorrelacao) {
+        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao.toString());
     }
 
     public static void remover() {
