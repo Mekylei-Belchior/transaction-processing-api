@@ -42,7 +42,7 @@ public class TedTransacaoStrategy implements TransacaoStrategy {
 
     private void validaHorarioPermitido() {
         LocalTime agora = LocalTime.now(BRASIL_TIMEZONE);
-        boolean foraDeHorario = agora.isBefore(BANCO_TED_INICIO) && agora.isAfter(BANCO_TED_FIM);
+        boolean foraDeHorario = agora.isBefore(BANCO_TED_INICIO) || agora.isAfter(BANCO_TED_FIM);
 
         if (foraDeHorario) {
             throw new RegraNegocioException(

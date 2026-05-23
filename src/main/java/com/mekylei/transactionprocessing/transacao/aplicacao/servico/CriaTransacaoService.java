@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoIdUtil;
-import com.mekylei.transactionprocessing.infraestrutura.persistencia.TransacaoJpaAdapter;
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.ValorMonetario;
@@ -17,9 +17,9 @@ public class CriaTransacaoService {
 
     private static final Logger logger = LoggerFactory.getLogger(CriaTransacaoService.class);
 
-    private final TransacaoJpaAdapter repository;
+    private final TransacaoRepository repository;
 
-    public CriaTransacaoService(TransacaoJpaAdapter repository) {
+    public CriaTransacaoService(TransacaoRepository repository) {
         this.repository = repository;
     }
 

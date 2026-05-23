@@ -1,9 +1,9 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
-import com.mekylei.transactionprocessing.infraestrutura.persistencia.TransacaoJpaAdapter;
+import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
-import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +16,11 @@ public class ProcessaTransacaoService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessaTransacaoService.class);
 
-    private final TransacaoJpaAdapter repository;
+    private final TransacaoRepository repository;
     private final CriaTransacaoService service;
     private final StrategyResolver resolver;
 
-    public ProcessaTransacaoService(TransacaoJpaAdapter repository, CriaTransacaoService service,
+    public ProcessaTransacaoService(TransacaoRepository repository, CriaTransacaoService service,
                                     StrategyResolver resolver) {
         this.repository = repository;
         this.service = service;

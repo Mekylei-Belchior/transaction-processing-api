@@ -59,7 +59,7 @@ public class TransacaoJpaAdapter implements TransacaoRepository {
 
     @Override
     public Optional<Transacao> findByIdCorrelacao(UUID idCorrelacao) {
-        return repository.findById(idCorrelacao).map(this::toDomain);
+        return repository.findByIdCorrelacao(idCorrelacao).map(this::toDomain);
     }
 
     @Override
