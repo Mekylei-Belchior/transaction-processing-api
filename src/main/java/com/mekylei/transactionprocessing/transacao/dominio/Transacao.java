@@ -6,21 +6,23 @@ import java.util.UUID;
 public class Transacao {
     private final UUID id;
     private final UUID idCorrelacao;
+    private final UUID idIdempotencia;
     private final ValorMonetario valor;
     private final TipoTransacao tipo;
     private final StatusTransacao status;
     private final Instant criadoEm;
-    private final String contaOrigem;
+    private final UUID idContaOrigem;
     private final String contaDestino;
 
     private Transacao(Builder builder) {
         this.id = builder.id;
         this.idCorrelacao = builder.idCorrelacao;
+        this.idIdempotencia = builder.idIdempotencia;
         this.valor = builder.valor;
         this.tipo = builder.tipo;
         this.status = builder.status;
         this.criadoEm = builder.criadoEm;
-        this.contaOrigem = builder.contaOrigem;
+        this.idContaOrigem = builder.idContaOrigem;
         this.contaDestino = builder.contaDestino;
     }
 
@@ -34,6 +36,10 @@ public class Transacao {
 
     public UUID getIdCorrelacao() {
         return idCorrelacao;
+    }
+
+    public UUID getIdIdempotencia() {
+        return idIdempotencia;
     }
 
     public ValorMonetario getValor() {
@@ -52,8 +58,8 @@ public class Transacao {
         return criadoEm;
     }
 
-    public String getContaOrigem() {
-        return contaOrigem;
+    public UUID getIdContaOrigem() {
+        return idContaOrigem;
     }
 
     public String getContaDestino() {
@@ -65,9 +71,10 @@ public class Transacao {
                 .status(statusAtual)
                 .id(this.id)
                 .idCorrelacao(this.idCorrelacao)
+                .idIdempotencia(this.idIdempotencia)
                 .tipo(this.tipo)
                 .valor(this.valor)
-                .contaOrigem(this.contaOrigem)
+                .idContaOrigem(this.idContaOrigem)
                 .contaDestino(this.contaDestino)
                 .criadoEm(this.criadoEm)
                 .build();
@@ -76,11 +83,12 @@ public class Transacao {
     public static final class Builder {
         private UUID id;
         private UUID idCorrelacao;
+        private UUID idIdempotencia;
         private ValorMonetario valor;
         private TipoTransacao tipo;
         private StatusTransacao status;
         private Instant criadoEm;
-        private String contaOrigem;
+        private UUID idContaOrigem;
         private String contaDestino;
 
         public Builder id(UUID id) {
@@ -90,6 +98,11 @@ public class Transacao {
 
         public Builder idCorrelacao(UUID idCorrelacao) {
             this.idCorrelacao = idCorrelacao;
+            return this;
+        }
+
+        public Builder idIdempotencia(UUID idIdempotencia) {
+            this.idIdempotencia = idIdempotencia;
             return this;
         }
 
@@ -113,8 +126,8 @@ public class Transacao {
             return this;
         }
 
-        public Builder contaOrigem(String contaOrigem) {
-            this.contaOrigem = contaOrigem;
+        public Builder idContaOrigem(UUID idContaOrigem) {
+            this.idContaOrigem = idContaOrigem;
             return this;
         }
 
@@ -126,8 +139,9 @@ public class Transacao {
         public Transacao build() {
             if (valor == null) throw new IllegalStateException("O 'valor' deve ser fornecido");
             if (tipo == null) throw new IllegalStateException("O 'tipo' deve ser fornecido");
-            if (contaOrigem == null || contaOrigem.isBlank()) throw new IllegalStateException("A 'contaOrigem' deve ser fornecido");
-            if (contaDestino == null || contaDestino.isBlank()) throw new IllegalStateException("A 'contaDestino' deve ser fornecido");
+            if (idContaOrigem == null) throw new IllegalStateException("A 'idContaOrigem' deve ser fornecido");
+            if (contaDestino == null || contaDestino.isBlank())
+                throw new IllegalStateException("A 'contaDestino' deve ser fornecido");
 
             if (id == null) id = UUID.randomUUID();
             if (status == null) status = StatusTransacao.PENDENTE;

@@ -12,6 +12,8 @@ public interface TransacaoRepository {
 
     Optional<Transacao> findByIdCorrelacao(UUID idCorrelacao);
 
+    Optional<Transacao> findByIdIdempotencia(UUID idIdempotencia);
+
     Transacao save(Transacao transacao);
 
     Transacao update(Transacao transacao);

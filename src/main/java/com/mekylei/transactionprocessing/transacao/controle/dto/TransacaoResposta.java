@@ -14,6 +14,9 @@ public record TransacaoResposta(
         @Schema(description = "Identificador único da transação")
         UUID id,
 
+        @Schema(description = "Identificador da conta de origem")
+        UUID idContaOrigem,
+
         @Schema(description = "Valor processado em BRL", example = "150.00")
         BigDecimal valor,
 
@@ -26,6 +29,9 @@ public record TransacaoResposta(
         @Schema(description = "ID de correlação para rastreamento nos logs")
         UUID idCorrelacao,
 
+        @Schema(description = "ID de idempotência para rastreamento nos logs")
+        UUID idIdempotencia,
+
         @Schema(description = "Timestamp de criação (UTC)")
         Instant criadoEm
 ) {
@@ -33,10 +39,12 @@ public record TransacaoResposta(
     public static TransacaoResposta aPartirDe(Transacao transacao) {
         return new TransacaoResposta(
                 transacao.getId(),
+                transacao.getIdContaOrigem(),
                 transacao.getValor().valor(),
                 transacao.getTipo(),
                 transacao.getStatus(),
                 transacao.getIdCorrelacao(),
+                transacao.getIdIdempotencia(),
                 transacao.getCriadoEm()
         );
     }

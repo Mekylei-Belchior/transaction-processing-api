@@ -10,10 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/transacoes")
@@ -30,12 +29,15 @@ public class TransacaoController {
     @Operation(
             summary = "Processar PIX",
             description = "Realiza uma transação PIX. Usa contaDestino como chave PIX.")
-    public ResponseEntity<TransacaoResposta> processaPix(@Valid @RequestBody TransacaoRequisicao requisicao) {
+    public ResponseEntity<TransacaoResposta> processaPix(
+            @Valid @RequestBody TransacaoRequisicao requisicao,
+            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.PIX,
-                requisicao.contaOrigem(),
-                requisicao.contaDestino());
+                requisicao.idContaOrigem(),
+                requisicao.contaDestino(),
+                idIdempotencia);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
     }
@@ -44,12 +46,15 @@ public class TransacaoController {
     @Operation(
             summary = "Processar TED",
             description = "Realiza uma TED. Disponível apenas em horário bancário (06h-17h BRT).")
-    public ResponseEntity<TransacaoResposta> processaTed(@Valid @RequestBody TransacaoRequisicao requisicao) {
+    public ResponseEntity<TransacaoResposta> processaTed(
+            @Valid @RequestBody TransacaoRequisicao requisicao,
+            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.TED,
-                requisicao.contaOrigem(),
-                requisicao.contaDestino());
+                requisicao.idContaOrigem(),
+                requisicao.contaDestino(),
+                idIdempotencia);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
     }
@@ -58,12 +63,15 @@ public class TransacaoController {
     @Operation(
             summary = "Processar TEF",
             description = "Realiza uma TEF entre contas do mesmo banco. Requer autorização antifraude.")
-    public ResponseEntity<TransacaoResposta> processaTef(@Valid @RequestBody TransacaoRequisicao requisicao) {
+    public ResponseEntity<TransacaoResposta> processaTef(
+            @Valid @RequestBody TransacaoRequisicao requisicao,
+            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.TEF,
-                requisicao.contaOrigem(),
-                requisicao.contaDestino());
+                requisicao.idContaOrigem(),
+                requisicao.contaDestino(),
+                idIdempotencia);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
     }

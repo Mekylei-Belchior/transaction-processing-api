@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
+import com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
@@ -10,25 +11,42 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProcessaTransacaoService {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessaTransacaoService.class);
 
+    private final IdempotenciaService idempotenciaService;
     private final TransacaoRepository repository;
-    private final CriaTransacaoService service;
+    private final CriaTransacaoService criaTransacaoService;
     private final StrategyResolver resolver;
 
-    public ProcessaTransacaoService(TransacaoRepository repository, CriaTransacaoService service,
+    public ProcessaTransacaoService(IdempotenciaService idempotenciaService,
+                                    TransacaoRepository repository,
+                                    CriaTransacaoService criaTransacaoService,
                                     StrategyResolver resolver) {
+        this.idempotenciaService = idempotenciaService;
         this.repository = repository;
-        this.service = service;
+        this.criaTransacaoService = criaTransacaoService;
         this.resolver = resolver;
     }
 
-    public Transacao processa(BigDecimal valor, TipoTransacao tipoTransacao, String contaOrigem, String contaDestino) {
-        Transacao transacao = service.cria(valor, tipoTransacao, contaOrigem, contaDestino);
+    public Transacao processa(BigDecimal valor,
+                              TipoTransacao tipoTransacao,
+                              UUID idContaOrigem,
+                              String contaDestino,
+                              UUID idIdempotencia) {
+
+        Optional<Transacao> existente = idempotenciaService.verificar(idIdempotencia);
+        if (existente.isPresent()) {
+            logger.info("Requisição idempotente detectada: idIdempotencia={}", idIdempotencia);
+            return existente.get();
+        }
+
+        Transacao transacao = criaTransacaoService.cria(valor, tipoTransacao, idContaOrigem, contaDestino, idIdempotencia);
 
         TransacaoStrategy strategy = resolver.resolve(tipoTransacao);
 

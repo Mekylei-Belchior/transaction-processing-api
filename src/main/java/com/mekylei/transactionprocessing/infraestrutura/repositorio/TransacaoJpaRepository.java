@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface TransacaoJpaRepository extends JpaRepository<TransacaoEntity, UUID> {
 
     Optional<TransacaoEntity> findByIdCorrelacao(UUID idCorrelacao);
+
+    Optional<TransacaoEntity> findByIdIdempotencia(UUID idIdempotencia);
 }

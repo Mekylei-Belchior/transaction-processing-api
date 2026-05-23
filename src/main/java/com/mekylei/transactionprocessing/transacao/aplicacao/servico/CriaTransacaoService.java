@@ -23,16 +23,18 @@ public class CriaTransacaoService {
         this.repository = repository;
     }
 
-    public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, String contaOrigem, String contaDestino) {
+    public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, UUID idContaOrigem, String contaDestino, UUID idIdempotencia) {
         UUID idCorrelacao = CorrelacaoIdUtil.gerar();
 
-        logger.info("Criando transação: tipo={}, valor={}, idCorrelacao={}", tipoTransacao, valor, idCorrelacao);
+        logger.info("Criando transação: tipo={}, valor={}, idContaOrigem={}, idCorrelacao={}",
+                tipoTransacao, valor, idContaOrigem, idCorrelacao);
 
         Transacao transacao = Transacao.builder()
                 .tipo(tipoTransacao)
                 .idCorrelacao(idCorrelacao)
+                .idIdempotencia(idIdempotencia)
                 .valor(ValorMonetario.paraReal(valor))
-                .contaOrigem(contaOrigem)
+                .idContaOrigem(idContaOrigem)
                 .contaDestino(contaDestino)
                 .build();
 

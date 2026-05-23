@@ -17,8 +17,11 @@ public class TransacaoEntity {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "id_correlacao", nullable = false, length = 50)
+    @Column(name = "id_correlacao", nullable = false)
     private UUID idCorrelacao;
+
+    @Column(name = "id_idempotencia", unique = true)
+    private UUID idIdempotencia;
 
     @Column(name = "valor", nullable = false, precision = 15, scale = 2)
     private BigDecimal valor;
@@ -37,11 +40,18 @@ public class TransacaoEntity {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 
-    @Column(name = "conta_origem", nullable = false, length = 100)
-    private String contaOrigem;
+    @Column(name = "atualizado_em")
+    private Instant atualizadoEm;
+
+    @Column(name = "id_conta_origem", nullable = false)
+    private UUID idContaOrigem;
 
     @Column(name = "conta_destino", nullable = false, length = 100)
     private String contaDestino;
+
+    @Version
+    @Column(name = "versao", nullable = false)
+    private Long versao;
 
     public TransacaoEntity() {
     }
@@ -60,6 +70,14 @@ public class TransacaoEntity {
 
     public void setIdCorrelacao(UUID idCorrelacao) {
         this.idCorrelacao = idCorrelacao;
+    }
+
+    public UUID getIdIdempotencia() {
+        return idIdempotencia;
+    }
+
+    public void setIdIdempotencia(UUID idIdempotencia) {
+        this.idIdempotencia = idIdempotencia;
     }
 
     public BigDecimal getValor() {
@@ -102,12 +120,20 @@ public class TransacaoEntity {
         this.criadoEm = criadoEm;
     }
 
-    public String getContaOrigem() {
-        return contaOrigem;
+    public Instant getAtualizadoEm() {
+        return atualizadoEm;
     }
 
-    public void setContaOrigem(String contaOrigem) {
-        this.contaOrigem = contaOrigem;
+    public void setAtualizadoEm(Instant atualizadoEm) {
+        this.atualizadoEm = atualizadoEm;
+    }
+
+    public UUID getIdContaOrigem() {
+        return idContaOrigem;
+    }
+
+    public void setIdContaOrigem(UUID idContaOrigem) {
+        this.idContaOrigem = idContaOrigem;
     }
 
     public String getContaDestino() {
@@ -116,5 +142,13 @@ public class TransacaoEntity {
 
     public void setContaDestino(String contaDestino) {
         this.contaDestino = contaDestino;
+    }
+
+    public Long getVersao() {
+        return versao;
+    }
+
+    public void setVersao(Long versao) {
+        this.versao = versao;
     }
 }

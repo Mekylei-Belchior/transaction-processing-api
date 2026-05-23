@@ -32,7 +32,9 @@ public class CorrelacaoIdUtil {
 
     public static void remover() {
         String idCorrelacao = get();
-        MDC.remove(CORRELACAO_ID_CHAVE);
-        logger.debug("IdCorrelacao ({}) removido do MDC.", idCorrelacao);
+        if (idCorrelacao != null && !idCorrelacao.isBlank()) {
+            MDC.remove(CORRELACAO_ID_CHAVE);
+            logger.debug("IdCorrelacao ({}) removido do MDC.", idCorrelacao);
+        }
     }
 }
