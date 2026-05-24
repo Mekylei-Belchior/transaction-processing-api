@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.controle;
 
+import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ConsultaTransacaoService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ProcessaTransacaoService;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoRequisicao;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoResposta;
@@ -20,9 +21,12 @@ import java.util.UUID;
 public class TransacaoController {
 
     private final ProcessaTransacaoService processaTransacaoService;
+    private final ConsultaTransacaoService consultaTransacaoService;
 
-    public TransacaoController(ProcessaTransacaoService processaTransacaoService) {
+    public TransacaoController(ProcessaTransacaoService processaTransacaoService,
+                               ConsultaTransacaoService consultaTransacaoService) {
         this.processaTransacaoService = processaTransacaoService;
+        this.consultaTransacaoService = consultaTransacaoService;
     }
 
     @PostMapping("/pix")
@@ -74,5 +78,14 @@ public class TransacaoController {
                 idIdempotencia);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(TransacaoResposta.aPartirDe(transacao));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Consultar status de transação",
+            description = "Consultar o estado atual de uma transação por ID")
+    public ResponseEntity<TransacaoResposta> consultaStatus(@PathVariable UUID id) {
+        Transacao transacao = consultaTransacaoService.consultar(id);
+        return ResponseEntity.ok(TransacaoResposta.aPartirDe(transacao));
     }
 }
