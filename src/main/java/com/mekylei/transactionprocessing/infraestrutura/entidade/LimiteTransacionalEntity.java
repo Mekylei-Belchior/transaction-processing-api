@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "limite_transacional")
+@Table(name = "limite")
 public class LimiteTransacionalEntity {
 
     @Id
