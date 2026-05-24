@@ -4,5 +4,6 @@ public enum StatusTransacao {
     PENDENTE,
     PROCESSANDO,
     COMPLETADA,
-    FALHOU
+    FALHOU,
+    ESTORNADA
 }

@@ -1,7 +1,10 @@
 package com.mekylei.transactionprocessing.transacao.controle;
 
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ConsultaTransacaoService;
+import com.mekylei.transactionprocessing.transacao.aplicacao.servico.EstornoTransacaoService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ProcessaTransacaoService;
+import com.mekylei.transactionprocessing.transacao.controle.dto.EstornoRequisicao;
+import com.mekylei.transactionprocessing.transacao.controle.dto.EstornoResposta;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoRequisicao;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoResposta;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
@@ -22,11 +25,13 @@ public class TransacaoController {
 
     private final ProcessaTransacaoService processaTransacaoService;
     private final ConsultaTransacaoService consultaTransacaoService;
+    private final EstornoTransacaoService estornoTransacaoService;
 
     public TransacaoController(ProcessaTransacaoService processaTransacaoService,
-                               ConsultaTransacaoService consultaTransacaoService) {
+                               ConsultaTransacaoService consultaTransacaoService, EstornoTransacaoService estornoTransacaoService) {
         this.processaTransacaoService = processaTransacaoService;
         this.consultaTransacaoService = consultaTransacaoService;
+        this.estornoTransacaoService = estornoTransacaoService;
     }
 
     @PostMapping("/pix")
@@ -88,4 +93,16 @@ public class TransacaoController {
         Transacao transacao = consultaTransacaoService.consultar(id);
         return ResponseEntity.ok(TransacaoResposta.aPartirDe(transacao));
     }
+
+    @PostMapping("/{id}/estorno")
+    @Operation(
+            summary = "Estornar transação",
+            description = "Estorno disponível para operações concluídas")
+    public ResponseEntity<EstornoResposta> estorna(
+            @PathVariable("id") UUID idTransacao,
+            @Valid @RequestBody EstornoRequisicao requisicao) {
+        EstornoResposta resposta = estornoTransacaoService.estornar(idTransacao, requisicao.motivo());
+        return ResponseEntity.ok(resposta);
+    }
+
 }
