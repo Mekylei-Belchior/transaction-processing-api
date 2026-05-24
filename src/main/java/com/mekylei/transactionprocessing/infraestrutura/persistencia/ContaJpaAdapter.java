@@ -39,6 +39,7 @@ public class ContaJpaAdapter implements ContaRepository {
                 .agencia(entity.getAgencia())
                 .idCliente(entity.getIdCliente())
                 .tipo(entity.getTipo())
+                .status(entity.getStatus())
                 .criadoEm(entity.getCriadoEm())
                 .build();
     }

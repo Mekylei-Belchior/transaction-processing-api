@@ -23,7 +23,7 @@ public class SaldoService {
     @Transactional(readOnly = true)
     public void validaSaldo(UUID idConta, BigDecimal valor) {
         Saldo saldo = buscarSaldo(idConta);
-        if (saldo.getDisponivel().compareTo(BigDecimal.ZERO) < 0) {
+        if (saldo.getDisponivel().compareTo(valor) < 0) {
             throw new SaldoInsuficienteException(idConta, saldo.getDisponivel(), valor);
         }
     }
