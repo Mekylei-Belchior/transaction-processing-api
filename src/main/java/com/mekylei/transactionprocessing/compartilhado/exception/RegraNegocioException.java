@@ -1,23 +1,13 @@
 package com.mekylei.transactionprocessing.compartilhado.exception;
 
-public class RegraNegocioException extends RuntimeException {
-    private final String codigoErro;
+public class RegraNegocioException extends ApiException {
 
     public RegraNegocioException(String codigoErro, String mensagem) {
-        super(mensagem);
-        this.codigoErro = codigoErro;
+        super(codigoErro, mensagem);
     }
 
     public RegraNegocioException(String codigoErro, String mensagem, Throwable causa) {
-        super(mensagem, causa);
-        this.codigoErro = codigoErro;
+        super(codigoErro, mensagem, causa);
     }
 
-    public String getCodigoErro() {
-        return codigoErro;
-    }
-
-    public String getMensagem() {
-        return getMessage();
-    }
 }
