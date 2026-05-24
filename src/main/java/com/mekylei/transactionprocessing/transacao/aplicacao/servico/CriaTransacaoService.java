@@ -4,7 +4,7 @@ import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoIdUtil;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
-import com.mekylei.transactionprocessing.transacao.dominio.ValorMonetario;
+import com.mekylei.transactionprocessing.transacao.dominio.vo.ValorMonetario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
