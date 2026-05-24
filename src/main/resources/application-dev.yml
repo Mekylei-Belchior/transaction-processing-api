@@ -50,3 +50,6 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+
+antifraude:
+  limite-aprovacao-automatica: ${LIMITE_AUTO:10000.00}

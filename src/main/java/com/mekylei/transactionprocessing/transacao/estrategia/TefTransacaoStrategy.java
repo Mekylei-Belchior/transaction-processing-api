@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.transacao.estrategia;
 
 
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
@@ -10,6 +11,12 @@ import org.slf4j.LoggerFactory;
 public class TefTransacaoStrategy implements TransacaoStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger(TefTransacaoStrategy.class);
+
+    private final AntiFraudeGateway antiFraudeGateway;
+
+    public TefTransacaoStrategy(AntiFraudeGateway antiFraudeGateway) {
+        this.antiFraudeGateway = antiFraudeGateway;
+    }
 
     @Override
     public boolean suporta(TipoTransacao tipoTransacao) {
@@ -21,7 +28,7 @@ public class TefTransacaoStrategy implements TransacaoStrategy {
         logger.info("Processando TEF: id={}, valor={}, idCorrelacao={}",
                 transacao.getId(), transacao.getValor(), transacao.getIdCorrelacao());
 
-        boolean autorizado = solicitarAutorizacao(transacao);
+        boolean autorizado = antiFraudeGateway.autorizar(transacao);
 
         if (!autorizado) {
             logger.warn("TEF não autorizado pelo antifraude: id={}", transacao.getId());
@@ -31,8 +38,4 @@ public class TefTransacaoStrategy implements TransacaoStrategy {
         return transacao.comStatus(StatusTransacao.COMPLETADA);
     }
 
-    private boolean solicitarAutorizacao(Transacao transacao) {
-        logger.debug("Solicitando autorização antifraude para TEF: {}", transacao.getId());
-        return true;
-    }
 }

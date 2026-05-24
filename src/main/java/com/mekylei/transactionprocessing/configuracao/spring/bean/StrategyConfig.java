@@ -2,7 +2,11 @@ package com.mekylei.transactionprocessing.configuracao.spring.bean;
 
 
 import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
-import com.mekylei.transactionprocessing.transacao.estrategia.*;
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
+import com.mekylei.transactionprocessing.transacao.estrategia.PixTransacaoStrategy;
+import com.mekylei.transactionprocessing.transacao.estrategia.TedTransacaoStrategy;
+import com.mekylei.transactionprocessing.transacao.estrategia.TefTransacaoStrategy;
+import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,8 +26,8 @@ public class StrategyConfig {
     }
 
     @Bean
-    public TefTransacaoStrategy tefTransacaoStrategy() {
-        return new TefTransacaoStrategy();
+    public TefTransacaoStrategy tefTransacaoStrategy(AntiFraudeGateway gateway) {
+        return new TefTransacaoStrategy(gateway);
     }
 
     @Bean
