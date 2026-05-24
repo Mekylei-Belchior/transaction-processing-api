@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio;
+package com.mekylei.transactionprocessing.conta.aplicacao.porta;
 
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
 

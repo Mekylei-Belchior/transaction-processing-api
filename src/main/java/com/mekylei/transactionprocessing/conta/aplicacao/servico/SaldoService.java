@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.conta.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.exception.RecursoNaoEncontradoException;
 import com.mekylei.transactionprocessing.compartilhado.exception.SaldoInsuficienteException;
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.SaldoRepository;
+import com.mekylei.transactionprocessing.conta.aplicacao.porta.SaldoRepository;
 import com.mekylei.transactionprocessing.conta.dominio.Saldo;
 import com.mekylei.transactionprocessing.transacao.dominio.vo.ValorMonetario;
 import org.springframework.stereotype.Service;
