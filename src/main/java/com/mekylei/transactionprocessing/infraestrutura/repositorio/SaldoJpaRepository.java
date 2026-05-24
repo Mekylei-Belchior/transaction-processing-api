@@ -12,9 +12,9 @@ import java.util.UUID;
 
 public interface SaldoJpaRepository extends JpaRepository<SaldoEntity, UUID> {
 
-    Optional<SaldoEntity> findByIdConta(UUID uuid);
+    Optional<SaldoEntity> findByIdConta(UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from SaldoEntity s where s.id = :idConta")
-    Optional<SaldoEntity> findByIdContaForUpdate(@Param("idConta") UUID uuid);
+    Optional<SaldoEntity> findByIdContaForUpdate(@Param("idConta") UUID id);
 }

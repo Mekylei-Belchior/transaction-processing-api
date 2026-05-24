@@ -3,6 +3,7 @@ package com.mekylei.transactionprocessing.conta.aplicacao.servico;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
+import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.vo.ValorMonetario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +22,14 @@ public class LimiteService {
     }
 
     @Transactional(readOnly = true)
-    public void validarLimite(UUID idConta, TipoConta tipoConta, BigDecimal valor) {
-        limiteRepository.findByIdContaAndTipo(idConta, tipoConta)
+    public void validarLimite(UUID idConta, TipoTransacao tipo, BigDecimal valor) {
+        limiteRepository.findByIdContaAndTipo(idConta, tipo)
                 .ifPresent(limite -> limite.validar(ValorMonetario.paraReal(valor)));
     }
 
     @Transactional
-    public void decrementarUtilizado(UUID idConta, TipoConta tipoConta, BigDecimal valor) {
-        Optional<LimiteTransacional> limiteOptional = limiteRepository.findByIdContaAndTipo(idConta, tipoConta);
+    public void decrementarUtilizado(UUID idConta, TipoTransacao tipo, BigDecimal valor) {
+        Optional<LimiteTransacional> limiteOptional = limiteRepository.findByIdContaAndTipo(idConta, tipo);
         limiteOptional.ifPresent(limite -> {
             LimiteTransacional atualizado = limite.decrementar(ValorMonetario.paraReal(valor));
             limiteRepository.save(atualizado);

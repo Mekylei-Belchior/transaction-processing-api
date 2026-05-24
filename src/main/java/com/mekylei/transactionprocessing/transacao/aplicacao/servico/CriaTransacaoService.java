@@ -38,10 +38,10 @@ public class CriaTransacaoService {
                 .contaDestino(contaDestino)
                 .build();
 
-        repository.save(transacao);
+        Transacao transacaoSalva = repository.save(transacao);
 
-        logger.info("Transação criada: id={}", transacao.getId());
+        logger.info("Transação criada: id={}", transacaoSalva.getId());
 
-        return transacao;
+        return transacaoSalva;
     }
 }
