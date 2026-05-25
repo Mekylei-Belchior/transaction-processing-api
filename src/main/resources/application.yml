@@ -8,6 +8,10 @@ spring:
     ansi:
       enabled: always
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
 logging:
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%thread]){cyan} %clr([%X{idCorrelacao:-sem-correlacao}]){magenta} %clr(%-5level) %clr(%logger{36}){green} %clr(-){faint} %msg%n"

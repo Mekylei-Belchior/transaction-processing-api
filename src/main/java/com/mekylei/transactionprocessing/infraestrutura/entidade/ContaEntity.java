@@ -12,27 +12,27 @@ import java.util.UUID;
 public class ContaEntity {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(name = "id", updatable = false)
     private UUID id;
 
-    @Column(name = "numero_conta", nullable = false, length = 20)
+    @Column(name = "numero_conta")
     private String numeroConta;
 
-    @Column(name = "agencia", nullable = false, length = 10)
+    @Column(name = "agencia")
     private String agencia;
 
-    @Column(name = "id_cliente", nullable = false)
+    @Column(name = "id_cliente")
     private UUID idCliente;
 
-    @Column(name = "tipo", nullable = false, length = 20)
+    @Column(name = "tipo")
     @Enumerated(EnumType.STRING)
     private TipoConta tipo;
 
-    @Column(name = "status",  nullable = false)
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private StatusConta status;
 
-    @Column(name = "criado_em", nullable = false, updatable = false)
+    @Column(name = "criado_em", updatable = false)
     private Instant criadoEm;
 
     public ContaEntity() {

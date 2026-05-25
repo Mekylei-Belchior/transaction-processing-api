@@ -11,23 +11,23 @@ import java.util.UUID;
 public class SaldoEntity {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(name = "id", updatable = false)
     private UUID id;
 
-    @Column(name = "id_conta", nullable = false, unique = true)
+    @Column(name = "id_conta")
     private UUID idConta;
 
-    @Column(name = "disponivel", nullable = false, precision = 15, scale = 2)
+    @Column(name = "disponivel")
     private BigDecimal disponivel;
 
-    @Column(name = "bloqueado", nullable = false, precision = 15, scale = 2)
+    @Column(name = "bloqueado")
     private BigDecimal bloqueado;
 
     @Version
-    @Column(name = "versao", nullable = false)
+    @Column(name = "versao")
     private Long versao;
 
-    @Column(name = "atualizado_em", nullable = false)
+    @Column(name = "atualizado_em")
     private Instant atualizadoEm;
 
     public SaldoEntity() {

@@ -14,43 +14,43 @@ import java.util.UUID;
 public class TransacaoEntity {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(name = "id", updatable = false)
     private UUID id;
 
-    @Column(name = "id_correlacao", nullable = false)
+    @Column(name = "id_correlacao")
     private UUID idCorrelacao;
 
-    @Column(name = "id_idempotencia", unique = true)
+    @Column(name = "id_idempotencia")
     private UUID idIdempotencia;
 
-    @Column(name = "valor", nullable = false, precision = 15, scale = 2)
+    @Column(name = "valor")
     private BigDecimal valor;
 
-    @Column(name = "moeda", nullable = false, length = 3)
+    @Column(name = "moeda")
     private String moeda;
 
-    @Column(name = "tipo", nullable = false, length = 10)
+    @Column(name = "tipo")
     @Enumerated(EnumType.STRING)
     private TipoTransacao tipo;
 
-    @Column(name = "status", nullable = false, length = 10)
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private StatusTransacao status;
 
-    @Column(name = "criado_em", nullable = false, updatable = false)
+    @Column(name = "criado_em", updatable = false)
     private Instant criadoEm;
 
-    @Column(name = "atualizado_em", nullable = false)
+    @Column(name = "atualizado_em")
     private Instant atualizadoEm;
 
-    @Column(name = "id_conta_origem", nullable = false)
+    @Column(name = "id_conta_origem")
     private UUID idContaOrigem;
 
-    @Column(name = "conta_destino", nullable = false, length = 100)
+    @Column(name = "conta_destino")
     private String contaDestino;
 
     @Version
-    @Column(name = "versao", nullable = false)
+    @Column(name = "versao")
     private Long versao;
 
     public TransacaoEntity() {

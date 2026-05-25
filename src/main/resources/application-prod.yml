@@ -9,7 +9,6 @@ spring:
     password: ${DB_PASSWORD}
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
     show-sql: false
@@ -18,6 +17,11 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
+  flyway:
+    baseline-on-migrate: false
+    out-of-order: false
+    clean-disabled: true
 
 logging:
   level:

@@ -12,26 +12,26 @@ import java.util.UUID;
 public class LimiteTransacionalEntity {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(name = "id", updatable = false)
     private UUID id;
 
-    @Column(name = "id_conta", nullable = false)
+    @Column(name = "id_conta")
     private UUID idConta;
 
-    @Column(name = "tipo", nullable = false, length = 10)
+    @Column(name = "tipo")
     @Enumerated(EnumType.STRING)
     private TipoTransacao tipo;
 
-    @Column(name = "limite_diario", nullable = false, precision = 15, scale = 2)
+    @Column(name = "limite_diario")
     private BigDecimal limiteDiario;
 
-    @Column(name = "limite_utilizado", nullable = false, precision = 15, scale = 2)
+    @Column(name = "limite_utilizado")
     private BigDecimal limiteTransacao;
 
-    @Column(name = "utilizado_hoje", nullable = false, precision = 15, scale = 2)
+    @Column(name = "utilizado_hoje")
     private BigDecimal utilizadoHoje;
 
-    @Column(name = "data_referencia", nullable = false)
+    @Column(name = "data_referencia")
     private LocalDate dataReferencia;
 
     public LimiteTransacionalEntity() {
