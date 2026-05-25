@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.configuracao.spring.bean;
 
 
+import com.mekylei.transactionprocessing.compartilhado.util.CalendarioStubBacenService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
 import com.mekylei.transactionprocessing.transacao.estrategia.PixTransacaoStrategy;
@@ -21,8 +22,8 @@ public class StrategyConfig {
     }
 
     @Bean
-    public TedTransacaoStrategy tedTransacaoStrategy() {
-        return new TedTransacaoStrategy();
+    public TedTransacaoStrategy tedTransacaoStrategy(CalendarioStubBacenService calendario) {
+        return new TedTransacaoStrategy(calendario);
     }
 
     @Bean

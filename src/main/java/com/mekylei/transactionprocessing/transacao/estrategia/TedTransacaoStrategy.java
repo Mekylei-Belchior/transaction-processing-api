@@ -2,12 +2,14 @@ package com.mekylei.transactionprocessing.transacao.estrategia;
 
 
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
+import com.mekylei.transactionprocessing.compartilhado.util.CalendarioStubBacenService;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 
@@ -19,6 +21,12 @@ public class TedTransacaoStrategy implements TransacaoStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger(TedTransacaoStrategy.class);
 
+    private final CalendarioStubBacenService calendarioService;
+
+    public TedTransacaoStrategy(CalendarioStubBacenService calendarioService) {
+        this.calendarioService = calendarioService;
+    }
+
     @Override
     public boolean suporta(TipoTransacao tipoTransacao) {
         return TipoTransacao.TED == tipoTransacao;
@@ -29,6 +37,7 @@ public class TedTransacaoStrategy implements TransacaoStrategy {
         logger.info("Processando TED: id={}, valor={}, idCorrelacao={}",
                 transacao.getId(), transacao.getValor(), transacao.getIdCorrelacao());
 
+        validarDiaUtil();
         validaHorarioPermitido();
 
         enviarParaSistemaTransferenciaReserva(transacao);
@@ -48,6 +57,16 @@ public class TedTransacaoStrategy implements TransacaoStrategy {
             throw new RegraNegocioException(
                     "TED_FORA_DO_HORARIO",
                     "TED disponível apenas entre " + BANCO_TED_INICIO + " e " + BANCO_TED_FIM + " (horário de Brasília)"
+            );
+        }
+    }
+
+    private void validarDiaUtil() {
+        LocalDate hoje = LocalDate.now(BRASIL_TIMEZONE);
+        if (!calendarioService.isDiaUtil(hoje)) {
+            throw new RegraNegocioException(
+                    "TED_DIA_NAO_UTIL",
+                    "TED não disponível em fins de semana ou feriados bancários. Data: " + hoje
             );
         }
     }
