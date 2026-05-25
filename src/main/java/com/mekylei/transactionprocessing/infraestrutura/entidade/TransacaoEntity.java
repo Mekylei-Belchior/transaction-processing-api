@@ -40,7 +40,7 @@ public class TransacaoEntity {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 
-    @Column(name = "atualizado_em")
+    @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
     @Column(name = "id_conta_origem", nullable = false)

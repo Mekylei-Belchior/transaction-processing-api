@@ -27,7 +27,7 @@ public class SaldoEntity {
     @Column(name = "versao", nullable = false)
     private Long versao;
 
-    @Column(name = "atualizado_em", nullable = false, updatable = false)
+    @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
     public SaldoEntity() {
