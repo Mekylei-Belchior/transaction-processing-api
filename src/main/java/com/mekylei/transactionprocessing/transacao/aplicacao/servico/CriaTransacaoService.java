@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
-import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoIdUtil;
+import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoUtil;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
@@ -24,7 +24,7 @@ public class CriaTransacaoService {
     }
 
     public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, UUID idContaOrigem, String contaDestino, UUID idIdempotencia) {
-        UUID idCorrelacao = CorrelacaoIdUtil.gerar();
+        UUID idCorrelacao = CorrelacaoUtil.gerarIdCorrelacao();
 
         logger.info("Criando transação: tipo={}, valor={}, idContaOrigem={}, idCorrelacao={}",
                 tipoTransacao, valor, idContaOrigem, idCorrelacao);

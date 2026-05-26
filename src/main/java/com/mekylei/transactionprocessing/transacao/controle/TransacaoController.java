@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.controle;
 
+import com.mekylei.transactionprocessing.compartilhado.constantes.HttpConstantes;
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ConsultaTransacaoService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.EstornoTransacaoService;
 import com.mekylei.transactionprocessing.transacao.aplicacao.servico.ProcessaTransacaoService;
@@ -42,7 +43,7 @@ public class TransacaoController {
             description = "Realiza uma transação PIX. Usa contaDestino como chave PIX.")
     public ResponseEntity<TransacaoResposta> processaPix(
             @Valid @RequestBody TransacaoRequisicao requisicao,
-            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
+            @RequestHeader(value = HttpConstantes.IDEMPOTENCIA_HEADER) UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.PIX,
@@ -60,7 +61,7 @@ public class TransacaoController {
             description = "Realiza uma TED. Disponível apenas em horário bancário (06h-17h BRT).")
     public ResponseEntity<TransacaoResposta> processaTed(
             @Valid @RequestBody TransacaoRequisicao requisicao,
-            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
+            @RequestHeader(value = HttpConstantes.IDEMPOTENCIA_HEADER) UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.TED,
@@ -78,7 +79,7 @@ public class TransacaoController {
             description = "Realiza uma TEF entre contas do mesmo banco. Requer autorização antifraude.")
     public ResponseEntity<TransacaoResposta> processaTef(
             @Valid @RequestBody TransacaoRequisicao requisicao,
-            @RequestHeader(value = "X-Idempotency-Key") UUID idIdempotencia) {
+            @RequestHeader(value = HttpConstantes.IDEMPOTENCIA_HEADER) UUID idIdempotencia) {
         Transacao transacao = processaTransacaoService.processa(
                 requisicao.valor(),
                 TipoTransacao.TEF,
