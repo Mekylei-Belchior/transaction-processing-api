@@ -10,11 +10,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.mekylei.transactionprocessing.compartilhado.constantes.ProblemaDetailConstantes.CODIGO_ERRO_PROPERTY;
+import static com.mekylei.transactionprocessing.compartilhado.constantes.ProblemaDetailConstantes.HORARIO_PROPERTY;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    private static final String HORARIO_PROPERTY = "horario";
-    private static final String CODIGO_ERRO_PROPERTY = "codigoErro";
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
 
         ProblemDetail problema = criaProblema("Erro Interno", HttpStatus.INTERNAL_SERVER_ERROR);
         problema.setDetail("Um erro inesperado ocorreu. Consulte o suporte com o horário da ocorrência.");
+        problema.setProperty(CODIGO_ERRO_PROPERTY, "ERRO_INTERNO_SERVIDOR");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problema);
     }

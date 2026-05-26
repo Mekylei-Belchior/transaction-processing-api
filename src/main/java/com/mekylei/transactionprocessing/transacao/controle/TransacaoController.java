@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class TransacaoController {
     }
 
     @PostMapping("/pix")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'OPERADOR', 'GERENTE', 'ADMIN', 'SERVICO_INTERNO')")
     @Operation(
             summary = "Processar PIX",
             description = "Realiza uma transação PIX. Usa contaDestino como chave PIX.")
@@ -52,6 +54,7 @@ public class TransacaoController {
     }
 
     @PostMapping("/ted")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'OPERADOR', 'GERENTE', 'ADMIN', 'SERVICO_INTERNO')")
     @Operation(
             summary = "Processar TED",
             description = "Realiza uma TED. Disponível apenas em horário bancário (06h-17h BRT).")
@@ -69,6 +72,7 @@ public class TransacaoController {
     }
 
     @PostMapping("/tef")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'OPERADOR', 'GERENTE', 'ADMIN', 'SERVICO_INTERNO')")
     @Operation(
             summary = "Processar TEF",
             description = "Realiza uma TEF entre contas do mesmo banco. Requer autorização antifraude.")
@@ -86,6 +90,7 @@ public class TransacaoController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CLIENTE', 'OPERADOR', 'GERENTE', 'ADMIN', 'SERVICO_INTERNO')")
     @Operation(
             summary = "Consultar status de transação",
             description = "Consultar o estado atual de uma transação por ID")
@@ -95,6 +100,7 @@ public class TransacaoController {
     }
 
     @PostMapping("/{id}/estorno")
+    @PreAuthorize("hasAnyRole('GERENTE', 'ADMIN')")
     @Operation(
             summary = "Estornar transação",
             description = "Estorno disponível para operações concluídas")

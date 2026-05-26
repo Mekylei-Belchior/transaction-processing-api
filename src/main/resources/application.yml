@@ -8,9 +8,22 @@ spring:
     ansi:
       enabled: always
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwks-uri: ${OAUTH2_JWKS_URI}
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+app:
+  rate-limit:
+    requests-per-minute: ${RATE_LIMIT_REQUISICOES_POR_MINUTO:60}
+  criptografia:
+    chave: ${APP_CRIPTOGRAFIA_CHAVE}
 
 logging:
   pattern:

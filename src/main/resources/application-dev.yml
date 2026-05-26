@@ -16,8 +16,24 @@ spring:
           lob:
             non_contextual_creation: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Keycloak local - homelab
+          jwks-uri: https://keycloak.lab.home/realms/bancario/protocol/openid-connect/certs
+          issuer-uri: https://keycloak.lab.home/realms/bancario
+
   flyway:
     clean-on-validation-error: false
+
+app:
+  rate-limit:
+    # limite mais alto para desenvolvimento
+    requests-per-minute: 300
+  criptografia:
+    # Chave de desenvolvimento
+    chave: dGVzdGVDaGF2ZUFlczI1NkJhc2U2NFRlc3RUZXN0VGVzdA==
 
 logging:
   level:
@@ -45,6 +61,12 @@ logging:
     # detalhado que DEBUG. Ideal para depurar parâmetros de consultas dinâmicas,
     # mas deve ser evitado em produção por questões de segurança e volume de logs.
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # Exibe a execução completa da cadeia de filtros de segurança: qual filtro
+    # processou a requisição, resultado da validação JWT (expiração, issuer,
+    # assinatura), e decisões de autorização (@PreAuthorize / hasRole).
+    # Essencial para diagnosticar erros de autenticação (401) e acesso negado (403)
+    # ATENÇÃO: logs contêm detalhes do token e decisões de acesso — NUNCA habilitar em produção.
+    org.springframework.security: DEBUG
 
 springdoc:
   api-docs:
