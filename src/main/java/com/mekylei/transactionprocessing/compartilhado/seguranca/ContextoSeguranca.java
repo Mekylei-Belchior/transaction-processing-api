@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.configuracao.seguranca;
+package com.mekylei.transactionprocessing.compartilhado.seguranca;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
