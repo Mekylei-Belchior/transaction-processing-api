@@ -86,11 +86,11 @@ transaction-processing-api/
 │   │   ├── java/com/mekylei/transactionprocessing/
 │   │   │   ├── TransactionProcessingApiApplication.java
 │   │   │   ├── auditoria/
+│   │   │   │   ├── AuditoriaListener.java
+│   │   │   │   ├── AuditoriaService.java
 │   │   │   │   ├── DadosAuditoria.java
 │   │   │   │   ├── aplicacao/
-│   │   │   │   │   ├── AuditoriaContextPadrao.java
-│   │   │   │   │   ├── AuditoriaListener.java
-│   │   │   │   │   └── AuditoriaService.java
+│   │   │   │   │   └── AuditoriaContextPadrao.java
 │   │   │   │   ├── dominio/
 │   │   │   │   │   ├── AcaoAuditoria.java
 │   │   │   │   │   └── AuditoriaEvento.java
@@ -98,12 +98,18 @@ transaction-processing-api/
 │   │   │   │       ├── AuditoriaContextGateway.java
 │   │   │   │       ├── AuditoriaContextWriter.java
 │   │   │   │       └── AuditoriaRepository.java
+│   │   │   ├── cliente/
+│   │   │   │   ├── dominio/
+│   │   │   │   └── aplicacao/porta/repositorio/
 │   │   │   ├── compartilhado/
 │   │   │   │   ├── adaptador/
 │   │   │   │   │   └── Jackson3FormatMapper.java
 │   │   │   │   ├── constantes/
-│   │   │   │   │   ├── HttpConstantes.java
+│   │   │   │   │   ├── HeadersHttp.java
 │   │   │   │   │   └── ProblemaDetailConstantes.java
+│   │   │   │   ├── dominio/
+│   │   │   │   │   └── ValorMonetario.java
+│   │   │   │   ├── evento/
 │   │   │   │   ├── exception/
 │   │   │   │   │   ├── ApiException.java
 │   │   │   │   │   ├── BaseException.java
@@ -120,6 +126,9 @@ transaction-processing-api/
 │   │   │   │       ├── CorrelacaoUtil.java
 │   │   │   │       └── DateTimeUtil.java
 │   │   │   ├── configuracao/
+│   │   │   │   ├── docs/
+│   │   │   │   ├── kafka/
+│   │   │   │   ├── resiliencia/
 │   │   │   │   ├── seguranca/
 │   │   │   │   │   ├── ApiAcessoNegadoHandler.java
 │   │   │   │   │   ├── ApiAutenticacaoEntryPoint.java
@@ -136,12 +145,14 @@ transaction-processing-api/
 │   │   │   ├── conta/
 │   │   │   │   ├── aplicacao/
 │   │   │   │   │   ├── porta/
-│   │   │   │   │   │   ├── ContaRepository.java
-│   │   │   │   │   │   ├── LimiteRepository.java
-│   │   │   │   │   │   └── SaldoRepository.java
+│   │   │   │   │   │   └── repositorio/
+│   │   │   │   │   │       ├── ContaRepository.java
+│   │   │   │   │   │       ├── LimiteRepository.java
+│   │   │   │   │   │       └── SaldoRepository.java
 │   │   │   │   │   └── servico/
 │   │   │   │   │       ├── LimiteService.java
 │   │   │   │   │       └── SaldoService.java
+│   │   │   │   ├── controle/
 │   │   │   │   └── dominio/
 │   │   │   │       ├── Conta.java
 │   │   │   │       ├── LimiteTransacional.java
@@ -170,12 +181,37 @@ transaction-processing-api/
 │   │   │   ├── integracao/
 │   │   │   │   ├── antifraude/
 │   │   │   │   │   └── AntiFraudeStubAdapter.java
-│   │   │   │   ├── bacen/          (vazio)
-│   │   │   │   └── spb/            (vazio)
+│   │   │   │   ├── bacen/
+│   │   │   │   ├── spb/
+│   │   │   │   └── str/
+│   │   │   ├── mensageria/
+│   │   │   │   ├── consumidor/
+│   │   │   │   ├── evento/
+│   │   │   │   ├── outbox/
+│   │   │   │   └── produtor/
+│   │   │   ├── observabilidade/
+│   │   │   │   ├── logging/
+│   │   │   │   ├── metrica/
+│   │   │   │   └── rastreamento/
+│   │   │   ├── pix/
+│   │   │   │   ├── aplicacao/porta/integracao/
+│   │   │   │   ├── aplicacao/servico/
+│   │   │   │   ├── controle/
+│   │   │   │   ├── dominio/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── enums/
+│   │   │   │   ├── mapper/
+│   │   │   │   └── validador/
+│   │   │   ├── ted/
+│   │   │   │   ├── aplicacao/porta/integracao/
+│   │   │   │   ├── aplicacao/servico/
+│   │   │   │   ├── controle/
+│   │   │   │   └── dto/
+│   │   │   ├── tef/
+│   │   │   │   ├── aplicacao/servico/
+│   │   │   │   └── controle/
 │   │   │   └── transacao/
 │   │   │       ├── aplicacao/
-│   │   │       │   ├── orquestracao/
-│   │   │       │   │   └── StrategyResolver.java
 │   │   │       │   ├── porta/
 │   │   │       │   │   ├── integracao/
 │   │   │       │   │   │   ├── AntiFraudeGateway.java
@@ -198,10 +234,10 @@ transaction-processing-api/
 │   │   │       │   ├── StatusTransacao.java
 │   │   │       │   ├── TipoTransacao.java
 │   │   │       │   ├── Transacao.java
-│   │   │       │   └── vo/
-│   │   │       │       └── ValorMonetario.java
+│   │   │       │   └── evento/
 │   │   │       └── estrategia/
 │   │   │           ├── PixTransacaoStrategy.java
+│   │   │           ├── StrategyResolver.java
 │   │   │           ├── TedTransacaoStrategy.java
 │   │   │           ├── TefTransacaoStrategy.java
 │   │   │           └── TransacaoStrategy.java
