@@ -4,6 +4,13 @@ API de simulação de processamento de transações bancárias (PIX, TED e TEF) 
 
 Ainda em desenvolvimento!
 
+<img width="1916" height="1080" alt="Captura de tela de 2026-05-27 03-33-29" src="https://github.com/user-attachments/assets/bca23a44-771d-417c-84ef-6e20f1134512" />
+<img width="1532" height="1076" alt="Captura de tela de 2026-05-27 03-11-49" src="https://github.com/user-attachments/assets/ea1d4f58-0c08-4d8a-b5c8-2d77c1fd8190" />
+<img width="1532" height="1076" alt="Captura de tela de 2026-05-27 03-13-08" src="https://github.com/user-attachments/assets/2bdb0369-825e-40ed-9eb3-619ddea8ed6d" />
+
+
+
+
 ---
 
 ## Tecnologias Utilizadas
