@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
+import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaListener;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "saldo")
+@EntityListeners(AuditoriaListener.class)
 public class SaldoEntity {
 
     @Id

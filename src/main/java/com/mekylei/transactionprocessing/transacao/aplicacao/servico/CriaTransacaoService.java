@@ -24,7 +24,7 @@ public class CriaTransacaoService {
     }
 
     public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, UUID idContaOrigem, String contaDestino, UUID idIdempotencia) {
-        UUID idCorrelacao = CorrelacaoUtil.gerarIdCorrelacao();
+        UUID idCorrelacao = CorrelacaoUtil.obter();
 
         logger.info("Criando transação: tipo={}, valor={}, idContaOrigem={}, idCorrelacao={}",
                 tipoTransacao, valor, idContaOrigem, idCorrelacao);

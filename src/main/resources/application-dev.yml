@@ -33,7 +33,7 @@ app:
     requests-per-minute: 300
   criptografia:
     # Chave de desenvolvimento
-    chave: dGVzdGVDaGF2ZUFlczI1NkJhc2U2NFRlc3RUZXN0VGVzdA==
+    chave: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
 logging:
   level:

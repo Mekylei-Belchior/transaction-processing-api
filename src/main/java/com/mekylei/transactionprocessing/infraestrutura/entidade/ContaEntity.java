@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
+import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaListener;
 import com.mekylei.transactionprocessing.conta.dominio.StatusConta;
 import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "conta")
+@EntityListeners(AuditoriaListener.class)
 public class ContaEntity {
 
     @Id

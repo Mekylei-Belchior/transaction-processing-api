@@ -18,6 +18,13 @@ spring:
           lob:
             non_contextual_creation: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwks-uri: ${OAUTH2_JWKS_URI}
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+
   flyway:
     baseline-on-migrate: false
     out-of-order: false

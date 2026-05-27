@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
+import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaListener;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import jakarta.persistence.*;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "limite")
+@EntityListeners(AuditoriaListener.class)
 public class LimiteTransacionalEntity {
 
     @Id

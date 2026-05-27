@@ -15,23 +15,20 @@ public class CorrelacaoUtil {
     private CorrelacaoUtil() {
     }
 
-    public static UUID gerarIdCorrelacao() {
-        UUID idCorrelacao = UUID.randomUUID();
-        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao.toString());
-        return idCorrelacao;
+    public static UUID definir(UUID idCorrelacao) {
+        UUID idCorrelacaoDefinido = idCorrelacao != null ? idCorrelacao : UUID.randomUUID();
+        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacaoDefinido.toString());
+        return idCorrelacaoDefinido;
     }
 
-    public static String obterIdCorrelacao() {
-        return MDC.get(CORRELACAO_ID_CHAVE);
-    }
-
-    public static void definir(UUID idCorrelacao) {
-        MDC.put(CORRELACAO_ID_CHAVE, idCorrelacao.toString());
+    public static UUID obter() {
+        String idCorrelacao = MDC.get(CORRELACAO_ID_CHAVE);
+        return idCorrelacao == null || idCorrelacao.isBlank() ? null : UUID.fromString(idCorrelacao);
     }
 
     public static void remover() {
-        String idCorrelacao = obterIdCorrelacao();
-        if (idCorrelacao != null && !idCorrelacao.isBlank()) {
+        UUID idCorrelacao = obter();
+        if (idCorrelacao != null) {
             MDC.remove(CORRELACAO_ID_CHAVE);
             logger.debug("IdCorrelacao ({}) removido do MDC.", idCorrelacao);
         }
