@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.LimiteRepository;
+import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.LimiteTransacionalEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.LimiteJpaRepository;

@@ -1,7 +1,6 @@
-package com.mekylei.transactionprocessing.auditoria.aplicacao;
+package com.mekylei.transactionprocessing.auditoria;
 
 
-import com.mekylei.transactionprocessing.auditoria.DadosAuditoria;
 import com.mekylei.transactionprocessing.auditoria.dominio.AcaoAuditoria;
 import com.mekylei.transactionprocessing.auditoria.dominio.AuditoriaEvento;
 import com.mekylei.transactionprocessing.auditoria.porta.AuditoriaContextGateway;

@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.SaldoRepository;
+import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.SaldoRepository;
 import com.mekylei.transactionprocessing.conta.dominio.Saldo;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.SaldoEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.SaldoJpaRepository;

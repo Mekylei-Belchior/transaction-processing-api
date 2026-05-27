@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.transacao.dominio.vo;
+package com.mekylei.transactionprocessing.compartilhado.dominio;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -10,7 +10,8 @@ public class DateTimeUtil {
     private static final ZoneId BRASIL_TIMEZONE = ZoneId.of("America/Sao_Paulo");
     private static final DateTimeFormatter FORMATO_BRASIL = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS z");
 
-    private DateTimeUtil() {}
+    private DateTimeUtil() {
+    }
 
     /**
      * Retorna o ZonedDateTime atual no fuso brasileiro

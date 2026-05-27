@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
-import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaListener;
+import com.mekylei.transactionprocessing.auditoria.AuditoriaListener;
 import com.mekylei.transactionprocessing.conta.dominio.StatusConta;
 import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
 import jakarta.persistence.*;

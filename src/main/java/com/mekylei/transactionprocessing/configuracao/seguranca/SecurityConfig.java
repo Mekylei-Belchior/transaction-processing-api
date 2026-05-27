@@ -42,14 +42,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(ENDPOINTS_PUBLICOS)
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
+                        .requestMatchers(ENDPOINTS_PUBLICOS).permitAll()
+                        .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt ->

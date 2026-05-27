@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.ContaRepository;
+import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.ContaRepository;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.ContaEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.ContaJpaRepository;

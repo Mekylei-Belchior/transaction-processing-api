@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.auditoria.aplicacao;
+package com.mekylei.transactionprocessing.auditoria;
 
 import com.mekylei.transactionprocessing.auditoria.dominio.AcaoAuditoria;
 import jakarta.persistence.PostLoad;

@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.conta.dominio;
 
+import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.compartilhado.exception.SaldoInsuficienteException;
-import com.mekylei.transactionprocessing.transacao.dominio.vo.ValorMonetario;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -127,7 +127,8 @@ public class Saldo {
         public Saldo build() {
             if (idConta == null) throw new IllegalStateException("'idConta' é obrigatório");
             if (disponivel == null) throw new IllegalStateException("'disponivel' é obrigatório");
-            if (disponivel.compareTo(BigDecimal.ZERO) < 0) throw new IllegalStateException("'disponivel' não pode ser negativo");
+            if (disponivel.compareTo(BigDecimal.ZERO) < 0)
+                throw new IllegalStateException("'disponivel' não pode ser negativo");
 
             if (id == null) id = UUID.randomUUID();
             if (atualizadoEm == null) atualizadoEm = Instant.now();

@@ -1,6 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
-import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaListener;
+import com.mekylei.transactionprocessing.auditoria.AuditoriaListener;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

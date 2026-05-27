@@ -2,15 +2,15 @@ package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService;
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.ContaRepository;
+import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.ContaRepository;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.LimiteService;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.SaldoService;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
-import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
+import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

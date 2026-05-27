@@ -104,7 +104,8 @@ public class Conta {
         }
 
         public Conta build() {
-            if (numeroConta == null || numeroConta.isBlank()) throw new IllegalStateException("'numeroConta' é obrigatório");
+            if (numeroConta == null || numeroConta.isBlank())
+                throw new IllegalStateException("'numeroConta' é obrigatório");
             if (agencia == null || agencia.isBlank()) throw new IllegalStateException("'agencia' é obrigatório");
             if (idCliente == null) throw new IllegalStateException("'idCliente' é obrigatório");
             if (tipo == null) throw new IllegalStateException("'tipo' é obrigatório");

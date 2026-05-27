@@ -2,12 +2,8 @@ package com.mekylei.transactionprocessing.configuracao.spring.bean;
 
 
 import com.mekylei.transactionprocessing.compartilhado.util.CalendarioStubBacenService;
-import com.mekylei.transactionprocessing.transacao.aplicacao.orquestracao.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
-import com.mekylei.transactionprocessing.transacao.estrategia.PixTransacaoStrategy;
-import com.mekylei.transactionprocessing.transacao.estrategia.TedTransacaoStrategy;
-import com.mekylei.transactionprocessing.transacao.estrategia.TefTransacaoStrategy;
-import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
+import com.mekylei.transactionprocessing.transacao.estrategia.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
