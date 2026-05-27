@@ -2,7 +2,6 @@ package com.mekylei.transactionprocessing.conta.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
-import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.vo.ValorMonetario;
 import org.springframework.stereotype.Service;
