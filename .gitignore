@@ -36,3 +36,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# env files
+.env
+.env.*
+
+# certificates
+/certificados/
+*.crt
+*.key
+
+# seeds
+/seed-db

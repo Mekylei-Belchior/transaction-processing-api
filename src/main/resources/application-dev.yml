@@ -21,8 +21,8 @@ spring:
       resourceserver:
         jwt:
           # Keycloak local - homelab
-          jwks-uri: https://keycloak.lab.home/realms/bancario/protocol/openid-connect/certs
-          issuer-uri: https://keycloak.lab.home/realms/bancario
+          jwks-uri: ${OAUTH2_JWKS_URI:https://keycloak.lab.home/realms/bancario/protocol/openid-connect/certs}
+          issuer-uri: ${OAUTH2_ISSUER_URI:https://keycloak.lab.home/realms/bancario}
 
   flyway:
     clean-on-validation-error: false
@@ -33,7 +33,7 @@ app:
     requests-per-minute: 300
   criptografia:
     # Chave de desenvolvimento
-    chave: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+    chave: ${APP_CRIPTOGRAFIA_CHAVE:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
 
 logging:
   level:
@@ -76,4 +76,4 @@ springdoc:
     path: /swagger-ui.html
 
 antifraude:
-  limite-aprovacao-automatica: ${LIMITE_AUTO:10000.00}
+  limite-aprovacao-automatica: ${ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA:10000.00}

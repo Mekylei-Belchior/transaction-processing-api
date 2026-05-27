@@ -1,0 +1,72 @@
+services:
+
+  postgres-transacao:
+    image: postgres:16-alpine
+    container_name: transacao_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - transacao_net
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transacao_app
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres-transacao:
+        condition: service_healthy
+
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      
+      DB_URL: jdbc:postgresql://postgres-transacao:5432/${POSTGRES_DB}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # OAuth2 / Keycloak
+      OAUTH2_JWKS_URI: ${OAUTH2_JWKS_URI}
+      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI}
+
+      # Chave de criptografia AES-256 (Base64)
+      APP_CRIPTOGRAFIA_CHAVE: ${APP_CRIPTOGRAFIA_CHAVE}
+
+      # Rate limiting
+      RATE_LIMIT_REQUISICOES_POR_MINUTO: ${RATE_LIMIT_REQUISICOES_POR_MINUTO}
+
+      # Antifraude
+      ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA: ${ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA}
+
+    networks:
+      - transacao_net
+
+networks:
+  transacao_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
