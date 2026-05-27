@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.configuracao.spring.filter;
 
 import com.mekylei.transactionprocessing.auditoria.DadosAuditoria;
 import com.mekylei.transactionprocessing.auditoria.porta.AuditoriaContextWriter;
-import com.mekylei.transactionprocessing.compartilhado.constantes.HttpConstantes;
+import com.mekylei.transactionprocessing.compartilhado.constantes.HeadersHttp;
 import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,7 +49,7 @@ public class ContextoRequisicaoFilter extends OncePerRequestFilter {
     }
 
     private String resolverIpOrigem(HttpServletRequest request) {
-        String forwardedFor = request.getHeader(HttpConstantes.IP_ORIGEM_HEADER);
+        String forwardedFor = request.getHeader(HeadersHttp.IP_ORIGEM_HEADER);
         if (forwardedFor != null && !forwardedFor.isBlank()) {
             return forwardedFor.split(",")[0].trim();
         }
@@ -57,7 +57,7 @@ public class ContextoRequisicaoFilter extends OncePerRequestFilter {
     }
 
     private UUID resolverCorrelacao(HttpServletRequest request) {
-        String CorrelationId = request.getHeader(HttpConstantes.CORRELACAO_HEADER);
+        String CorrelationId = request.getHeader(HeadersHttp.CORRELACAO_HEADER);
         return (CorrelationId != null && !CorrelationId.isBlank()) ? UUID.fromString(CorrelationId) : null;
     }
 

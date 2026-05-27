@@ -1,8 +1,8 @@
 package com.mekylei.transactionprocessing.compartilhado.constantes;
 
-public final class HttpConstantes {
+public final class HeadersHttp {
 
-    private HttpConstantes() {}
+    private HeadersHttp() {}
 
     public static final String CORRELACAO_HEADER = "X-Correlation-Id";
     public static final String IDEMPOTENCIA_HEADER = "X-Idempotency-Key";
