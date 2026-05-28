@@ -34,6 +34,7 @@
         <postgresql.version>42.7.11</postgresql.version>
         <springdoc-openapi.version>3.0.3</springdoc-openapi.version>
         <bucket4j-core.version>8.19.0</bucket4j-core.version>
+        <logstash-logback.version>9.0</logstash-logback.version>
     </properties>
 
     <dependencies>
@@ -107,6 +108,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-json</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
