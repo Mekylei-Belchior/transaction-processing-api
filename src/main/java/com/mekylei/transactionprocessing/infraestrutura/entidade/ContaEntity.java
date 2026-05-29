@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
 import com.mekylei.transactionprocessing.auditoria.AuditoriaListener;
+import com.mekylei.transactionprocessing.compartilhado.util.CriptografiaConverter;
 import com.mekylei.transactionprocessing.conta.dominio.StatusConta;
 import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
 import jakarta.persistence.*;
@@ -17,9 +18,11 @@ public class ContaEntity {
     @Column(name = "id", updatable = false)
     private UUID id;
 
+    @Convert(converter = CriptografiaConverter.class)
     @Column(name = "numero_conta")
     private String numeroConta;
 
+    @Convert(converter = CriptografiaConverter.class)
     @Column(name = "agencia")
     private String agencia;
 
