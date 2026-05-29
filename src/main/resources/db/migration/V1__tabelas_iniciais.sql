@@ -1,15 +1,18 @@
 create table conta(
     id uuid not null,
-    agencia varchar(10) not null,
+    agencia_hmac varchar(64) not null,
+    agencia varchar(255) not null,
     criado_em timestamptz(6) not null,
     id_cliente uuid not null,
-    numero_conta varchar(20) not null,
+    numero_conta_hmac varchar(64) not null,
+    numero_conta varchar(255) not null,
     status varchar(20) not null,
     tipo varchar(20) not null,
     constraint conta_pkey primary key (id)
 );
 
-create index idx_conta_numero_conta on conta (numero_conta);
+create index idx_conta_numero_hmac_conta on conta (numero_conta_hmac);
+create index idx_conta_agencia_hmac_conta on conta (agencia_hmac);
 
 create table transacao(
     id uuid not null,

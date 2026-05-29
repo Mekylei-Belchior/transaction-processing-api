@@ -19,7 +19,8 @@ public final class DadosSensiveisMasker {
             "bearer",
             "authorization",
             "token",
-            "email"
+            "email",
+            "numeroConta"
     );
 
     private static final List<MascaraPadrao> PADROES = List.of(
@@ -31,6 +32,12 @@ public final class DadosSensiveisMasker {
             ),
 
             // Conta bancária
+            new MascaraPadrao(
+                    Pattern.compile("numeroConta[=: ]+(\\d{2,}-?\\d?)", Pattern.CASE_INSENSITIVE),
+                    "numeroConta=****"
+            ),
+
+            // Valores Monetários
             new MascaraPadrao(
                     Pattern.compile("(?i)(valor|saldo|amount)[=: ]+([0-9]+(?:\\.[0-9]{2})?)", Pattern.CASE_INSENSITIVE),
                     "$1=****"

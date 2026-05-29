@@ -9,7 +9,7 @@ public interface ContaRepository {
 
     Optional<Conta> findById(UUID id);
 
-    Optional<Conta> findByNumeroConta(String numeroConta);
+    Optional<Conta> findByNumeroContaHmac(String numeroContaHmac);
 
     Conta save(Conta conta);
 }

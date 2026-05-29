@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 
+import com.mekylei.transactionprocessing.compartilhado.seguranca.HmacService;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.ContaRepository;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.ContaEntity;
@@ -13,9 +14,11 @@ import java.util.UUID;
 public class ContaJpaAdapter implements ContaRepository {
 
     private final ContaJpaRepository repository;
+    private final HmacService hmacService;
 
-    public ContaJpaAdapter(ContaJpaRepository repository) {
+    public ContaJpaAdapter(ContaJpaRepository repository, HmacService hmacService) {
         this.repository = repository;
+        this.hmacService = hmacService;
     }
 
     public ContaEntity toEntity(Conta conta) {
@@ -23,7 +26,9 @@ public class ContaJpaAdapter implements ContaRepository {
 
         entity.setId(conta.getId());
         entity.setNumeroConta(conta.getNumeroConta());
+        entity.setNumeroContaHmac(hmacService.gerar(conta.getNumeroConta()));
         entity.setAgencia(conta.getAgencia());
+        entity.setAgenciaHmac(hmacService.gerar(conta.getAgencia()));
         entity.setIdCliente(conta.getIdCliente());
         entity.setTipo(conta.getTipo());
         entity.setStatus(conta.getStatus());
@@ -50,12 +55,15 @@ public class ContaJpaAdapter implements ContaRepository {
     }
 
     @Override
-    public Optional<Conta> findByNumeroConta(String numeroConta) {
-        return repository.findByNumeroConta(numeroConta).map(this::toDomain);
+    public Optional<Conta> findByNumeroContaHmac(String numeroConta) {
+        String hmac = hmacService.gerar(numeroConta);
+        return repository.findByNumeroContaHmac(hmac).map(this::toDomain);
     }
 
     @Override
     public Conta save(Conta conta) {
-        return toDomain(repository.save(toEntity(conta)));
+        ContaEntity entity = toEntity(conta);
+        ContaEntity contaSalva = repository.save(entity);
+        return toDomain(contaSalva);
     }
 }

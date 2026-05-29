@@ -18,9 +18,15 @@ public class ContaEntity {
     @Column(name = "id", updatable = false)
     private UUID id;
 
+    @Column(name = "numero_conta_hmac")
+    private String numeroContaHmac;
+
     @Convert(converter = CriptografiaConverter.class)
     @Column(name = "numero_conta")
     private String numeroConta;
+
+    @Column(name = "agencia_hmac")
+    private String agenciaHmac;
 
     @Convert(converter = CriptografiaConverter.class)
     @Column(name = "agencia")
@@ -51,12 +57,28 @@ public class ContaEntity {
         this.id = id;
     }
 
+    public String getNumeroContaHmac() {
+        return numeroContaHmac;
+    }
+
+    public void setNumeroContaHmac(String numeroContaHmac) {
+        this.numeroContaHmac = numeroContaHmac;
+    }
+
     public String getNumeroConta() {
         return numeroConta;
     }
 
     public void setNumeroConta(String numeroConta) {
         this.numeroConta = numeroConta;
+    }
+
+    public String getAgenciaHmac() {
+        return agenciaHmac;
+    }
+
+    public void setAgenciaHmac(String agenciaHmac) {
+        this.agenciaHmac = agenciaHmac;
     }
 
     public String getAgencia() {

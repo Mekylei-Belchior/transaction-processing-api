@@ -24,6 +24,8 @@ app:
     requests-per-minute: ${RATE_LIMIT_REQUISICOES_POR_MINUTO:60}
   criptografia:
     chave: ${APP_CRIPTOGRAFIA_CHAVE}
+  hmac:
+    chave: ${APP_HMAC_CHAVE}
 
 logging:
   pattern:

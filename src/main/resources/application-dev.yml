@@ -34,6 +34,9 @@ app:
   criptografia:
     # Chave de desenvolvimento
     chave: ${APP_CRIPTOGRAFIA_CHAVE:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+  hmac:
+    # Chave de desenvolvimento
+    chave: ${APP_HMAC_CHAVE:xK9mP2vL8nQ5rT1wY4zB7cF3hJ6kU8aR0dG2hN5pS7vL9m}
 
 logging:
   level:
