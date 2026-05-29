@@ -27,18 +27,20 @@ Ainda em desenvolvimento!
 | Bucket4j                    | 8.19.0                 | Rate limiting por token bucket           |
 | SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)     |
 | Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                        |
+| Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)     |
 
 ## Módulos Existentes
 
-| Módulo           | Responsabilidade                                         |
-| ---------------- | -------------------------------------------------------- |
-| `transacao`      | Processamento de PIX, TED e TEF — domínio central        |
-| `conta`          | Domínio de conta, saldo e limite transacional            |
-| `auditoria`      | Registro de eventos de auditoria regulatória             |
-| `compartilhado`  | Utilitários, filtros, exceções e constantes transversais |
-| `configuracao`   | Configurações Spring: segurança, beans e filtros         |
-| `infraestrutura` | Adaptadores JPA e repositórios Spring Data               |
-| `integracao`     | Adaptadores para integrações externas (antifraude stub)  |
+| Módulo            | Responsabilidade                                                            |
+| ----------------- | --------------------------------------------------------------------------- |
+| `transacao`       | Processamento de PIX, TED e TEF — domínio central                           |
+| `conta`           | Domínio de conta, saldo e limite transacional                               |
+| `auditoria`       | Registro de eventos de auditoria regulatória                                |
+| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC e constantes transversais |
+| `configuracao`    | Configurações Spring: segurança, beans e filtros                            |
+| `infraestrutura`  | Adaptadores JPA e repositórios Spring Data                                  |
+| `integracao`      | Adaptadores para integrações externas (antifraude stub)                     |
+| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON      |
 
 ## Organização do Código
 
@@ -48,6 +50,9 @@ Ainda em desenvolvimento!
 - Porta de repositório: `TransacaoRepository`, `ContaRepository`, `SaldoRepository` e `LimiteRepository` como interfaces no módulo de aplicação — infraestrutura desacoplada.
 - Resposta padronizada: `GlobalExceptionHandler` com `ProblemDetail` (RFC 7807).
 - Correlação ponta-a-ponta: `ContextoRequisicaoFilter` com `HIGHEST_PRECEDENCE` propagando `idCorrelacao` via MDC (Mapped Diagnostic Context).
+- Criptografia em repouso: `CriptografiaConverter` como `AttributeConverter` JPA usando AES-256-GCM com IV aleatório por valor — campos sensíveis das entidades armazenados criptografados no banco.
+- Integridade com HMAC: `HmacService` com HMAC-SHA256 para geração e verificação de assinaturas de integridade de dados, configurável via `HmacProperties`.
+- Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `MascaradoJsonProvider`.
 
 ---
 
@@ -60,11 +65,15 @@ Ainda em desenvolvimento!
 - Camada de domínio (`Transacao`, `Conta`, `Saldo`, `LimiteTransacional`, `ValorMonetario`) sem dependência de frameworks.
 - Camada de infraestrutura (`TransacaoJpaAdapter`, `ContaJpaAdapter`, `SaldoJpaAdapter`, `LimiteJpaAdapter`, `AuditoriaJpaAdapter`) implementando interfaces de porta.
 - Filtros transversais (`ContextoRequisicaoFilter`, `RateLimitFilter`) na camada de entrada.
+- Criptografia em repouso via `CriptografiaConverter` (AES-256-GCM, `AttributeConverter` JPA).
+- Mascaramento de dados sensíveis nos logs via subsistema `observabilidade/mascaramento` integrado ao Logback com logging estruturado em JSON (`logstash-logback-encoder`).
+- HMAC-SHA256 para verificação de integridade de dados (`HmacService`, `HmacUtils`).
 
 ## Parcialmente Implementado
 
 - Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações SPI, STR e DICT sem implementação de produção.
 - Auditoria: captura automática via `AuditoriaListener` (JPA lifecycle callbacks) operacional; mascaramento de dados sensíveis nos eventos de auditoria não implementado.
+- Bounded contexts `pix`, `ted` e `tef`: estrutura de pacotes criada, sem implementações.
 
 ## Planejado
 
@@ -99,8 +108,8 @@ transaction-processing-api/
 │   │   │   │       ├── AuditoriaContextWriter.java
 │   │   │   │       └── AuditoriaRepository.java
 │   │   │   ├── cliente/
-│   │   │   │   ├── dominio/
-│   │   │   │   └── aplicacao/porta/repositorio/
+│   │   │   │   ├── dominio/                          (vazio — planejado)
+│   │   │   │   └── aplicacao/porta/repositorio/      (vazio — planejado)
 │   │   │   ├── compartilhado/
 │   │   │   │   ├── adaptador/
 │   │   │   │   │   └── Jackson3FormatMapper.java
@@ -109,7 +118,7 @@ transaction-processing-api/
 │   │   │   │   │   └── ProblemaDetailConstantes.java
 │   │   │   │   ├── dominio/
 │   │   │   │   │   └── ValorMonetario.java
-│   │   │   │   ├── evento/
+│   │   │   │   ├── evento/                           (vazio — planejado)
 │   │   │   │   ├── exception/
 │   │   │   │   │   ├── ApiException.java
 │   │   │   │   │   ├── BaseException.java
@@ -120,15 +129,20 @@ transaction-processing-api/
 │   │   │   │   ├── idempotencia/
 │   │   │   │   │   └── IdempotenciaService.java
 │   │   │   │   ├── seguranca/
+│   │   │   │   │   ├── HmacService.java
+│   │   │   │   │   ├── HmacUtils.java
 │   │   │   │   │   └── RoleTransacao.java
 │   │   │   │   └── util/
 │   │   │   │       ├── CalendarioStubBacenService.java
 │   │   │   │       ├── CorrelacaoUtil.java
+│   │   │   │       ├── CriptografiaConverter.java
 │   │   │   │       └── DateTimeUtil.java
 │   │   │   ├── configuracao/
-│   │   │   │   ├── docs/
-│   │   │   │   ├── kafka/
-│   │   │   │   ├── resiliencia/
+│   │   │   │   ├── docs/                             (vazio — planejado)
+│   │   │   │   ├── kafka/                            (vazio — planejado)
+│   │   │   │   ├── persistencia/
+│   │   │   │   │   └── HmacProperties.java
+│   │   │   │   ├── resiliencia/                      (vazio — planejado)
 │   │   │   │   ├── seguranca/
 │   │   │   │   │   ├── ApiAcessoNegadoHandler.java
 │   │   │   │   │   ├── ApiAutenticacaoEntryPoint.java
@@ -152,7 +166,7 @@ transaction-processing-api/
 │   │   │   │   │   └── servico/
 │   │   │   │   │       ├── LimiteService.java
 │   │   │   │   │       └── SaldoService.java
-│   │   │   │   ├── controle/
+│   │   │   │   ├── controle/                         (vazio — planejado)
 │   │   │   │   └── dominio/
 │   │   │   │       ├── Conta.java
 │   │   │   │       ├── LimiteTransacional.java
@@ -181,35 +195,49 @@ transaction-processing-api/
 │   │   │   ├── integracao/
 │   │   │   │   ├── antifraude/
 │   │   │   │   │   └── AntiFraudeStubAdapter.java
-│   │   │   │   ├── bacen/
-│   │   │   │   ├── spb/
-│   │   │   │   └── str/
+│   │   │   │   ├── bacen/                            (vazio — planejado)
+│   │   │   │   ├── spb/                              (vazio — planejado)
+│   │   │   │   └── str/                              (vazio — planejado)
 │   │   │   ├── mensageria/
-│   │   │   │   ├── consumidor/
-│   │   │   │   ├── evento/
-│   │   │   │   ├── outbox/
-│   │   │   │   └── produtor/
+│   │   │   │   ├── consumidor/                       (vazio — planejado)
+│   │   │   │   ├── evento/                           (vazio — planejado)
+│   │   │   │   ├── outbox/                           (vazio — planejado)
+│   │   │   │   └── produtor/                         (vazio — planejado)
 │   │   │   ├── observabilidade/
 │   │   │   │   ├── logging/
-│   │   │   │   ├── metrica/
-│   │   │   │   └── rastreamento/
+│   │   │   │   │   ├── LogMascaramentoConverter.java
+│   │   │   │   │   ├── MascaradoJsonProvider.java
+│   │   │   │   │   └── TipoCampoMascarado.java
+│   │   │   │   ├── mascaramento/
+│   │   │   │   │   ├── DadosSensiveisMasker.java
+│   │   │   │   │   ├── MascaraPadrao.java
+│   │   │   │   │   └── estrategia/
+│   │   │   │   │       ├── AbstractRegexMascaraStrategy.java
+│   │   │   │   │       ├── HeaderMascaradoStrategy.java
+│   │   │   │   │       ├── JsonMascaradoStrategy.java
+│   │   │   │   │       ├── MascaraStrategy.java
+│   │   │   │   │       ├── MensagemMascaradaStrategy.java
+│   │   │   │   │       ├── StacktraceMascaradoStrategy.java
+│   │   │   │   │       └── StrategyMascaramentoResolver.java
+│   │   │   │   ├── metrica/                          (vazio — planejado)
+│   │   │   │   └── rastreamento/                     (vazio — planejado)
 │   │   │   ├── pix/
-│   │   │   │   ├── aplicacao/porta/integracao/
-│   │   │   │   ├── aplicacao/servico/
-│   │   │   │   ├── controle/
-│   │   │   │   ├── dominio/
-│   │   │   │   ├── dto/
-│   │   │   │   ├── enums/
-│   │   │   │   ├── mapper/
-│   │   │   │   └── validador/
+│   │   │   │   ├── aplicacao/porta/integracao/       (vazio — planejado)
+│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
+│   │   │   │   ├── controle/                         (vazio — planejado)
+│   │   │   │   ├── dominio/                          (vazio — planejado)
+│   │   │   │   ├── dto/                              (vazio — planejado)
+│   │   │   │   ├── enums/                            (vazio — planejado)
+│   │   │   │   ├── mapper/                           (vazio — planejado)
+│   │   │   │   └── validador/                        (vazio — planejado)
 │   │   │   ├── ted/
-│   │   │   │   ├── aplicacao/porta/integracao/
-│   │   │   │   ├── aplicacao/servico/
-│   │   │   │   ├── controle/
-│   │   │   │   └── dto/
+│   │   │   │   ├── aplicacao/porta/integracao/       (vazio — planejado)
+│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
+│   │   │   │   ├── controle/                         (vazio — planejado)
+│   │   │   │   └── dto/                              (vazio — planejado)
 │   │   │   ├── tef/
-│   │   │   │   ├── aplicacao/servico/
-│   │   │   │   └── controle/
+│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
+│   │   │   │   └── controle/                         (vazio — planejado)
 │   │   │   └── transacao/
 │   │   │       ├── aplicacao/
 │   │   │       │   ├── porta/
@@ -234,7 +262,8 @@ transaction-processing-api/
 │   │   │       │   ├── StatusTransacao.java
 │   │   │       │   ├── TipoTransacao.java
 │   │   │       │   ├── Transacao.java
-│   │   │       │   └── evento/
+│   │   │       │   ├── evento/                       (vazio — planejado)
+│   │   │       │   └── vo/                           (vazio — planejado)
 │   │   │       └── estrategia/
 │   │   │           ├── PixTransacaoStrategy.java
 │   │   │           ├── StrategyResolver.java
@@ -245,12 +274,25 @@ transaction-processing-api/
 │   │       ├── application.yml
 │   │       ├── application-dev.yml
 │   │       ├── application-prod.yml
+│   │       ├── logback-spring.xml
 │   │       └── db/migration/
 │   │           ├── V1__tabelas_iniciais.sql
 │   │           └── V2__auditoria.sql
 │   └── test/
 │       └── java/com/mekylei/transactionprocessing/
-│           └── TransactionProcessingApiApplicationTests.java
+│           ├── TransactionProcessingApiApplicationTests.java
+│           ├── compartilhado/
+│           │   ├── seguranca/
+│           │   │   ├── HmacServiceTest.java
+│           │   │   └── HmacUtilsTest.java
+│           │   └── util/
+│           │       ├── CriptografiaConverterTest.java
+│           │       └── CriptografiaConverterIntegrationTest.java
+│           └── infraestrutura/
+│               ├── entidade/
+│               │   └── ContaBancariaEntity.java
+│               └── repositorio/
+│                   └── ContaBancariaTestRepository.java
 ```
 
 ## 3. Arquitetura Alvo
@@ -357,6 +399,9 @@ AuditoriaEvento
 - **Auditoria regulatória**: `AuditoriaListener` captura eventos JPA lifecycle (`@PostPersist`, `@PostUpdate`, `@PostLoad`) e registra em tabela append-only com regras PostgreSQL impedindo UPDATE e DELETE.
 - **Tratamento de erros de autenticação/autorização**: `ApiAutenticacaoEntryPoint` e `ApiAcessoNegadoHandler` retornam respostas padronizadas.
 - **Endpoints públicos**: `/actuator/health`, `/actuator/info`, `/v3/api-docs/**`, `/swagger-ui/**` e `/swagger-ui.html` acessíveis sem autenticação.
+- **Criptografia em repouso**: `CriptografiaConverter` implementado como `AttributeConverter` JPA com AES-256-GCM e IV aleatório gerado por `SecureRandom` a cada operação de escrita — campos sensíveis das entidades armazenados criptografados no banco de dados.
+- **Integridade com HMAC**: `HmacService` com HMAC-SHA256 para geração e verificação de assinaturas de integridade, com normalização de valores (`trim` + `toUpperCase`) antes do cálculo. Configurado via `HmacProperties`.
+- **Mascaramento de dados sensíveis nos logs**: subsistema `observabilidade/mascaramento` com interface `MascaraStrategy` e implementações intercambiáveis para JSON fields, headers HTTP, mensagens de log e stack traces. Integrado ao Logback via `LogMascaramentoConverter` e ao encoder JSON via `MascaradoJsonProvider` (logstash-logback-encoder).
 
 ---
 
@@ -511,11 +556,18 @@ docker exec transacao_postgres psql -U ozzy -d transacaodb -f /tmp/seed.sql
 -- -------------------------------------------------------
 -- CONTAS
 -- -------------------------------------------------------
-INSERT INTO public.conta (id, agencia, criado_em, id_cliente, numero_conta, status, tipo)
+-- CONTAS
+-- agencia: 0001
+-- 1 - número conta: 00001-9
+-- 2 - número conta: 00002-7
+-- 3 - número conta: 00003-5
+-- -------------------------------------------------------
+INSERT INTO public.conta (id, agencia, agencia_hmac, criado_em, id_cliente, numero_conta, numero_conta_hmac, status, tipo)
 VALUES
-    ('aaaaaaaa-0000-0000-0000-000000000001', '0001', NOW(), '11111111-0000-0000-0000-000000000001', '00001-9', 'ATIVA',      'CORRENTE'),
-    ('bbbbbbbb-0000-0000-0000-000000000002', '0001', NOW(), '22222222-0000-0000-0000-000000000002', '00002-7', 'ATIVA',      'CORRENTE'),
-    ('cccccccc-0000-0000-0000-000000000003', '0001', NOW(), '33333333-0000-0000-0000-000000000003', '00003-5', 'BLOQUEADA',  'CORRENTE');
+    ('aaaaaaaa-0000-0000-0000-000000000001', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d',  NOW(), '11111111-0000-0000-0000-000000000001', 'Gp9UEf+hVdymVh+gxKDVI6v9dD2n6XfOPY+duIq5rTCt2Xc=', '74e38e5e3a9e1f61d36f22e6b59c1f7b33a2db18f4d0a4d876c0a1d8a2d3f2e9',  'ATIVA',      'CORRENTE'),
+    ('bbbbbbbb-0000-0000-0000-000000000002', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d', NOW(), '22222222-0000-0000-0000-000000000002', 'cawdBLoH00mTeqODJhn9Dh3iAZfbUcbeP4VdkA7pAwATP2U=', '2dcf0d48f7a2a4bb3f59cb34d1e08c89f0cf57c65bc46a52f9b2f67a15a42a87',  'ATIVA',      'CORRENTE'),
+    ('cccccccc-0000-0000-0000-000000000003', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d', NOW(), '33333333-0000-0000-0000-000000000003', 'GY+ApqCbh1PBcfZ8OGr+x7x33X6OREvAYV+Njd2d+PuHJ3E=', '6f81db6c2ecfd0f3d0a7a3cb8f0dfd8cb4eec0b02a9e67b09cf4f4aef16cb8a3',  'BLOQUEADA',  'CORRENTE');
+
 
 -- -------------------------------------------------------
 -- SALDOS
@@ -753,6 +805,7 @@ POSTGRES_PASSWORD=keycloak
 | `postgresql`                                 | Driver JDBC PostgreSQL                 |
 | `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema     |
 | `bucket4j_jdk17-core`                        | Rate limiting via token bucket         |
+| `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)   |
 
 ---
 
@@ -772,8 +825,8 @@ POSTGRES_PASSWORD=keycloak
 
 ### 2. Segurança
 
-- [ ] Implementar `AttributeConverter` JPA para criptografia em repouso dos campos sensíveis
-- [ ] Implementar filtro de mascaramento de dados sensíveis nos logs
+- [x] Implementar `AttributeConverter` JPA para criptografia em repouso dos campos sensíveis (`CriptografiaConverter` — AES-256-GCM)
+- [x] Implementar filtro de mascaramento de dados sensíveis nos logs (`observabilidade/mascaramento` + `LogMascaramentoConverter`)
 - [ ] Configurar integração com HashiCorp Vault ou AWS Secrets Manager para gestão de segredos
 
 ### 3. Observabilidade
@@ -781,7 +834,7 @@ POSTGRES_PASSWORD=keycloak
 - [ ] Instrumentar serviços com métricas customizadas Micrometer (contadores, timers, gauges)
 - [ ] Adicionar dependência `micrometer-tracing-bridge-otel`
 - [ ] Configurar exportação de traces para Jaeger (dev) ou Grafana Tempo (prod)
-- [ ] Configurar logs estruturados em JSON para indexação (ELK / CloudWatch)
+- [x] Configurar logs estruturados em JSON (`logstash-logback-encoder` + `MascaradoJsonProvider` integrado ao Logback)
 - [ ] Configurar dashboards Grafana com alertas de SLO
 
 ### 4. Resiliência
@@ -794,6 +847,8 @@ POSTGRES_PASSWORD=keycloak
 
 ### 5. Testes
 
+- [x] Implementar testes unitários de segurança (`HmacServiceTest`, `HmacUtilsTest`, `CriptografiaConverterTest`)
+- [x] Implementar testes de integração de criptografia (`CriptografiaConverterIntegrationTest`)
 - [ ] Implementar testes unitários de domínio
 - [ ] Implementar testes unitários de serviços de aplicação
 - [ ] Implementar testes unitários de estratégias
