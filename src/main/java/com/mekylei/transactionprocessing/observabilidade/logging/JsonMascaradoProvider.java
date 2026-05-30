@@ -8,7 +8,7 @@ import net.logstash.logback.composite.AbstractJsonProvider;
 import net.logstash.logback.composite.JsonWritingUtils;
 import tools.jackson.core.JsonGenerator;
 
-public class MascaradoJsonProvider extends AbstractJsonProvider<ILoggingEvent> {
+public class JsonMascaradoProvider extends AbstractJsonProvider<ILoggingEvent> {
 
     private String fieldName;
     private TipoCampoMascarado tipo;

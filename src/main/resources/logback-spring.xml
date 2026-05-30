@@ -36,13 +36,13 @@
                     </threadName>
 
                     <provider
-                            class="com.mekylei.transactionprocessing.observabilidade.logging.MascaradoJsonProvider">
+                            class="com.mekylei.transactionprocessing.observabilidade.logging.JsonMascaradoProvider">
                         <fieldName>message</fieldName>
                         <tipo>MESSAGE</tipo>
                     </provider>
 
                     <provider
-                            class="com.mekylei.transactionprocessing.observabilidade.logging.MascaradoJsonProvider">
+                            class="com.mekylei.transactionprocessing.observabilidade.logging.JsonMascaradoProvider">
                         <fieldName>stacktrace</fieldName>
                         <tipo>STACKTRACE</tipo>
                     </provider>

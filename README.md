@@ -52,7 +52,7 @@ Ainda em desenvolvimento!
 - Correlação ponta-a-ponta: `ContextoRequisicaoFilter` com `HIGHEST_PRECEDENCE` propagando `idCorrelacao` via MDC (Mapped Diagnostic Context).
 - Criptografia em repouso: `CriptografiaConverter` como `AttributeConverter` JPA usando AES-256-GCM com IV aleatório por valor — campos sensíveis das entidades armazenados criptografados no banco.
 - Integridade com HMAC: `HmacService` com HMAC-SHA256 para geração e verificação de assinaturas de integridade de dados, configurável via `HmacProperties`.
-- Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `MascaradoJsonProvider`.
+- Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 
 ---
 
@@ -206,7 +206,7 @@ transaction-processing-api/
 │   │   │   ├── observabilidade/
 │   │   │   │   ├── logging/
 │   │   │   │   │   ├── LogMascaramentoConverter.java
-│   │   │   │   │   ├── MascaradoJsonProvider.java
+│   │   │   │   │   ├── JsonMascaradoProvider.java
 │   │   │   │   │   └── TipoCampoMascarado.java
 │   │   │   │   ├── mascaramento/
 │   │   │   │   │   ├── DadosSensiveisMasker.java
@@ -401,7 +401,7 @@ AuditoriaEvento
 - **Endpoints públicos**: `/actuator/health`, `/actuator/info`, `/v3/api-docs/**`, `/swagger-ui/**` e `/swagger-ui.html` acessíveis sem autenticação.
 - **Criptografia em repouso**: `CriptografiaConverter` implementado como `AttributeConverter` JPA com AES-256-GCM e IV aleatório gerado por `SecureRandom` a cada operação de escrita — campos sensíveis das entidades armazenados criptografados no banco de dados.
 - **Integridade com HMAC**: `HmacService` com HMAC-SHA256 para geração e verificação de assinaturas de integridade, com normalização de valores (`trim` + `toUpperCase`) antes do cálculo. Configurado via `HmacProperties`.
-- **Mascaramento de dados sensíveis nos logs**: subsistema `observabilidade/mascaramento` com interface `MascaraStrategy` e implementações intercambiáveis para JSON fields, headers HTTP, mensagens de log e stack traces. Integrado ao Logback via `LogMascaramentoConverter` e ao encoder JSON via `MascaradoJsonProvider` (logstash-logback-encoder).
+- **Mascaramento de dados sensíveis nos logs**: subsistema `observabilidade/mascaramento` com interface `MascaraStrategy` e implementações intercambiáveis para JSON fields, headers HTTP, mensagens de log e stack traces. Integrado ao Logback via `LogMascaramentoConverter` e ao encoder JSON via `JsonMascaradoProvider` (logstash-logback-encoder).
 
 ---
 
@@ -834,7 +834,7 @@ POSTGRES_PASSWORD=keycloak
 - [ ] Instrumentar serviços com métricas customizadas Micrometer (contadores, timers, gauges)
 - [ ] Adicionar dependência `micrometer-tracing-bridge-otel`
 - [ ] Configurar exportação de traces para Jaeger (dev) ou Grafana Tempo (prod)
-- [x] Configurar logs estruturados em JSON (`logstash-logback-encoder` + `MascaradoJsonProvider` integrado ao Logback)
+- [x] Configurar logs estruturados em JSON (`logstash-logback-encoder` + `JsonMascaradoProvider` integrado ao Logback)
 - [ ] Configurar dashboards Grafana com alertas de SLO
 
 ### 4. Resiliência
