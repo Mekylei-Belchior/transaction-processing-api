@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.mensageria.produtor;
 
+import com.mekylei.transactionprocessing.compartilhado.exception.KafkaPublicarException;
 import com.mekylei.transactionprocessing.configuracao.kafka.OutboxProperties;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,15 +42,16 @@ class KafkaEventoProdutorTest {
         String payloadStr = "{\"id\":\"uuid-teste\"}";
         OutboxEventoEntity evento = criarEvento(topico, chave, payloadStr);
 
+        SendResult<String, String> sendResult = mock(SendResult.class, RETURNS_DEEP_STUBS);
         when(kafkaTemplate.send(topico, chave, payloadStr))
-                .thenReturn(CompletableFuture.completedFuture(mock(SendResult.class)));
+                .thenReturn(CompletableFuture.completedFuture(sendResult));
 
         assertThatNoException().isThrownBy(() -> produtor.enviar(evento));
         verify(kafkaTemplate).send(topico, chave, payloadStr);
     }
 
     @Test
-    void deveLancarRuntimeExceptionQuandoKafkaFalha() {
+    void deveLancarKafkaPublicarExceptionComCodigoFalhaPublicarEventoQuandoBrokerFalha() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("transacoes.falhas", "chave", "{}");
         when(evento.getId()).thenReturn(idEvento);
@@ -60,15 +62,18 @@ class KafkaEventoProdutorTest {
         when(kafkaTemplate.send(any(), any(), any())).thenReturn(future);
 
         assertThatThrownBy(() -> produtor.enviar(evento))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Falha ao enviar evento para o Kafka")
-                .hasMessageContaining(idEvento.toString());
+                .isInstanceOf(KafkaPublicarException.class)
+                .hasMessageContaining("Falha ao publicar evento no Kafka")
+                .hasMessageContaining(idEvento.toString())
+                .extracting(e -> ((KafkaPublicarException) e).getCodigoErro())
+                .isEqualTo("FALHA_PUBLICAR_EVENTO");
     }
 
     @Test
-    void deveLancarRuntimeExceptionEmTimeoutDeEnvio() {
+    void deveLancarKafkaPublicarExceptionComCodigoFalhaPublicarEventoEmTimeout() {
+        UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
-        when(evento.getId()).thenReturn(UUID.randomUUID());
+        when(evento.getId()).thenReturn(idEvento);
         when(evento.getTipoEvento()).thenReturn("TransacaoIniciada");
 
         // future nunca completa — simula timeout de infraestrutura
@@ -78,12 +83,15 @@ class KafkaEventoProdutorTest {
         KafkaEventoProdutor produtorTimeout = new KafkaEventoProdutor(kafkaTemplate, propriedadesTimeout);
 
         assertThatThrownBy(() -> produtorTimeout.enviar(evento))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Falha ao enviar evento para o Kafka");
+                .isInstanceOf(KafkaPublicarException.class)
+                .hasMessageContaining("Falha ao publicar evento no Kafka")
+                .hasMessageContaining(idEvento.toString())
+                .extracting(e -> ((KafkaPublicarException) e).getCodigoErro())
+                .isEqualTo("FALHA_PUBLICAR_EVENTO");
     }
 
     @Test
-    void deveLancarRuntimeExceptionEmErroDeSend() {
+    void deveLancarKafkaPublicarExceptionComCodigoFalhaIniciarSendQuandoSendLancaExcecao() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
         when(evento.getId()).thenReturn(idEvento);
@@ -93,12 +101,15 @@ class KafkaEventoProdutorTest {
                 .thenThrow(new RuntimeException("Falha ao criar producer"));
 
         assertThatThrownBy(() -> produtor.enviar(evento))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Falha ao enviar evento para o Kafka");
+                .isInstanceOf(KafkaPublicarException.class)
+                .hasMessageContaining("Falha ao iniciar envio para o Kafka")
+                .hasMessageContaining(idEvento.toString())
+                .extracting(e -> ((KafkaPublicarException) e).getCodigoErro())
+                .isEqualTo("FALHA_INICIAR_ENVIO");
     }
 
     @Test
-    void deveIncluirIdEtipoEventoNaMensagemDeErro() {
+    void deveIncluirIdEtipoEventoNaMensagemDeErroParaFalhaDoBroker() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
         when(evento.getId()).thenReturn(idEvento);
@@ -109,9 +120,29 @@ class KafkaEventoProdutorTest {
         when(kafkaTemplate.send(any(), any(), any())).thenReturn(future);
 
         assertThatThrownBy(() -> produtor.enviar(evento))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(KafkaPublicarException.class)
                 .hasMessageContaining(idEvento.toString())
-                .hasMessageContaining("TransacaoConcluida");
+                .hasMessageContaining("TransacaoConcluida")
+                .extracting(e -> ((KafkaPublicarException) e).getCodigoErro())
+                .isEqualTo("FALHA_PUBLICAR_EVENTO");
+    }
+
+    @Test
+    void deveIncluirIdEtipoEventoNaMensagemDeErroParaFalhaDeInicioDeEnvio() {
+        UUID idEvento = UUID.randomUUID();
+        OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
+        when(evento.getId()).thenReturn(idEvento);
+        when(evento.getTipoEvento()).thenReturn("TransacaoEstornada");
+
+        when(kafkaTemplate.send(any(), any(), any()))
+                .thenThrow(new RuntimeException("producer fechado"));
+
+        assertThatThrownBy(() -> produtor.enviar(evento))
+                .isInstanceOf(KafkaPublicarException.class)
+                .hasMessageContaining(idEvento.toString())
+                .hasMessageContaining("TransacaoEstornada")
+                .extracting(e -> ((KafkaPublicarException) e).getCodigoErro())
+                .isEqualTo("FALHA_INICIAR_ENVIO");
     }
 
     private OutboxEventoEntity criarEvento(String topico, String chave, String payloadStr) {

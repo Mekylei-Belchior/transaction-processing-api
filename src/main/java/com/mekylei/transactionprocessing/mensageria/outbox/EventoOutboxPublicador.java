@@ -43,7 +43,7 @@ public class EventoOutboxPublicador {
             return;
         }
 
-        logger.info("Iniciando a publicação de {} evento(s) pendentes", eventos.size());
+        logger.info("Iniciando a publicação de {} evento(s) pendente(s)", eventos.size());
 
         for (OutboxEventoEntity evento : eventos) {
             try {
