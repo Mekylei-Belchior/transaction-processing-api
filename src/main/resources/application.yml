@@ -8,6 +8,9 @@ spring:
     ansi:
       enabled: always
 
+  jpa:
+    open-in-view: false
+
   security:
     oauth2:
       resourceserver:
@@ -19,6 +22,35 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka.lab.home:9094}
+    security:
+      protocol: SASL_SSL
+    properties:
+      sasl.mechanism: SCRAM-SHA-256
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="${KAFKA_USERNAME}"
+        password="${KAFKA_PASSWORD}";
+    ssl:
+      trust-store-location: ${KAFKA_SSL_TRUSTSTORE_LOCATION}
+      trust-store-password: ${KAFKA_SSL_TRUSTSTORE_PASSWORD}
+      trust-store-type: ${KAFKA_SSL_TRUSTSTORE_TYPE:PKCS12}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
+
 app:
   rate-limit:
     requests-per-minute: ${RATE_LIMIT_REQUISICOES_POR_MINUTO:60}
@@ -26,6 +58,24 @@ app:
     chave: ${APP_CRIPTOGRAFIA_CHAVE}
   hmac:
     chave: ${APP_HMAC_CHAVE}
+
+  eventos:
+    kafka:
+      enabled: ${EVENTOS_KAFKA_ENABLED:false}
+      dlq:
+        sufixo-topico: .DLQ
+        max-tentativas: ${EVENTOS_KAFKA_DLQ_MAX_TENTATIVAS:3}
+        intervalo-reprocessamento: ${EVENTOS_KAFKA_DLQ_INTERVALO_REPROCESSAMENTO:10s}
+    outbox:
+      lote-publicacao: ${EVENTOS_OUTBOX_LOTE_PUBLICACAO:50}
+      intervalo-publicacao-ms: ${EVENTOS_OUTBOX_INTERVALO_PUBLICACAO_MS:5000}
+      intervalo-reprocessamento: ${EVENTOS_OUTBOX_INTERVALO_REPROCESSAMENTO:30s}
+      timeout-envio-ms: ${EVENTOS_OUTBOX_TIMEOUT_ENVIO_MS:5000}
+    topicos:
+      transacoes-iniciadas: transacoes.iniciadas
+      transacoes-concluidas: transacoes.concluidas
+      transacoes-falhas: transacoes.falhas
+      transacoes-estornadas: transacoes.estornadas
 
 logging:
   pattern:

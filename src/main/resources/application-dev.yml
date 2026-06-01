@@ -8,7 +8,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -37,6 +37,9 @@ app:
   hmac:
     # Chave de desenvolvimento
     chave: ${APP_HMAC_CHAVE:xK9mP2vL8nQ5rT1wY4zB7cF3hJ6kU8aR0dG2hN5pS7vL9m}
+  eventos:
+    kafka:
+      enabled: ${EVENTOS_KAFKA_ENABLED:true}
 
 logging:
   level:
@@ -52,12 +55,12 @@ logging:
     # Exibe logs genéricos do Hibernate: abertura/fechamento de sessões, transações,
     # estatísticas, cache de primeiro nível, etc. Ajuda a monitorar o ciclo de vida da
     # sessão e o comportamento geral do ORM.
-    org.hibernate: DEBUG
+    org.hibernate: INFO
     # SQL gerado pelo Hibernate - nível DEBUG
     # Mostra exatamente as instruções SQL que o Hibernate envia ao banco de dados.
     # Muito útil para validar se as consultas estão eficientes e corretas, e para
     # detectar problemas como N+1 queries.
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
     # Parâmetros bindados nas consultas SQL - nível TRACE
     # Exibe os valores que são substituídos nos placeholders (?) das queries SQL.
     # Como contém dados sensíveis (ex: valores de transações), o nível TRACE é mais
@@ -70,6 +73,9 @@ logging:
     # Essencial para diagnosticar erros de autenticação (401) e acesso negado (403)
     # ATENÇÃO: logs contêm detalhes do token e decisões de acesso — NUNCA habilitar em produção.
     org.springframework.security: DEBUG
+
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
 
 springdoc:
   api-docs:

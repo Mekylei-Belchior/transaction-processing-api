@@ -6,10 +6,13 @@ import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.Conta
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.LimiteService;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.SaldoService;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
+import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.EventoPublicador;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
+import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoConcluidaEvento;
+import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoFalhouEvento;
 import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ public class ProcessaTransacaoService {
     private final CriaTransacaoService criaTransacaoService;
     private final StrategyResolver strategyResolver;
     private final TransacaoRepository transacaoRepository;
+    private final EventoPublicador eventoPublicador;
 
     public ProcessaTransacaoService(IdempotenciaService idempotenciaService,
                                     ContaRepository contaRepository,
@@ -40,7 +44,7 @@ public class ProcessaTransacaoService {
                                     LimiteService limiteService,
                                     CriaTransacaoService criaTransacaoService,
                                     StrategyResolver strategyResolver,
-                                    TransacaoRepository transacaoRepository) {
+                                    TransacaoRepository transacaoRepository, EventoPublicador eventoPublicador) {
         this.idempotenciaService = idempotenciaService;
         this.contaRepository = contaRepository;
         this.saldoService = saldoService;
@@ -48,6 +52,7 @@ public class ProcessaTransacaoService {
         this.criaTransacaoService = criaTransacaoService;
         this.strategyResolver = strategyResolver;
         this.transacaoRepository = transacaoRepository;
+        this.eventoPublicador = eventoPublicador;
     }
 
     @Transactional
@@ -93,9 +98,18 @@ public class ProcessaTransacaoService {
 
         // 8. Persisti o estado final da transação
         Transacao transacaoFinalizada = transacaoRepository.update(processada);
+        publicarEventoEstadoFinal(transacaoFinalizada);
 
         logger.info("Transação finalizada: id={}, status={}", transacaoFinalizada.getId(), transacaoFinalizada.getStatus());
 
         return transacaoFinalizada;
+    }
+
+    private void publicarEventoEstadoFinal(Transacao transacao) {
+        if (StatusTransacao.COMPLETADA.equals(transacao.getStatus())) {
+            eventoPublicador.publica(TransacaoConcluidaEvento.de(transacao));
+        } else if (StatusTransacao.FALHOU.equals(transacao.getStatus())) {
+            eventoPublicador.publica(TransacaoFalhouEvento.de(transacao, "Processamento recusado"));
+        }
     }
 }

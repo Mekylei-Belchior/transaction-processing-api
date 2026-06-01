@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="clr" class="org.springframework.boot.logging.logback.ColorConverter"/>
 
     <conversionRule
             conversionWord="mascarado"
-            converterClass="com.mekylei.transactionprocessing.observabilidade.logging.LogMascaramentoConverter"/>
+            class="com.mekylei.transactionprocessing.observabilidade.logging.LogMascaramentoConverter"/>
 
     <!-- ========================= -->
     <!-- Produção                  -->
