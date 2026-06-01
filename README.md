@@ -1,8 +1,8 @@
 # Transaction Processing API
 
-API de simulação de processamento de transações bancárias (PIX, TED e TEF) desenvolvida com Java 21 e Spring Boot 4.0.6. A aplicação segue os princípios de Arquitetura Hexagonal e Domain-Driven Design, com suporte a autenticação via OAuth2/JWT, controle de rate limiting, auditoria regulatória e validação de saldo e limites transacionais.
+API de simulação de processamento de transações bancárias (PIX, TED e TEF) desenvolvida com Java 21 e Spring Boot 4.0.6. A aplicação segue os princípios de Arquitetura Hexagonal e Domain-Driven Design, com suporte a autenticação via OAuth2/JWT, controle de rate limiting, auditoria regulatória, validação de saldo e limites transacionais, criptografia em repouso, integridade por HMAC e mensageria com Outbox Pattern + Kafka.
 
-Ainda em desenvolvimento!
+Estado da documentação: junho/2026.
 
 <img width="1916" height="1080" alt="Captura de tela de 2026-05-27 03-33-29" src="https://github.com/user-attachments/assets/bca23a44-771d-417c-84ef-6e20f1134512" />
 <img width="1532" height="1076" alt="Captura de tela de 2026-05-27 03-11-49" src="https://github.com/user-attachments/assets/ea1d4f58-0c08-4d8a-b5c8-2d77c1fd8190" />
@@ -21,6 +21,7 @@ Ainda em desenvolvimento!
 | Spring Boot                 | 4.0.6                  | Framework de aplicação                   |
 | Spring Security             | (gerenciado pelo Boot) | Autenticação e autorização               |
 | Spring Data JPA / Hibernate | (gerenciado pelo Boot) | Persistência                             |
+| Spring for Apache Kafka     | (gerenciado pelo Boot) | Publicação e consumo de eventos          |
 | Spring Boot Actuator        | (gerenciado pelo Boot) | Health checks e informações operacionais |
 | PostgreSQL                  | 42.7.11                | Banco de dados relacional                |
 | Flyway                      | 12.6.2                 | Versionamento de schema                  |
@@ -31,16 +32,17 @@ Ainda em desenvolvimento!
 
 ## Módulos Existentes
 
-| Módulo            | Responsabilidade                                                            |
-| ----------------- | --------------------------------------------------------------------------- |
-| `transacao`       | Processamento de PIX, TED e TEF — domínio central                           |
-| `conta`           | Domínio de conta, saldo e limite transacional                               |
-| `auditoria`       | Registro de eventos de auditoria regulatória                                |
-| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC e constantes transversais |
-| `configuracao`    | Configurações Spring: segurança, beans e filtros                            |
-| `infraestrutura`  | Adaptadores JPA e repositórios Spring Data                                  |
-| `integracao`      | Adaptadores para integrações externas (antifraude stub)                     |
-| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON      |
+| Módulo            | Responsabilidade                                                              |
+| ----------------- |-------------------------------------------------------------------------------|
+| `transacao`       | Processamento de PIX, TED e TEF — domínio central                             |
+| `conta`           | Domínio de conta, saldo e limite transacional                                 |
+| `auditoria`       | Registro de eventos de auditoria regulatória                                  |
+| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC e constantes transversais  |
+| `configuracao`    | Configurações Spring: segurança, beans e filtros                              |
+| `infraestrutura`  | Adaptadores JPA e repositórios Spring Data                                    |
+| `integracao`      | Adaptadores para integrações externas (antifraude stub)                       |
+| `mensageria`      | Outbox Pattern, publicação Kafka, consumo e monitoramento de DLQ              |
+| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON        |
 
 ## Organização do Código
 
@@ -53,6 +55,8 @@ Ainda em desenvolvimento!
 - Criptografia em repouso: `CriptografiaConverter` como `AttributeConverter` JPA usando AES-256-GCM com IV aleatório por valor — campos sensíveis das entidades armazenados criptografados no banco.
 - Integridade com HMAC: `HmacService` com HMAC-SHA256 para geração e verificação de assinaturas de integridade de dados, configurável via `HmacProperties`.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
+- Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
+- Consumo resiliente: consumidor Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ` e idempotência de consumo por `evento_processado`.
 
 ---
 
@@ -68,17 +72,19 @@ Ainda em desenvolvimento!
 - Criptografia em repouso via `CriptografiaConverter` (AES-256-GCM, `AttributeConverter` JPA).
 - Mascaramento de dados sensíveis nos logs via subsistema `observabilidade/mascaramento` integrado ao Logback com logging estruturado em JSON (`logstash-logback-encoder`).
 - HMAC-SHA256 para verificação de integridade de dados (`HmacService`, `HmacUtils`).
+- Eventos de domínio e outbox (`DominioEventoOutboxPublicador`, `OutboxEventoJpaAdapter`, `EventoOutboxPublicador`) com publicação Kafka assíncrona.
+- Consumidores Kafka iniciais (`TransacaoIniciadaKafkaConsumidor`, `DlqMonitorConsumidor`) com idempotência por `EventoProcessadoService`.
+- Configuração de Kafka + DLQ (`KafkaConfig`, `KafkaDlqProperties`, `OutboxProperties`) condicionada por `app.eventos.kafka.enabled`.
 
 ## Parcialmente Implementado
 
 - Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações SPI, STR e DICT sem implementação de produção.
 - Auditoria: captura automática via `AuditoriaListener` (JPA lifecycle callbacks) operacional; mascaramento de dados sensíveis nos eventos de auditoria não implementado.
-- Bounded contexts `pix`, `ted` e `tef`: estrutura de pacotes criada, sem implementações.
+- Consumidores de negócio por tipo de transação: consumidor de `transacoes.iniciadas` já roteia PIX/TED/TEF e mantém pontos de extensão para regras específicas de cada tipo.
 
 ## Planejado
 
 - Bounded context para `PIX`, `TED` e `TEF`.
-- Camada de eventos (Outbox Pattern, produtores e consumidores Kafka).
 - Camada de resiliência (circuit breaker, retry, bulkhead por integração).
 - Domínio de `Cliente` e `ChavePix`.
 - Integração real com SPI/BACEN, STR e DICT.
@@ -107,9 +113,6 @@ transaction-processing-api/
 │   │   │   │       ├── AuditoriaContextGateway.java
 │   │   │   │       ├── AuditoriaContextWriter.java
 │   │   │   │       └── AuditoriaRepository.java
-│   │   │   ├── cliente/
-│   │   │   │   ├── dominio/                          (vazio — planejado)
-│   │   │   │   └── aplicacao/porta/repositorio/      (vazio — planejado)
 │   │   │   ├── compartilhado/
 │   │   │   │   ├── adaptador/
 │   │   │   │   │   └── Jackson3FormatMapper.java
@@ -118,11 +121,13 @@ transaction-processing-api/
 │   │   │   │   │   └── ProblemaDetailConstantes.java
 │   │   │   │   ├── dominio/
 │   │   │   │   │   └── ValorMonetario.java
-│   │   │   │   ├── evento/                           (vazio — planejado)
+│   │   │   │   ├── evento/
+│   │   │   │   │   └── EventoDominio.java
 │   │   │   │   ├── exception/
 │   │   │   │   │   ├── ApiException.java
 │   │   │   │   │   ├── BaseException.java
 │   │   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   │   ├── KafkaPublicarException.java
 │   │   │   │   │   ├── RecursoNaoEncontradoException.java
 │   │   │   │   │   ├── RegraNegocioException.java
 │   │   │   │   │   └── SaldoInsuficienteException.java
@@ -138,11 +143,12 @@ transaction-processing-api/
 │   │   │   │       ├── CriptografiaConverter.java
 │   │   │   │       └── DateTimeUtil.java
 │   │   │   ├── configuracao/
-│   │   │   │   ├── docs/                             (vazio — planejado)
-│   │   │   │   ├── kafka/                            (vazio — planejado)
+│   │   │   │   ├── kafka/
+│   │   │   │   │   ├── KafkaConfig.java
+│   │   │   │   │   ├── KafkaDlqProperties.java
+│   │   │   │   │   └── OutboxProperties.java
 │   │   │   │   ├── persistencia/
 │   │   │   │   │   └── HmacProperties.java
-│   │   │   │   ├── resiliencia/                      (vazio — planejado)
 │   │   │   │   ├── seguranca/
 │   │   │   │   │   ├── ApiAcessoNegadoHandler.java
 │   │   │   │   │   ├── ApiAutenticacaoEntryPoint.java
@@ -151,6 +157,7 @@ transaction-processing-api/
 │   │   │   │   │   └── SecurityConfig.java
 │   │   │   │   └── spring/
 │   │   │   │       ├── bean/
+│   │   │   │       │   ├── AppConfig.java
 │   │   │   │       │   ├── HibernateJsonConfig.java
 │   │   │   │       │   └── StrategyConfig.java
 │   │   │   │       └── filter/
@@ -177,32 +184,43 @@ transaction-processing-api/
 │   │   │   │   ├── entidade/
 │   │   │   │   │   ├── AuditoriaEventoEntity.java
 │   │   │   │   │   ├── ContaEntity.java
+│   │   │   │   │   ├── EventoProcessadoEntity.java
 │   │   │   │   │   ├── LimiteTransacionalEntity.java
+│   │   │   │   │   ├── OutboxEventoEntity.java
 │   │   │   │   │   ├── SaldoEntity.java
+│   │   │   │   │   ├── StatusOutboxEvento.java
 │   │   │   │   │   └── TransacaoEntity.java
 │   │   │   │   ├── persistencia/
 │   │   │   │   │   ├── AuditoriaJpaAdapter.java
 │   │   │   │   │   ├── ContaJpaAdapter.java
 │   │   │   │   │   ├── LimiteJpaAdapter.java
+│   │   │   │   │   ├── OutboxEventoJpaAdapter.java
 │   │   │   │   │   ├── SaldoJpaAdapter.java
 │   │   │   │   │   └── TransacaoJpaAdapter.java
 │   │   │   │   └── repositorio/
 │   │   │   │       ├── AuditoriaJpaRepository.java
 │   │   │   │       ├── ContaJpaRepository.java
+│   │   │   │       ├── EventoProcessadoJpaRepository.java
 │   │   │   │       ├── LimiteJpaRepository.java
+│   │   │   │       ├── OutboxEventoJpaRepository.java
 │   │   │   │       ├── SaldoJpaRepository.java
 │   │   │   │       └── TransacaoJpaRepository.java
 │   │   │   ├── integracao/
 │   │   │   │   ├── antifraude/
 │   │   │   │   │   └── AntiFraudeStubAdapter.java
-│   │   │   │   ├── bacen/                            (vazio — planejado)
-│   │   │   │   ├── spb/                              (vazio — planejado)
-│   │   │   │   └── str/                              (vazio — planejado)
 │   │   │   ├── mensageria/
-│   │   │   │   ├── consumidor/                       (vazio — planejado)
-│   │   │   │   ├── evento/                           (vazio — planejado)
-│   │   │   │   ├── outbox/                           (vazio — planejado)
-│   │   │   │   └── produtor/                         (vazio — planejado)
+│   │   │   │   ├── consumidor/
+│   │   │   │   │   ├── DlqMonitorConsumidor.java
+│   │   │   │   │   ├── EventoProcessadoService.java
+│   │   │   │   │   └── TransacaoIniciadaKafkaConsumidor.java
+│   │   │   │   ├── evento/
+│   │   │   │   │   ├── TopicosTransacao.java
+│   │   │   │   │   └── TransacaoEventoRouter.java
+│   │   │   │   ├── outbox/
+│   │   │   │   │   ├── DominioEventoOutboxPublicador.java
+│   │   │   │   │   └── EventoOutboxPublicador.java
+│   │   │   │   └── produtor/
+│   │   │   │       └── KafkaEventoProdutor.java
 │   │   │   ├── observabilidade/
 │   │   │   │   ├── logging/
 │   │   │   │   │   ├── LogMascaramentoConverter.java
@@ -219,28 +237,11 @@ transaction-processing-api/
 │   │   │   │   │       ├── MensagemMascaradaStrategy.java
 │   │   │   │   │       ├── StacktraceMascaradoStrategy.java
 │   │   │   │   │       └── StrategyMascaramentoResolver.java
-│   │   │   │   ├── metrica/                          (vazio — planejado)
-│   │   │   │   └── rastreamento/                     (vazio — planejado)
-│   │   │   ├── pix/
-│   │   │   │   ├── aplicacao/porta/integracao/       (vazio — planejado)
-│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
-│   │   │   │   ├── controle/                         (vazio — planejado)
-│   │   │   │   ├── dominio/                          (vazio — planejado)
-│   │   │   │   ├── dto/                              (vazio — planejado)
-│   │   │   │   ├── enums/                            (vazio — planejado)
-│   │   │   │   ├── mapper/                           (vazio — planejado)
-│   │   │   │   └── validador/                        (vazio — planejado)
-│   │   │   ├── ted/
-│   │   │   │   ├── aplicacao/porta/integracao/       (vazio — planejado)
-│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
-│   │   │   │   ├── controle/                         (vazio — planejado)
-│   │   │   │   └── dto/                              (vazio — planejado)
-│   │   │   ├── tef/
-│   │   │   │   ├── aplicacao/servico/                (vazio — planejado)
-│   │   │   │   └── controle/                         (vazio — planejado)
 │   │   │   └── transacao/
 │   │   │       ├── aplicacao/
 │   │   │       │   ├── porta/
+│   │   │       │   │   ├── evento/
+│   │   │       │   │   │   └── EventoPublicador.java
 │   │   │       │   │   ├── integracao/
 │   │   │       │   │   │   ├── AntiFraudeGateway.java
 │   │   │       │   │   │   └── PixGateway.java
@@ -260,10 +261,14 @@ transaction-processing-api/
 │   │   │       │       └── TransacaoResposta.java
 │   │   │       ├── dominio/
 │   │   │       │   ├── StatusTransacao.java
+│   │   │       │   ├── TipoEventoTransacao.java
 │   │   │       │   ├── TipoTransacao.java
 │   │   │       │   ├── Transacao.java
-│   │   │       │   ├── evento/                       (vazio — planejado)
-│   │   │       │   └── vo/                           (vazio — planejado)
+│   │   │       │   └── evento/
+│   │   │       │       ├── TransacaoConcluidaEvento.java
+│   │   │       │       ├── TransacaoEstornadaEvento.java
+│   │   │       │       ├── TransacaoFalhouEvento.java
+│   │   │       │       └── TransacaoIniciadaEvento.java
 │   │   │       └── estrategia/
 │   │   │           ├── PixTransacaoStrategy.java
 │   │   │           ├── StrategyResolver.java
@@ -277,7 +282,8 @@ transaction-processing-api/
 │   │       ├── logback-spring.xml
 │   │       └── db/migration/
 │   │           ├── V1__tabelas_iniciais.sql
-│   │           └── V2__auditoria.sql
+│   │           ├── V2__auditoria.sql
+│   │           └── V3__mensageria.sql
 │   └── test/
 │       └── java/com/mekylei/transactionprocessing/
 │           ├── TransactionProcessingApiApplicationTests.java
@@ -288,11 +294,6 @@ transaction-processing-api/
 │           │   └── util/
 │           │       ├── CriptografiaConverterTest.java
 │           │       └── CriptografiaConverterIntegrationTest.java
-│           └── infraestrutura/
-│               ├── entidade/
-│               │   └── ContaBancariaEntity.java
-│               └── repositorio/
-│                   └── ContaBancariaTestRepository.java
 ```
 
 ## 3. Arquitetura Alvo
@@ -321,6 +322,7 @@ transaction-processing-api/
 │  │  5. Resolve a strategy e processa a transação                 │  │
 │  │  6. Debita saldo e atualiza limite quando COMPLETADA          │  │
 │  │  7. Persiste o estado final                                   │  │
+│  │  8. Publica evento de domínio via Outbox                      │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │  ┌────────────────────┐  ┌──────────────────┐  ┌────────────────┐   │
 │  │ ConsultaTransacao  │  │ EstornoTransacao │  │ CriaTransacao  │   │
@@ -346,15 +348,21 @@ transaction-processing-api/
 │  │ TransacaoJpaAdap.│  │  ContaJpaAdapter │  │  SaldoJpaAdapter │   │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
-│  │ LimiteJpaAdapter │  │ AuditoriaJpaAdap.│  │ AntiFraudeStubAd.│   │
+│  │ LimiteJpaAdapter │  │ AuditoriaJpaAdap.│  │ OutboxEventoJPA  │   │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+│  ┌──────────────────┐                                               │
+│  │ AntiFraudeStubAd.│                                               │
+│  └──────────────────┘                                               │
 └─────────────────────────────────┬───────────────────────────────────┘
                                   │
 ┌─────────────────────────────────▼───────────────────────────────────┐
 │                     EXTERNAL INTEGRATIONS                           │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
-│  │    PostgreSQL    │  │ OAuth2/JWT JWKS  │  │ Antifraude Stub  │   │
+│  │    PostgreSQL    │  │ OAuth2/JWT JWKS  │  │   Kafka (SSL)    │   │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+│  ┌──────────────────┐                                               │
+│  │ Antifraude Stub  │                                               │
+│  └──────────────────┘                                               │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -412,28 +420,37 @@ AuditoriaEvento
 - Java 21 (JDK)
 - Maven 3.9+ (opcional, caso não utilize o wrapper `./mvnw`)
 - PostgreSQL 16+
+- Kafka 3.9+ (necessário quando `EVENTOS_KAFKA_ENABLED=true`)
 - Authorization Server compatível com OAuth2/OIDC (ex: Keycloak) com JWKS endpoint exposto
 
 ## Variáveis de Ambiente
 
-| Variável                                 | Descrição                                      | Exemplo                                                               |
-| ---------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------- |
-| `DB_URL`                                 | URL JDBC do banco                              | `jdbc:postgresql://localhost:5432/transacaodb`                        |
-| `DB_USERNAME`                            | Usuário do banco                               | `postgres`                                                            |
-| `DB_PASSWORD`                            | Senha do banco                                 | —                                                                     |
-| `OAUTH2_JWKS_URI`                        | Endpoint JWKS do Authorization Server          | `https://keycloak.host/realms/bancario/protocol/openid-connect/certs` |
-| `OAUTH2_ISSUER_URI`                      | Issuer URI do Authorization Server             | `https://keycloak.host/realms/bancario`                               |
-| `APP_CRIPTOGRAFIA_CHAVE`                 | Chave de criptografia Base64 (AES-256)         | —                                                                     |
-| `RATE_LIMIT_REQUISICOES_POR_MINUTO`      | Limite de requisições por IP por minuto        | `60`                                                                  |
-| `ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA` | Valor máximo para aprovação automática no stub | `10000.00`                                                            |
+| Variável                                 | Descrição                                      | Exemplo                                                                |
+| ---------------------------------------- | ---------------------------------------------- |------------------------------------------------------------------------|
+| `DB_URL`                                 | URL JDBC do banco                              | `jdbc:postgresql://localhost:5432/transacaodb`                         |
+| `DB_USERNAME`                            | Usuário do banco                               | `ozzy`                                                                 |
+| `DB_PASSWORD`                            | Senha do banco                                 | `ozzy`                                                                 |
+| `OAUTH2_JWKS_URI`                        | Endpoint JWKS do Authorization Server          | `https://keycloak.host/realms/bancario/protocol/openid-connect/certs`  |
+| `OAUTH2_ISSUER_URI`                      | Issuer URI do Authorization Server             | `https://keycloak.host/realms/bancario`                                |
+| `APP_CRIPTOGRAFIA_CHAVE`                 | Chave de criptografia Base64 (AES-256)         | `MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=`                         |
+| `APP_HMAC_CHAVE`                         | Chave usada no HMAC-SHA256                     | `xK9mP2vL8nQ5rT1wY4zB7cF3hJ6kU8aR0dG2hN5pS7vL9m`                       |
+| `RATE_LIMIT_REQUISICOES_POR_MINUTO`      | Limite de requisições por IP por minuto        | `60`                                                                   |
+| `ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA` | Valor máximo para aprovação automática no stub | `10000.00`                                                             |
+| `EVENTOS_KAFKA_ENABLED`                  | Habilita publicação/consumo de eventos Kafka   | `true`                                                                 |
+| `KAFKA_BOOTSTRAP_SERVERS`                | Endereço do broker Kafka                       | `kafka.lab.home:9094`                                                  |
+| `KAFKA_USERNAME`                         | Usuário SASL/SCRAM do Kafka                    | `app-prod`                                                             |
+| `KAFKA_PASSWORD`                         | Senha SASL/SCRAM do Kafka                      | `trocar-esta-senha`                                                    |
+| `KAFKA_SSL_TRUSTSTORE_LOCATION`          | Local do truststore cliente Kafka              | `file:/caminho/kafka-client-truststore.p12`                            |
+| `KAFKA_SSL_TRUSTSTORE_PASSWORD`          | Senha do truststore cliente Kafka              | `changeit`                                                             |
+| `KAFKA_SSL_TRUSTSTORE_TYPE`              | Tipo do truststore                             | `PKCS12`                                                               |
 
 ## Execução Local
 
 ### IMPORTANTE
 
-Com o perfil `dev`, as variáveis de banco possuem valores padrão, mas normalmente são sobrescritas via variáveis de ambiente na IDE, por exemplo, ou utilizando um arquivo `.env` para build com `docker compose`.
+Com o perfil `dev`, as variáveis de banco possuem valores padrão, mas são normalmente sobrescritas via variáveis de ambiente na IDE, por exemplo, ou utilizando um arquivo `.env` para build com `docker compose`.
 
-Rodo o Keycloak em um servidor homelab e utilizo um `.env` para definir os dados de acesso ao banco dele. Este servidor possui uma unidade certificadora que, junto com o gateway (Traefik), possibilita a utilização de HTTPS entre os serviços na rede local. Dessa forma, a chave de criptografia e as URIs OAuth2 apontam para o recurso do homelab (`keycloak.lab.home`). Mais abaixo disponibilizo o script para criar os containers do Keycloak e o seu banco de dados.
+Rodo o Keycloak em um servidor homelab e utilizo um `.env` para definir os dados de acesso ao banco dele. Este servidor possui uma unidade certificadora que, junto com o gateway (Traefik), possibilita a utilização de HTTPS entre os serviços na rede local. Dessa forma, a chave de criptografia e as URIs OAuth2 apontam para o recurso do homelab (`keycloak.lab.home`). Mais abaixo disponibilizo o script para criar os containers do Keycloak e o seu banco de dados. O broker do Kafka também roda na mesma infra.
 
 É preciso configurar as `ROLES` [CLIENTE, OPERADOR, GERENTE, ADMIN, SERVICO_INTERNO] no provedor de autenticação e expô-las na claim `roles` do token.
 
@@ -454,6 +471,25 @@ APP_CRIPTOGRAFIA_CHAVE=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 RATE_LIMIT_REQUISICOES_POR_MINUTO=60
 
 ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA=10000.00
+
+APP_HMAC_CHAVE=xK9mP2vL8nQ5rT1wY4zB7cF3hJ6kU8aR0dG2hN5pS7vL9m
+
+EVENTOS_KAFKA_ENABLED=true
+KAFKA_BOOTSTRAP_SERVERS=kafka.lab.home:9094
+KAFKA_USERNAME=app-prod
+KAFKA_PASSWORD=trocar-esta-senha
+KAFKA_SSL_TRUSTSTORE_LOCATION=file:/<CAMINHO_DO_CERTIFICADO>/kafka-client-truststore.p12
+KAFKA_SSL_TRUSTSTORE_PASSWORD=changeit
+KAFKA_SSL_TRUSTSTORE_TYPE=PKCS12
+```
+
+Para execução local apontando para o broker do homelab, as variáveis mínimas complementares são:
+
+```env
+KAFKA_PASSWORD=trocar-esta-senha
+KAFKA_SSL_TRUSTSTORE_LOCATION=file:/<CAMINHO_DO_CERTIFICADO>/kafka-client-truststore.p12
+KAFKA_SSL_TRUSTSTORE_PASSWORD=changeit
+KAFKA_USERNAME=app-prod
 ```
 
 ### Rodar de forma direta
@@ -647,6 +683,8 @@ select c.id as idconta,
 ├── check-certs.sh
 ├── database
 │   └── docker-compose.yml
+├── docs
+│   └── gitlab-access-context.md
 ├── gitlab
 │   ├── backup.sh
 │   ├── config
@@ -661,6 +699,11 @@ select c.id as idconta,
 ├── k8s-states
 │   ├── myblog-dev.txt
 │   └── myblog.txt
+├── kafka
+│   ├── certs
+│   ├── docker-compose.yml
+│   ├── generate-kafka-certs.sh
+│   └── kafka_server_jaas.conf
 ├── keycloak
 │   ├── backups
 │   ├── docker-compose.yml
@@ -777,6 +820,116 @@ networks:
     external: true
 ```
 
+### docker-compose.yml (kafka no homelab)
+
+```yml
+services:
+  kafka:
+    image: ${KAFKA_IMAGE}
+    container_name: kafka
+    restart: unless-stopped
+
+    networks:
+      - infra-net
+
+    environment:
+      KAFKA_NODE_ID: ${KAFKA_NODE_ID}
+      KAFKA_PROCESS_ROLES: ${KAFKA_PROCESS_ROLES}
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_INTER_BROKER_LISTENER_NAME}
+      KAFKA_CONTROLLER_LISTENER_NAMES: ${KAFKA_CONTROLLER_LISTENER_NAMES}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_CONTROLLER_QUORUM_VOTERS: ${KAFKA_CONTROLLER_QUORUM_VOTERS}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+      KAFKA_LOG_DIRS: ${KAFKA_LOG_DIRS}
+      KAFKA_SSL_KEYSTORE_TYPE: ${KAFKA_SSL_KEYSTORE_TYPE}
+      KAFKA_SSL_KEYSTORE_FILENAME: ${KAFKA_SSL_KEYSTORE_FILENAME}
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: ${KAFKA_SSL_KEYSTORE_CREDENTIALS}
+      KAFKA_SSL_KEY_CREDENTIALS: ${KAFKA_SSL_KEY_CREDENTIALS}
+      KAFKA_SSL_TRUSTSTORE_TYPE: ${KAFKA_SSL_TRUSTSTORE_TYPE}
+      KAFKA_SSL_TRUSTSTORE_FILENAME: ${KAFKA_SSL_TRUSTSTORE_FILENAME}
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ${KAFKA_SSL_TRUSTSTORE_CREDENTIALS}
+      KAFKA_SSL_CLIENT_AUTH: ${KAFKA_SSL_CLIENT_AUTH}
+      KAFKA_SASL_ENABLED_MECHANISMS: ${KAFKA_SASL_ENABLED_MECHANISMS}
+      KAFKA_OPTS: ${KAFKA_OPTS}
+
+    volumes:
+      - ${KAFKA_DATA_VOLUME}:/var/lib/kafka/data
+      - ./certs:/etc/kafka/secrets:ro
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec 'echo > /dev/tcp/127.0.0.1/${KAFKA_HEALTHCHECK_PORT}'"]
+      interval: ${KAFKA_HEALTHCHECK_INTERVAL}
+      timeout: ${KAFKA_HEALTHCHECK_TIMEOUT}
+      retries: ${KAFKA_HEALTHCHECK_RETRIES}
+      start_period: ${KAFKA_HEALTHCHECK_START_PERIOD}
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.kafka.rule=HostSNI(`kafka.lab.home`)"
+      - "traefik.tcp.routers.kafka.entrypoints=kafkassl"
+      - "traefik.tcp.routers.kafka.tls=true"
+      - "traefik.tcp.routers.kafka.tls.passthrough=true"
+      - "traefik.tcp.services.kafka.loadbalancer.server.port=9094"
+
+volumes:
+  kafka-data:
+
+networks:
+  infra-net:
+    external: true
+```
+
+### Exemplo do .env (kafka)
+
+```env
+KAFKA_IMAGE=apache/kafka:3.9.0
+KAFKA_NODE_ID=1
+KAFKA_PROCESS_ROLES=broker,controller
+KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,SASL_SSL://0.0.0.0:9094
+KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,SASL_SSL://kafka.lab.home:9094,CONTROLLER://kafka:9093
+KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,SASL_SSL:SASL_SSL
+KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+KAFKA_LOG_DIRS=/var/lib/kafka/data
+KAFKA_DATA_VOLUME=kafka-data
+KAFKA_SSL_KEYSTORE_TYPE=PKCS12
+KAFKA_SSL_KEYSTORE_FILENAME=kafka.keystore.p12
+KAFKA_SSL_KEYSTORE_CREDENTIALS=kafka_ssl_keystore_creds
+KAFKA_SSL_KEY_CREDENTIALS=kafka_ssl_key_creds
+KAFKA_SSL_TRUSTSTORE_TYPE=PKCS12
+KAFKA_SSL_TRUSTSTORE_FILENAME=kafka.truststore.p12
+KAFKA_SSL_TRUSTSTORE_CREDENTIALS=kafka_ssl_truststore_creds
+KAFKA_SSL_CLIENT_AUTH=none
+KAFKA_SASL_ENABLED_MECHANISMS=SCRAM-SHA-256
+KAFKA_OPTS=-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+KAFKA_HEALTHCHECK_PORT=9092
+KAFKA_HEALTHCHECK_INTERVAL=15s
+KAFKA_HEALTHCHECK_TIMEOUT=10s
+KAFKA_HEALTHCHECK_RETRIES=5
+KAFKA_HEALTHCHECK_START_PERIOD=30s
+KAFKA_CERT_CN=kafka.lab.home
+KAFKA_CERT_SAN_DOCKER=kafka
+KAFKA_CERT_TTL=720h
+STEP_CA_ROOT_CERT=../step-ca/root_ca.crt
+STEP_CA_INTERMEDIATE_CERT=../step-ca/data/certs/intermediate_ca.crt
+STEP_CA_INTERMEDIATE_KEY=../step-ca/data/secrets/intermediate_ca_key
+STEP_CA_PASSWORD_FILE=../step-ca/data/secrets/password.txt
+KAFKA_SSL_SECRET=changeit
+KAFKA_SASL_USERNAME=app-prod
+KAFKA_SASL_PASSWORD=trocar-esta-senha
+```
+
 ### Exemplo do .env
 
 ```
@@ -801,6 +954,7 @@ POSTGRES_PASSWORD=keycloak
 | `spring-boot-starter-validation`             | Bean Validation (Jakarta Validation)   |
 | `spring-boot-starter-actuator`               | Health checks e endpoints operacionais |
 | `spring-boot-starter-json`                   | Serialização Jackson 3                 |
+| `spring-boot-starter-kafka`                  | Publicação e consumo de eventos Kafka  |
 | `springdoc-openapi-starter-webmvc-ui`        | Documentação OpenAPI / Swagger UI      |
 | `postgresql`                                 | Driver JDBC PostgreSQL                 |
 | `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema     |
@@ -813,15 +967,15 @@ POSTGRES_PASSWORD=keycloak
 
 ### 1. Event-Driven Architecture
 
-- [ ] Criar tabela `outbox_evento` no banco de dados
-- [ ] Implementar `OutboxEventoEntity` e adaptador JPA
-- [ ] Implementar publicador agendado (Outbox Publisher)
-- [ ] Adicionar dependência Spring Kafka ao `pom.xml`
-- [ ] Implementar produtores Kafka para eventos de domínio (`transacoes.iniciadas`, `transacoes.concluidas`, `transacoes.falhas`, `transacoes.estornadas`)
-- [ ] Implementar consumidores Kafka para PIX, TED e TEF
-- [ ] Implementar Dead Letter Queue com reprocessamento configurável
-- [ ] Implementar Domain Events: `TransacaoIniciadaEvent`, `TransacaoConcluidaEvent`, `TransacaoFalhouEvent`, `TransacaoEstornadaEvent`
-- [ ] Implementar idempotência de consumidor via tabela `evento_processado`
+- [x] Criar tabela `outbox_evento` no banco de dados
+- [x] Implementar `OutboxEventoEntity` e adaptador JPA
+- [x] Implementar publicador agendado (Outbox Publisher)
+- [x] Adicionar dependência Spring Kafka ao `pom.xml`
+- [x] Implementar produtores Kafka para eventos de domínio (`transacoes.iniciadas`, `transacoes.concluidas`, `transacoes.falhas`, `transacoes.estornadas`)
+- [ ] Implementar lógica de negócio completa nos consumidores Kafka para PIX, TED e TEF (consumidor inicial com roteamento já existe)
+- [x] Implementar Dead Letter Queue com reprocessamento configurável
+- [x] Implementar Domain Events: `TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`
+- [x] Implementar idempotência de consumidor via tabela `evento_processado`
 
 ### 2. Segurança
 
