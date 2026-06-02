@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class ContextoRequisicaoFilter extends OncePerRequestFilter {
 
     private final AuditoriaContextWriter auditoriaContextWriter;
