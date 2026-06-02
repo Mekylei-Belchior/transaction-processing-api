@@ -138,6 +138,22 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    void deveDescartarMensagemSemCampoIdAgregado() {
+        String payload = """
+                {
+                  "tipo": "PIX",
+                  "idEvento": "%s",
+                  "idCorrelacao": "%s"
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+        ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 8L, "key", payload);
+
+        consumidor.consumir(record);
+
+        verifyNoInteractions(eventoProcessadoService);
+    }
+
+    @Test
     void deveDescartarMensagemComIdEventoInvalido() {
         String payload = """
                 {
@@ -165,6 +181,23 @@ class TransacaoIniciadaKafkaConsumidorTest {
                 }
                 """.formatted(UUID.randomUUID(), UUID.randomUUID());
         ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 9L, "key", payload);
+
+        consumidor.consumir(record);
+
+        verifyNoInteractions(eventoProcessadoService);
+    }
+
+    @Test
+    void deveDescartarMensagemComIdAgregadoInvalido() {
+        String payload = """
+                {
+                  "tipo": "TEF",
+                  "idEvento": "%s",
+                  "idCorrelacao": "%s",
+                  "idAgregado": "nao-e-um-uuid"
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+        ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 10L, "key", payload);
 
         consumidor.consumir(record);
 

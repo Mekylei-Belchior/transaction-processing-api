@@ -2,6 +2,7 @@ package com.mekylei.transactionprocessing.mensageria.consumidor;
 
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -32,82 +34,105 @@ public class TransacaoIniciadaKafkaConsumidor {
             groupId = GRUPO_CONSUMIDOR
     )
     public void consumir(ConsumerRecord<String, String> record) {
-        JsonNode payload;
-
-        try {
-            payload = objectMapper.readTree(record.value());
-        } catch (Exception e) {
-            logger.error("Mensagem com JSON inválido descartada: topico={}, offset={}, partition={}",
-                    record.topic(), record.offset(), record.partition());
+        Optional<EventoRecebido> evento = extrairEventoRecebido(record);
+        if (evento.isEmpty()) {
             return;
         }
 
-        JsonNode tipoNode = payload.get("tipo");
-        if (tipoNode == null || tipoNode.isNull()) {
-            logger.error("Campo 'tipo' ausente na mensagem: topico={}, offset={}", record.topic(), record.offset());
-            return;
-        }
-
-        TipoTransacao tipo;
-        try {
-            tipo = TipoTransacao.valueOf(tipoNode.asString());
-        } catch (IllegalArgumentException e) {
-            logger.error("Tipo de transação desconhecido: tipo={}, topico={}, offset={}",
-                    tipoNode.asString(), record.topic(), record.offset());
-            return;
-        }
-
-        JsonNode idEventoNode = payload.get("idEvento");
-        JsonNode idCorrelacaoNode = payload.get("idCorrelacao");
-        if (idEventoNode == null || idCorrelacaoNode == null) {
-            logger.error("Campos obrigatórios ausentes na mensagem: topico={}, offset={}",
-                    record.topic(), record.offset());
-            return;
-        }
-
-        UUID idEvento;
-        UUID idCorrelacao;
-        try {
-            idEvento = UUID.fromString(idEventoNode.asString());
-            idCorrelacao = UUID.fromString(idCorrelacaoNode.asString());
-        } catch (IllegalArgumentException e) {
-            logger.error("UUID inválido na mensagem: topico={}, offset={}", record.topic(), record.offset());
-            return;
-        }
-
+        EventoRecebido transacaoIniciada = evento.get();
         boolean deveProcessar = eventoProcessadoService.registrarSeNaoProcessado(
-                idEvento,
-                idCorrelacao,
+                transacaoIniciada.idEvento(),
+                transacaoIniciada.idCorrelacao(),
                 GRUPO_CONSUMIDOR,
                 record.topic());
 
         if (!deveProcessar) {
-            logger.info("Evento já processado (idempotência): idEvento={}, grupo={}", idEvento, GRUPO_CONSUMIDOR);
+            logger.info("Evento já processado (idempotência): idEvento={}, grupo={}",
+                    transacaoIniciada.idEvento(), GRUPO_CONSUMIDOR);
             return;
         }
 
-        switch (tipo) {
-            case PIX -> processarPix(payload, idEvento, record);
-            case TED -> processarTed(payload, idEvento, record);
-            case TEF -> processarTef(payload, idEvento, record);
+        processar(transacaoIniciada);
+    }
+
+    private Optional<EventoRecebido> extrairEventoRecebido(ConsumerRecord<String, String> record) {
+        Optional<JsonNode> payload = lerPayload(record);
+        if (payload.isEmpty()) {
+            return Optional.empty();
+        }
+        JsonNode payloadNode = payload.get();
+
+        Optional<TipoTransacao> tipo = lerTipo(payloadNode, record);
+        if (tipo.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<UUID> idEvento = lerIdentificadorObrigatorio(payloadNode, "idEvento", record);
+        if (idEvento.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<UUID> idCorrelacao = lerIdentificadorObrigatorio(payloadNode, "idCorrelacao", record);
+        if (idCorrelacao.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<UUID> idAgregado = lerIdentificadorObrigatorio(payloadNode, "idAgregado", record);
+
+        return idAgregado.map(uuid -> new EventoRecebido(
+                tipo.get(),
+                idEvento.get(),
+                idCorrelacao.get(),
+                uuid));
+
+    }
+
+    private Optional<JsonNode> lerPayload(ConsumerRecord<String, String> record) {
+        try {
+            return Optional.of(objectMapper.readTree(record.value()));
+        } catch (Exception e) {
+            logger.error("Mensagem com JSON inválido descartada: topico={}, offset={}, partition={}",
+                    record.topic(), record.offset(), record.partition());
+            return Optional.empty();
         }
     }
 
-    private void processarPix(JsonNode payload, UUID idEvento, ConsumerRecord<String, String> record) {
-        logger.info("Transacao PIX iniciada recebida: idEvento={}, idTransacao={}",
-                idEvento, payload.get("idAgregado").asString());
-        // implementação do PIX
+    private Optional<TipoTransacao> lerTipo(@NonNull JsonNode payload, ConsumerRecord<String, String> record) {
+        JsonNode tipoNode = payload.get("tipo");
+        if (tipoNode == null || tipoNode.isNull()) {
+            logger.error("Campo 'tipo' ausente na mensagem: topico={}, offset={}", record.topic(), record.offset());
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(TipoTransacao.valueOf(tipoNode.asString()));
+        } catch (IllegalArgumentException e) {
+            logger.error("Tipo de transação desconhecido: tipo={}, topico={}, offset={}",
+                    tipoNode.asString(), record.topic(), record.offset());
+            return Optional.empty();
+        }
     }
 
-    private void processarTed(JsonNode payload, UUID idEvento, ConsumerRecord<String, String> record) {
-        logger.info("Transacao TED iniciada recebida: idEvento={}, idTransacao={}",
-                idEvento, payload.get("idAgregado").asString());
-        // implementação do TED
+    private Optional<UUID> lerIdentificadorObrigatorio(@NonNull JsonNode payload,
+                                                       String campo,
+                                                       ConsumerRecord<String, String> record) {
+        JsonNode campoNode = payload.get(campo);
+        if (campoNode == null || campoNode.isNull()) {
+            logger.error("Campo '{}' ausente na mensagem: topico={}, offset={}", campo, record.topic(), record.offset());
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(UUID.fromString(campoNode.asString()));
+        } catch (IllegalArgumentException e) {
+            logger.error("'{}' com UUID inválido: topico={}, offset={}", campo, record.topic(), record.offset());
+            return Optional.empty();
+        }
     }
 
-    private void processarTef(JsonNode payload, UUID idEvento, ConsumerRecord<String, String> record) {
-        logger.info("Transacao TEF iniciada recebida: idEvento={}, idTransacao={}",
-                idEvento, payload.get("idAgregado").asString());
-        // implementação do TEF
+    private void processar(@NonNull EventoRecebido evento) {
+        logger.info("Transacao {} iniciada recebida: idEvento={}, idTransacao={}",
+                evento.tipo(), evento.idEvento(), evento.idAgregado());
+        // implementação para PIX, TED e TEF
+    }
+
+    private record EventoRecebido(TipoTransacao tipo, UUID idEvento, UUID idCorrelacao, UUID idAgregado) {
     }
 }
