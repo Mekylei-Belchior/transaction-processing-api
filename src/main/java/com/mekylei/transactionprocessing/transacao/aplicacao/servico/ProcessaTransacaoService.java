@@ -75,28 +75,28 @@ public class ProcessaTransacaoService {
                         "CONTA_INVALIDA",
                         "A conta de origem não foi encontrada ou não está ativa: " + idContaOrigem));
 
-        // 3. Valida se há saldo disponível
+        // 3. Pré-valida saldo disponível (leitura otimista — fail-fast antes de integrações externas)
         saldoService.validaSaldo(idContaOrigem, valor);
 
         // 4. Valida o limite de transação
         limiteService.validarLimite(idContaOrigem, tipo, valor);
 
-        // 5. Criar a transação com (status PENDENTE) e persiste
+        // 5. Cria a transação (status PENDENTE) e persiste
         Transacao transacao = criaTransacaoService.cria(valor, tipo, idContaOrigem, contaDestino, idIdempotencia);
 
-        // 6. Executa a strategy específica do tipo de transação
+        // 6. Executa a strategy específica do tipo de transação — integrações externas (antifraude, SPI, STR, DICT)
         TransacaoStrategy strategy = strategyResolver.resolve(tipo);
         logger.info("Strategy selecionada: {} para transação: {}", strategy.getClass().getSimpleName(), transacao.getId());
 
         Transacao processada = strategy.processa(transacao);
 
-        // 7. Efetiva o débito e decrementa o limite somente se o processamento foi bem-sucedido
+        // 7. Efetiva o débito (lock pessimista + invariante de domínio) e decrementa o limite
         if (StatusTransacao.COMPLETADA.equals(processada.getStatus())) {
             saldoService.debitar(idContaOrigem, valor);
             limiteService.decrementarUtilizado(idContaOrigem, tipo, valor);
         }
 
-        // 8. Persisti o estado final da transação
+        // 8. Persiste o estado final da transação
         Transacao transacaoFinalizada = transacaoRepository.update(processada);
         publicarEventoEstadoFinal(transacaoFinalizada);
 
