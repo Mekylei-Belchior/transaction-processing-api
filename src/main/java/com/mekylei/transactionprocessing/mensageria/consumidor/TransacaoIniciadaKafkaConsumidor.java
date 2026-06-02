@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.mensageria.consumidor;
 
+import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoService;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.jspecify.annotations.NonNull;

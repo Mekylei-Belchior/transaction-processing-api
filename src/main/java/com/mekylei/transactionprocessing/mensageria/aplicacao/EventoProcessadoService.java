@@ -1,4 +1,4 @@
-package com.mekylei.transactionprocessing.mensageria.consumidor;
+package com.mekylei.transactionprocessing.mensageria.aplicacao;
 
 import com.mekylei.transactionprocessing.infraestrutura.entidade.EventoProcessadoEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.EventoProcessadoJpaRepository;

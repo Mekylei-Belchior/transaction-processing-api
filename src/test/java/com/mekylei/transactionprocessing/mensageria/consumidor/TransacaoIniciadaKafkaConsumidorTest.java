@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.mensageria.consumidor;
 
+import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

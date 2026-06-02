@@ -2,6 +2,7 @@ package com.mekylei.transactionprocessing.mensageria.consumidor;
 
 import com.mekylei.transactionprocessing.infraestrutura.entidade.EventoProcessadoEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.EventoProcessadoJpaRepository;
+import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
