@@ -286,14 +286,34 @@ transaction-processing-api/
 │   │           └── V3__mensageria.sql
 │   └── test/
 │       └── java/com/mekylei/transactionprocessing/
-│           ├── TransactionProcessingApiApplicationTests.java
-│           ├── compartilhado/
-│           │   ├── seguranca/
-│           │   │   ├── HmacServiceTest.java
-│           │   │   └── HmacUtilsTest.java
-│           │   └── util/
-│           │       ├── CriptografiaConverterTest.java
-│           │       └── CriptografiaConverterIntegrationTest.java
+│           ├── compartilhado
+│           │       ├── seguranca
+│           │       │       ├── HmacServiceTest.java
+│           │       │       └── HmacUtilsTest.java
+│           │       └── util
+│           │           ├── CriptografiaConverterIntegrationTest.java
+│           │           └── CriptografiaConverterTest.java
+│           ├── infraestrutura
+│           │       ├── entidade
+│           │       │       └── ContaBancariaEntity.java
+│           │       └── repositorio
+│           │           └── ContaBancariaTestRepository.java
+│           ├── mensageria
+│           │       ├── consumidor
+│           │       │       ├── DlqMonitorConsumidorTest.java
+│           │       │       ├── EventoProcessadoServiceTest.java
+│           │       │       └── TransacaoIniciadaKafkaConsumidorTest.java
+│           │       ├── evento
+│           │       │       └── TransacaoEventoRouterTest.java
+│           │       ├── outbox
+│           │       │       ├── EventoOutboxPublicadorSchedulerTest.java
+│           │       │       ├── EventoOutboxPublicadorTest.java
+│           │       │       └── OutboxEventoJpaAdapterTest.java
+│           │       └── produtor
+│           │           └── KafkaEventoProdutorTest.java
+│           └── TransactionProcessingApiApplicationTests.java
+└── resources
+    └── application-test.yml
 ```
 
 ## 3. Arquitetura Alvo
