@@ -9,6 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,8 @@ import java.util.UUID;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class ContextoRequisicaoFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContextoRequisicaoFilter.class);
 
     private final AuditoriaContextWriter auditoriaContextWriter;
 
@@ -57,8 +61,16 @@ public class ContextoRequisicaoFilter extends OncePerRequestFilter {
     }
 
     private UUID resolverCorrelacao(HttpServletRequest request) {
-        String CorrelationId = request.getHeader(HeadersHttp.CORRELACAO_HEADER);
-        return (CorrelationId != null && !CorrelationId.isBlank()) ? UUID.fromString(CorrelationId) : null;
+        String correlationId = request.getHeader(HeadersHttp.CORRELACAO_HEADER);
+        if (correlationId == null || correlationId.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(correlationId);
+        } catch (IllegalArgumentException e) {
+            logger.warn("X-Correlation-Id inválido recebido, ignorando: valor='{}'", correlationId);
+            return null;
+        }
     }
 
     private Optional<UUID> resolverIdOperador() {
