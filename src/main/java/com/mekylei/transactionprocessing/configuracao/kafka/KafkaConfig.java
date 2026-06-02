@@ -13,7 +13,7 @@ import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 @EnableKafka
-@EnableConfigurationProperties({OutboxProperties.class, KafkaDlqProperties.class})
+@EnableConfigurationProperties({OutboxProperties.class, KafkaDlqProperties.class, TopicosProperties.class})
 public class KafkaConfig {
 
     @Bean

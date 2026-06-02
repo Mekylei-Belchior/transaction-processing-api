@@ -1,6 +1,8 @@
 package com.mekylei.transactionprocessing.mensageria.evento;
 
 import com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio;
+import com.mekylei.transactionprocessing.configuracao.kafka.TopicosProperties;
+import com.mekylei.transactionprocessing.transacao.dominio.TipoEventoTransacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,35 +13,59 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TransacaoEventoRouterTest {
 
+    private static final String TRANSACOES_INICIADAS = "transacoes.iniciadas";
+    private static final String TRANSACOES_CONCLUIDAS = "transacoes.concluidas";
+    private static final String TRANSACOES_ESTORNADAS = "transacoes.estornadas";
+    private static final String TRANSACOES_FALHAS = "transacoes.falhas";
+
     private TransacaoEventoRouter router;
 
     @BeforeEach
     void setUp() {
-        router = new TransacaoEventoRouter();
+        router = new TransacaoEventoRouter(new TopicosProperties(null, null, null, null));
     }
 
     @Test
     void deveResolverTopicoParaTransacaoIniciada() {
-        EventoDominio evento = eventoComTipo("TransacaoIniciada");
-        assertThat(router.resolveTopico(evento)).isEqualTo(TopicosTransacao.TRANSACOES_INICIADAS);
+        assertThat(router.resolveTopico(TipoEventoTransacao.TRANSACAO_INICIADA))
+                .isEqualTo(TRANSACOES_INICIADAS);
     }
 
     @Test
     void deveResolverTopicoParaTransacaoConcluida() {
-        EventoDominio evento = eventoComTipo("TransacaoConcluida");
-        assertThat(router.resolveTopico(evento)).isEqualTo(TopicosTransacao.TRANSACOES_CONCLUIDAS);
+        assertThat(router.resolveTopico(TipoEventoTransacao.TRANSACAO_CONCLUIDA))
+                .isEqualTo(TRANSACOES_CONCLUIDAS);
     }
 
     @Test
     void deveResolverTopicoParaTransacaoFalhou() {
-        EventoDominio evento = eventoComTipo("TransacaoFalhou");
-        assertThat(router.resolveTopico(evento)).isEqualTo(TopicosTransacao.TRANSACOES_FALHAS);
+        assertThat(router.resolveTopico(TipoEventoTransacao.TRANSACAO_FALHOU))
+                .isEqualTo(TRANSACOES_FALHAS);
     }
 
     @Test
     void deveResolverTopicoParaTransacaoEstornada() {
-        EventoDominio evento = eventoComTipo("TransacaoEstornada");
-        assertThat(router.resolveTopico(evento)).isEqualTo(TopicosTransacao.TRANSACOES_ESTORNADAS);
+        assertThat(router.resolveTopico(TipoEventoTransacao.TRANSACAO_ESTORNADA))
+                .isEqualTo(TRANSACOES_ESTORNADAS);
+    }
+
+    @Test
+    void deveResolverTopicosConfigurados() {
+        TransacaoEventoRouter routerConfigurado = new TransacaoEventoRouter(new TopicosProperties(
+                "topico.iniciada",
+                "topico.concluida",
+                "topico.estornada",
+                "topico.falhou"
+        ));
+
+        assertThat(routerConfigurado.resolveTopico(TipoEventoTransacao.TRANSACAO_INICIADA))
+                .isEqualTo("topico.iniciada");
+        assertThat(routerConfigurado.resolveTopico(TipoEventoTransacao.TRANSACAO_CONCLUIDA))
+                .isEqualTo("topico.concluida");
+        assertThat(routerConfigurado.resolveTopico(TipoEventoTransacao.TRANSACAO_ESTORNADA))
+                .isEqualTo("topico.estornada");
+        assertThat(routerConfigurado.resolveTopico(TipoEventoTransacao.TRANSACAO_FALHOU))
+                .isEqualTo("topico.falhou");
     }
 
     @Test
@@ -76,14 +102,4 @@ class TransacaoEventoRouterTest {
                 .isEqualTo(idAgregado.toString());
     }
 
-    private EventoDominio eventoComTipo(String tipo) {
-        return new EventoDominio() {
-            @Override public UUID idEvento() { return UUID.randomUUID(); }
-            @Override public UUID idAgregado() { return UUID.randomUUID(); }
-            @Override public UUID idCorrelacao() { return UUID.randomUUID(); }
-            @Override public String tipoEvento() { return tipo; }
-            @Override public String tipoAgregado() { return "Transacao"; }
-            @Override public Instant ocorridoEm() { return Instant.now(); }
-        };
-    }
 }
