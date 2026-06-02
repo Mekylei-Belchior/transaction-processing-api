@@ -10,5 +10,7 @@ public interface LimiteRepository {
 
     Optional<LimiteTransacional> findByIdContaAndTipo(UUID id, TipoTransacao tipo);
 
+    Optional<LimiteTransacional> findByIdContaAndTipoForUpdate(UUID idConta, TipoTransacao tipo);
+
     LimiteTransacional save(LimiteTransacional limite);
 }

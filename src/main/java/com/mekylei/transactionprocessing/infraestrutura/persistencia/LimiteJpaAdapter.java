@@ -29,6 +29,7 @@ public class LimiteJpaAdapter implements LimiteRepository {
         entity.setLimiteTransacao(limite.getLimiteTransacao());
         entity.setUtilizadoHoje(limite.getUtilizadoHoje());
         entity.setDataReferencia(limite.getDataReferencia());
+        entity.setVersao(limite.getVersao());
 
         return entity;
     }
@@ -42,12 +43,18 @@ public class LimiteJpaAdapter implements LimiteRepository {
                 .limiteTransacao(entity.getLimiteTransacao())
                 .utilizadoHoje(entity.getUtilizadoHoje())
                 .dataReferencia(entity.getDataReferencia())
+                .versao(entity.getVersao())
                 .build();
     }
 
     @Override
     public Optional<LimiteTransacional> findByIdContaAndTipo(UUID id, TipoTransacao tipo) {
         return repository.findByIdContaAndTipo(id, tipo).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<LimiteTransacional> findByIdContaAndTipoForUpdate(UUID idConta, TipoTransacao tipo) {
+        return repository.findByIdContaAndTipoForUpdate(idConta, tipo).map(this::toDomain);
     }
 
     @Override

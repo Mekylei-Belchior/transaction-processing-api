@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.conta.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
+import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
@@ -22,13 +23,16 @@ public class LimiteService {
 
     @Transactional(readOnly = true)
     public void validarLimite(UUID idConta, TipoTransacao tipo, BigDecimal valor) {
-        limiteRepository.findByIdContaAndTipo(idConta, tipo)
-                .ifPresent(limite -> limite.validar(ValorMonetario.paraReal(valor)));
+        LimiteTransacional limite = limiteRepository.findByIdContaAndTipo(idConta, tipo)
+                .orElseThrow(() -> new RegraNegocioException(
+                        "LIMITE_NAO_CONFIGURADO",
+                        "Limite transacional não configurado para o tipo " + tipo + " na conta: " + idConta));
+        limite.validar(ValorMonetario.paraReal(valor));
     }
 
     @Transactional
     public void decrementarUtilizado(UUID idConta, TipoTransacao tipo, BigDecimal valor) {
-        Optional<LimiteTransacional> limiteOptional = limiteRepository.findByIdContaAndTipo(idConta, tipo);
+        Optional<LimiteTransacional> limiteOptional = limiteRepository.findByIdContaAndTipoForUpdate(idConta, tipo);
         limiteOptional.ifPresent(limite -> {
             LimiteTransacional atualizado = limite.decrementar(ValorMonetario.paraReal(valor));
             limiteRepository.save(atualizado);

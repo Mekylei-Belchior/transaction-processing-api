@@ -1,0 +1,1 @@
+alter table limite add column versao bigint not null default 0;

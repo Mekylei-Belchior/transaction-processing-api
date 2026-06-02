@@ -36,6 +36,10 @@ public class LimiteTransacionalEntity {
     @Column(name = "data_referencia")
     private LocalDate dataReferencia;
 
+    @Version
+    @Column(name = "versao")
+    private Long versao;
+
     public LimiteTransacionalEntity() {
     }
 
@@ -93,5 +97,13 @@ public class LimiteTransacionalEntity {
 
     public void setDataReferencia(LocalDate dataReferencia) {
         this.dataReferencia = dataReferencia;
+    }
+
+    public Long getVersao() {
+        return versao;
+    }
+
+    public void setVersao(Long versao) {
+        this.versao = versao;
     }
 }

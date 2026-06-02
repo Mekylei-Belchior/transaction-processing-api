@@ -17,6 +17,7 @@ public class LimiteTransacional {
     private final BigDecimal limiteTransacao;
     private final BigDecimal utilizadoHoje;
     private final LocalDate dataReferencia;
+    private final Long versao;
 
     private LimiteTransacional(Builder builder) {
         this.id = builder.id;
@@ -26,6 +27,7 @@ public class LimiteTransacional {
         this.limiteTransacao = builder.limiteTransacao;
         this.utilizadoHoje = builder.utilizadoHoje;
         this.dataReferencia = builder.dataReferencia;
+        this.versao = builder.versao;
     }
 
     public static Builder builder() {
@@ -68,6 +70,7 @@ public class LimiteTransacional {
                 .limiteTransacao(this.limiteTransacao)
                 .utilizadoHoje(this.utilizadoHoje.add(valor.valor()))
                 .dataReferencia(this.dataReferencia)
+                .versao(this.versao)
                 .build();
     }
 
@@ -99,6 +102,10 @@ public class LimiteTransacional {
         return dataReferencia;
     }
 
+    public Long getVersao() {
+        return versao;
+    }
+
     public static final class Builder {
         private UUID id;
         private UUID idConta;
@@ -107,6 +114,7 @@ public class LimiteTransacional {
         private BigDecimal limiteTransacao;
         private BigDecimal utilizadoHoje = BigDecimal.ZERO;
         private LocalDate dataReferencia;
+        private Long versao;
 
         public Builder id(UUID id) {
             this.id = id;
@@ -140,6 +148,11 @@ public class LimiteTransacional {
 
         public Builder dataReferencia(LocalDate data) {
             this.dataReferencia = data;
+            return this;
+        }
+
+        public Builder versao(Long versao) {
+            this.versao = versao;
             return this;
         }
 
