@@ -6,6 +6,7 @@ import com.mekylei.transactionprocessing.infraestrutura.entidade.StatusOutboxEve
 import com.mekylei.transactionprocessing.infraestrutura.persistencia.OutboxEventoJpaAdapter;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.OutboxEventoJpaRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -22,7 +23,36 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link OutboxEventoJpaAdapter}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link OutboxEventoJpaAdapter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code OutboxEventoJpaAdapter}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve persistir evento com status pendente.</li>
+ *     <li>Deve marcar evento como publicado.</li>
+ *     <li>Deve lançar exceção ao marcar publicado evento inexistente.</li>
+ *     <li>Deve marcar falha incrementando tentativas.</li>
+ *     <li>Deve lançar exceção ao marcar falha de evento inexistente.</li>
+ *     <li>Deve usar nome da classe como erro quando mensagem nula.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Outbox Evento Jpa Adapter")
 class OutboxEventoJpaAdapterTest {
 
     @Mock
@@ -35,6 +65,7 @@ class OutboxEventoJpaAdapterTest {
     private OutboxEventoJpaAdapter adapter;
 
     @Test
+    @DisplayName("deve persistir evento com status pendente")
     void devePersistirEventoComStatusPendente() {
         UUID idEvento = UUID.randomUUID();
         UUID idAgregado = UUID.randomUUID();
@@ -75,6 +106,7 @@ class OutboxEventoJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("deve marcar evento como publicado")
     void deveMarcarEventoComoPublicado() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity entity = new OutboxEventoEntity();
@@ -96,6 +128,7 @@ class OutboxEventoJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção ao marcar publicado evento inexistente")
     void deveLancarExcecaoAoMarcarPublicadoEventoInexistente() {
         UUID idEvento = UUID.randomUUID();
         when(repository.findById(idEvento)).thenReturn(Optional.empty());
@@ -106,6 +139,7 @@ class OutboxEventoJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("deve marcar falha incrementando tentativas")
     void deveMarcarFalhaIncrementandoTentativas() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity entity = new OutboxEventoEntity();
@@ -132,6 +166,7 @@ class OutboxEventoJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção ao marcar falha de evento inexistente")
     void deveLancarExcecaoAoMarcarFalhaDeEventoInexistente() {
         UUID idEvento = UUID.randomUUID();
         when(repository.findById(idEvento)).thenReturn(Optional.empty());
@@ -142,6 +177,7 @@ class OutboxEventoJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("deve usar nome da classe como erro quando mensagem nula")
     void deveUsarNomeDaClasseComoErroQuandoMensagemNula() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity entity = new OutboxEventoEntity();

@@ -14,6 +14,7 @@ import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoEstornadaEvento;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -29,7 +30,35 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Testes unitários para {@link EstornoTransacaoService}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link EstornoTransacaoService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code EstornoTransacaoService}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve estornar transação completada com sucesso.</li>
+ *     <li>Deve lançar exceção quando transação não encontrada.</li>
+ *     <li>Deve lançar exceção ao estornar transação pendente.</li>
+ *     <li>Deve lançar exceção ao estornar transação já estornada.</li>
+ *     <li>Deve lançar exceção ao estornar transação falhou.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Estorno Transacao Service")
 class EstornoTransacaoServiceTest {
 
     @Mock
@@ -49,6 +78,7 @@ class EstornoTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve estornar transação completada com sucesso")
     void deveEstornarTransacaoCompletadaComSucesso() {
         UUID idTransacao = UUID.randomUUID();
         BigDecimal valor = new BigDecimal("75.00");
@@ -76,6 +106,7 @@ class EstornoTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção quando transação não encontrada")
     void deveLancarExcecaoQuandoTransacaoNaoEncontrada() {
         UUID idTransacao = UUID.randomUUID();
         when(transacaoRepository.findById(idTransacao)).thenReturn(Optional.empty());
@@ -87,16 +118,19 @@ class EstornoTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção ao estornar transação pendente")
     void deveLancarExcecaoAoEstornarTransacaoPendente() {
         deveLancarExcecaoAoEstornarTransacaoComStatus(StatusTransacao.PENDENTE);
     }
 
     @Test
+    @DisplayName("deve lançar exceção ao estornar transação já estornada")
     void deveLancarExcecaoAoEstornarTransacaoJaEstornada() {
         deveLancarExcecaoAoEstornarTransacaoComStatus(StatusTransacao.ESTORNADA);
     }
 
     @Test
+    @DisplayName("deve lançar exceção ao estornar transação falhou")
     void deveLancarExcecaoAoEstornarTransacaoFalhou() {
         deveLancarExcecaoAoEstornarTransacaoComStatus(StatusTransacao.FALHOU);
     }

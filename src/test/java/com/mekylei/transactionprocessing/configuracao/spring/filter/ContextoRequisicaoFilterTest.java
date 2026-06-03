@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -27,7 +28,37 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
+/**
+ * Testes unitários para {@link ContextoRequisicaoFilter}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link ContextoRequisicaoFilter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code ContextoRequisicaoFilter}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve gerar novo ID correlação quando header ausente.</li>
+ *     <li>Deve usar ID correlação do header quando presente.</li>
+ *     <li>Deve ignorar ID correlação inválido e gerar novo.</li>
+ *     <li>Deve limpar correlação após requisição.</li>
+ *     <li>Deve extrair IP do X-Forwarded-For quando presente.</li>
+ *     <li>Deve usar remote addr quando X-Forwarded-For ausente.</li>
+ *     <li>Deve propagar exceção do filter chain e limpar correlação.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Contexto Requisicao Filter")
 class ContextoRequisicaoFilterTest {
 
     @Mock
@@ -54,6 +85,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve gerar novo ID correlação quando header ausente")
     void deveGerarNovoIdCorrelacaoQuandoHeaderAusente() throws ServletException, IOException {
         AtomicReference<UUID> idDuranteFiltro = capturarCorrelacaoDuranteFilterChain();
 
@@ -63,6 +95,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve usar ID correlação do header quando presente")
     void deveUsarIdCorrelacaoDoHeaderQuandoPresente() throws ServletException, IOException {
         UUID idCorrelacao = UUID.randomUUID();
         request.addHeader(HeadersHttp.CORRELACAO_HEADER, idCorrelacao.toString());
@@ -74,6 +107,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve ignorar ID correlação inválido e gerar novo")
     void deveIgnorarIdCorrelacaoInvalidoEGerarNovo() throws ServletException, IOException {
         request.addHeader(HeadersHttp.CORRELACAO_HEADER, "nao-e-uuid");
         AtomicReference<UUID> idDuranteFiltro = capturarCorrelacaoDuranteFilterChain();
@@ -84,6 +118,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve limpar correlação após requisição")
     void deveLimparCorrelacaoAposRequisicao() throws ServletException, IOException {
         filter.doFilter(request, response, filterChain);
 
@@ -91,6 +126,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve extrair IP do X-Forwarded-For quando presente")
     void deveExtrairIpDoXForwardedForQuandoPresente() throws ServletException, IOException {
         request.addHeader(HeadersHttp.IP_ORIGEM_HEADER, "10.0.0.1, 192.168.0.1");
 
@@ -102,6 +138,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve usar remote addr quando X-Forwarded-For ausente")
     void deveUsarRemoteAddrQuandoXForwardedForAusente() throws ServletException, IOException {
         request.setRemoteAddr("172.16.0.10");
 
@@ -113,6 +150,7 @@ class ContextoRequisicaoFilterTest {
     }
 
     @Test
+    @DisplayName("deve propagar exceção do filter chain e limpar correlação")
     void devePropagamentoDoFilterChainMesmoSeLancarExcecao() throws ServletException, IOException {
         doThrow(new ServletException("falha no chain"))
                 .when(filterChain)

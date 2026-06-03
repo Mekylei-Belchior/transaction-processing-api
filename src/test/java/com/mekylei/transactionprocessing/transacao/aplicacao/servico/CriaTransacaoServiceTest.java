@@ -10,6 +10,7 @@ import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoIniciadaEvento;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -23,7 +24,33 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Testes unitários para {@link CriaTransacaoService}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link CriaTransacaoService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code CriaTransacaoService}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve salvar transação na repository e retornar transação salva.</li>
+ *     <li>Deve publicar evento transação iniciada após persistir.</li>
+ *     <li>Deve criar transação com todos os campos preenchidos.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Cria Transacao Service")
 class CriaTransacaoServiceTest {
 
     @Mock
@@ -40,6 +67,7 @@ class CriaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve salvar transação na repository e retornar transação salva")
     void deveSalvarTransacaoNaRepositoryERetornarTransacaoSalva() {
         BigDecimal valor = new BigDecimal("100.00");
         UUID idContaOrigem = UUID.randomUUID();
@@ -57,6 +85,7 @@ class CriaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve publicar evento transação iniciada após persistir")
     void devePublicarEventoTransacaoIniciadaAposPersistir() {
         BigDecimal valor = new BigDecimal("100.00");
         UUID idContaOrigem = UUID.randomUUID();
@@ -74,6 +103,7 @@ class CriaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve criar transação com todos os campos preenchidos")
     void deveCriarTransacaoComTodosOsCamposPreenchidos() {
         BigDecimal valor = new BigDecimal("100.00");
         UUID idContaOrigem = UUID.randomUUID();

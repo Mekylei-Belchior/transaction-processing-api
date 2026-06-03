@@ -11,20 +11,36 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Testes unitários para HmacService.
+ * Testes unitários para {@link HmacService}.
  *
- * HmacService é responsável por gerar os blind indexes armazenados em
- * numeroContaHmac e agenciaHmac na tabela conta. Esses campos permitem
- * que ContaJpaAdapter execute buscas exatas por numero de conta sem
- * precisar descriptografar todas as linhas ou expor o valor em texto claro.
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link HmacService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code HmacService}.</li>
+ * </ul>
  *
- * Comportamentos críticos validados:
- *  - Retorno null para entradas nulas ou em branco (não gera índice inválido).
- *  - Normalização (trim + uppercase) garante que "0001", "  0001  " e "0001"
- *    maiúsculo produzam o mesmo HMAC, evitando duplicatas nos índices.
- *  - Determinismo: o mesmo valor sempre produz o mesmo HMAC para a mesma chave.
- *  - Isolamento de chaves: rotação de chave invalida todos os blind indexes
- *    anteriores (HMACs distintos por chave).
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve retornar null para valor null (sem índice inválido no banco).</li>
+ *     <li>Deve retornar hex lowercase de 64 caracteres (HMAC-SHA256 = 32 bytes).</li>
+ *     <li>Deve ser determinístico: mesmo valor sempre produz o mesmo blind index.</li>
+ *     <li>Deve normalizar com trim+uppercase: variações de espaço e caixa geram o mesmo HMAC.</li>
+ *     <li>Deve gerar mesmo blind index para numeroConta com e sem espaços laterais.</li>
+ *     <li>Deve gerar mesmo blind index para agencia com e sem espaços laterais.</li>
+ *     <li>Valores distintos de numeroConta devem gerar HMACs distintos (sem colisão).</li>
+ *     <li>Valores distintos de agencia devem gerar HMACs distintos (sem colisão).</li>
+ *     <li>HMAC não deve expor o valor original (propriedade unidirecional).</li>
+ *     <li>Rotação de chave deve produzir HMACs distintos (blind indexes incompatíveis entre versões).</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
  */
 @DisplayName("HmacService")
 class HmacServiceTest {

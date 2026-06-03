@@ -4,6 +4,7 @@ import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoSe
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,7 +15,48 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link TransacaoIniciadaKafkaConsumidor}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link TransacaoIniciadaKafkaConsumidor} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code TransacaoIniciadaKafkaConsumidor}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve descartar mensagem com JSON inválido.</li>
+ *     <li>Deve descartar mensagem com payload nulo.</li>
+ *     <li>Deve descartar mensagem com payload JSON vazio.</li>
+ *     <li>Deve descartar mensagem sem campo tipo.</li>
+ *     <li>Deve descartar mensagem com campo tipo nulo.</li>
+ *     <li>Deve descartar mensagem com tipo desconhecido.</li>
+ *     <li>Deve descartar mensagem sem campo ID evento.</li>
+ *     <li>Deve descartar mensagem sem campo ID correlação.</li>
+ *     <li>Deve descartar mensagem sem campo ID agregado.</li>
+ *     <li>Deve descartar mensagem com ID evento inválido.</li>
+ *     <li>Deve descartar mensagem com ID correlação inválido.</li>
+ *     <li>Deve descartar mensagem com ID agregado inválido.</li>
+ *     <li>Deve descartar mensagem já processada.</li>
+ *     <li>Deve solicitar registro de idempotência antes de processar.</li>
+ *     <li>Deve processar mensagem Pix válida.</li>
+ *     <li>Deve processar mensagem TED válida.</li>
+ *     <li>Deve processar mensagem TEF válida.</li>
+ *     <li>Deve passar tópico correto ao serviço de idempotência.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Transacao Iniciada Kafka Consumidor")
 class TransacaoIniciadaKafkaConsumidorTest {
 
     private static final String TOPICO = "transacoes.iniciadas";
@@ -31,6 +73,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com JSON inválido")
     void deveDescartarMensagemComJsonInvalido() {
         ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 0L, "key", "nao-e-json{{{");
 
@@ -40,6 +83,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com payload nulo")
     void deveDescartarMensagemComPayloadNulo() {
         ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 1L, "key", null);
 
@@ -49,6 +93,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com payload JSON vazio")
     void deveDescartarMensagemComPayloadJsonVazio() {
         ConsumerRecord<String, String> record = new ConsumerRecord<>(TOPICO, 0, 2L, "key", "{}");
 
@@ -58,6 +103,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem sem campo tipo")
     void deveDescartarMensagemSemCampoTipo() {
         String payload = """
                 {
@@ -74,6 +120,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com campo tipo nulo")
     void deveDescartarMensagemComCampoTipoNulo() {
         String payload = """
                 {
@@ -90,6 +137,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com tipo desconhecido")
     void deveDescartarMensagemComTipoDesconhecido() {
         String payload = """
                 {
@@ -107,6 +155,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem sem campo ID evento")
     void deveDescartarMensagemSemCampoIdEvento() {
         String payload = """
                 {
@@ -123,6 +172,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem sem campo ID correlação")
     void deveDescartarMensagemSemCampoIdCorrelacao() {
         String payload = """
                 {
@@ -139,6 +189,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem sem campo ID agregado")
     void deveDescartarMensagemSemCampoIdAgregado() {
         String payload = """
                 {
@@ -155,6 +206,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com ID evento inválido")
     void deveDescartarMensagemComIdEventoInvalido() {
         String payload = """
                 {
@@ -172,6 +224,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com ID correlação inválido")
     void deveDescartarMensagemComIdCorrelacaoInvalido() {
         String payload = """
                 {
@@ -189,6 +242,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem com ID agregado inválido")
     void deveDescartarMensagemComIdAgregadoInvalido() {
         String payload = """
                 {
@@ -206,6 +260,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve descartar mensagem já processada")
     void deveDescartarMensagemJaProcessada() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
@@ -221,6 +276,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve solicitar registro de idempotência antes de processar")
     void deveSolicitarRegistroDeIdempotenciaAntesDeProcessar() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
@@ -237,6 +293,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve processar mensagem Pix válida")
     void deveProcessarMensagemPixValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
@@ -251,6 +308,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve processar mensagem TED válida")
     void deveProcessarMensagemTedValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
@@ -265,6 +323,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve processar mensagem TEF válida")
     void deveProcessarMensagemTefValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
@@ -279,6 +338,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     @Test
+    @DisplayName("deve passar tópico correto ao serviço de idempotência")
     void devePassarTopicoCorretoAoServicoDeIdempotencia() {
         String topicoAlternativo = "transacoes.iniciadas.alt";
         UUID idEvento = UUID.randomUUID();

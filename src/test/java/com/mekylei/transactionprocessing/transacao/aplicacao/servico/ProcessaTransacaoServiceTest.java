@@ -18,6 +18,7 @@ import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -36,7 +37,36 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+/**
+ * Testes unitários para {@link ProcessaTransacaoService}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link ProcessaTransacaoService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code ProcessaTransacaoService}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve validar saldo e debitar quando transação concluida.</li>
+ *     <li>Deve retornar transação existente quando idempotência já registrada.</li>
+ *     <li>Deve lançar exceção quando conta não encontrada.</li>
+ *     <li>Deve lançar exceção quando conta está bloqueada.</li>
+ *     <li>Deve não debitar saldo quando transação falhou.</li>
+ *     <li>Deve publicar evento após transação concluida.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Processa Transacao Service")
 class ProcessaTransacaoServiceTest {
 
     @Mock
@@ -85,6 +115,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve validar saldo e debitar quando transação concluida")
     void deveValidarSaldoEDebitarQuandoTransacaoConcluida() {
         BigDecimal valor = new BigDecimal("50.00");
         String contaDestino = "email@email.com";
@@ -107,6 +138,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve retornar transação existente quando idempotência já registrada")
     void deveRetornarTransacaoExistenteQuandoIdempotenciaJaRegistrada() {
         BigDecimal valor = new BigDecimal("50.00");
         String contaDestino = "email@email.com";
@@ -123,6 +155,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção quando conta não encontrada")
     void deveLancarExcecaoQuandoContaNaoEncontrada() {
         BigDecimal valor = new BigDecimal("50.00");
         UUID idIdempotencia = UUID.randomUUID();
@@ -140,6 +173,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção quando conta está bloqueada")
     void deveLancarExcecaoQuandoContaEstaBloqueada() {
         BigDecimal valor = new BigDecimal("50.00");
         UUID idIdempotencia = UUID.randomUUID();
@@ -157,6 +191,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve não debitar saldo quando transação falhou")
     void deveNaoDebitarSaldoQuandoTransacaoFalhou() {
         BigDecimal valor = new BigDecimal("50.00");
         String contaDestino = "email@email.com";
@@ -178,6 +213,7 @@ class ProcessaTransacaoServiceTest {
     }
 
     @Test
+    @DisplayName("deve publicar evento após transação concluida")
     void devePublicarEventoAposTransacaoConcluida() {
         BigDecimal valor = new BigDecimal("50.00");
         String contaDestino = "email@email.com";

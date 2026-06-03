@@ -5,6 +5,7 @@ import com.mekylei.transactionprocessing.infraestrutura.persistencia.OutboxEvent
 import com.mekylei.transactionprocessing.mensageria.evento.TransacaoEventoRouter;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoEventoTransacao;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -14,7 +15,33 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link EventoOutboxPublicador}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link EventoOutboxPublicador} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code EventoOutboxPublicador}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve delegar persistência ao adapter com tópico e chave resolvidos.</li>
+ *     <li>Deve chamar resolve tópico e resolve chave para cada evento.</li>
+ *     <li>Deve propaga tópicos diferentes.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Evento Outbox Publicador")
 class EventoOutboxPublicadorTest {
 
     private static final String TRANSACOES_INICIADAS = "transacoes.iniciadas";
@@ -31,6 +58,7 @@ class EventoOutboxPublicadorTest {
     private DominioEventoOutboxPublicador publicador;
 
     @Test
+    @DisplayName("deve delegar persistência ao adapter com tópico e chave resolvidos")
     void deveDelegarPersistenciaAoAdapterComTopicoEChaveResolvidos() {
         EventoDominio evento = mock(EventoDominio.class);
         String topicoEsperado = TRANSACOES_INICIADAS;
@@ -47,6 +75,7 @@ class EventoOutboxPublicadorTest {
     }
 
     @Test
+    @DisplayName("deve chamar resolve tópico e resolve chave para cada evento")
     void deveChamarResolveTopicoEResolveChaveParaCadaEvento() {
         EventoDominio evento = mock(EventoDominio.class);
         when(evento.tipoEvento()).thenReturn(TipoEventoTransacao.TRANSACAO_CONCLUIDA.tipoEvento());
@@ -60,6 +89,7 @@ class EventoOutboxPublicadorTest {
     }
 
     @Test
+    @DisplayName("deve propaga tópicos diferentes")
     void devePropagaTopicosDiferentes() {
         EventoDominio eventoFalha = mock(EventoDominio.class);
         String chave = UUID.randomUUID().toString();

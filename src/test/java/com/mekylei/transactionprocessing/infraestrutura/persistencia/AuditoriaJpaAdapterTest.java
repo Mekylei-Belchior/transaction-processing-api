@@ -6,6 +6,7 @@ import com.mekylei.transactionprocessing.infraestrutura.entidade.AuditoriaEvento
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.AuditoriaJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -19,11 +20,36 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Testes unitários para {@link AuditoriaJpaAdapter}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link AuditoriaJpaAdapter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code AuditoriaJpaAdapter}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Salvar deve persistir evento de auditoria.</li>
+ *     <li>Salvar deve ser append only.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @Import(AuditoriaJpaAdapter.class)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
+@DisplayName("Auditoria Jpa Adapter")
 class AuditoriaJpaAdapterTest {
 
     @Autowired
@@ -38,6 +64,7 @@ class AuditoriaJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("salvar deve persistir evento de auditoria")
     void salvar_devePersistirEventoDeAuditoria() {
         UUID idOperador = UUID.randomUUID();
         UUID idRecurso = UUID.randomUUID();
@@ -61,6 +88,7 @@ class AuditoriaJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("salvar deve ser append only")
     void salvar_deveSerAppendOnly() {
         UUID idRecurso = UUID.randomUUID();
         adapter.registrar(AuditoriaEvento.simples(

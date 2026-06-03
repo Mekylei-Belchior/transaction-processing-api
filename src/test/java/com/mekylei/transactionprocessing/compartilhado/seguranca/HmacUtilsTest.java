@@ -8,18 +8,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Testes unitários para HmacUtils.
+ * Testes unitários para {@link HmacUtils}.
  *
- * HmacUtils é um utilitário estático que gera um HMAC-SHA256 a partir de um valor e uma chave,
- * retornando o resultado como hex lowercase de 64 caracteres.
- * É usado internamente por HmacService para calcular os blind indexes
- * (numeroContaHmac, agenciaHmac) que permitem buscas determinísticas sem expor
- * os dados sensíveis em texto claro no banco.
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link HmacUtils} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code HmacUtils}.</li>
+ * </ul>
  *
- * Por que HMAC e não hash simples?
- *  - HMAC utiliza uma chave secreta: sem ela, mesmo tendo o hash é impossível reverter ou
- *    verificar por força bruta em tabelas rainbow.
- *  - Garante autenticidade: qualquer alteração no valor ou na chave produz HMAC diferente.
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve retornar hex lowercase de 64 caracteres (SHA-256 = 32 bytes = 64 hex).</li>
+ *     <li>Deve ser determinístico: mesmas entradas sempre produzem o mesmo HMAC.</li>
+ *     <li>Chave diferente deve produzir HMAC distinto para o mesmo valor.</li>
+ *     <li>Valor diferente deve produzir HMAC distinto (efeito avalanche).</li>
+ *     <li>Deve suportar string vazia como valor e retornar HMAC de 64 chars.</li>
+ *     <li>HMAC não deve conter o valor original (propriedade unidirecional).</li>
+ *     <li>Deve lançar IllegalStateException para valor null.</li>
+ *     <li>Deve lançar IllegalStateException para chave null.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
  */
 @DisplayName("HmacUtils")
 class HmacUtilsTest {

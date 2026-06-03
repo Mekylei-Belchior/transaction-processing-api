@@ -13,6 +13,34 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Testes unitários para {@link Saldo}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link Saldo} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code Saldo}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve retornar nova instância com disponível reduzido quando valor menor que disponível.</li>
+ *     <li>Deve retornar nova instância com disponível zero quando valor igual ao disponível.</li>
+ *     <li>Deve lançar SaldoInsuficienteException quando valor maior que disponível.</li>
+ *     <li>Deve manter original imutável quando debitar.</li>
+ *     <li>Deve retornar nova instância com disponível incrementado quando creditar.</li>
+ *     <li>Deve manter original imutável quando creditar.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @DisplayName("Saldo")
 class SaldoTest {
 

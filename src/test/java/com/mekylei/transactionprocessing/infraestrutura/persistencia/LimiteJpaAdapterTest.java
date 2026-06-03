@@ -3,6 +3,7 @@ package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -15,16 +16,43 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Testes unitários para {@link LimiteJpaAdapter}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link LimiteJpaAdapter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code LimiteJpaAdapter}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>FindByIdContaAndTipo deve retornar limite correto.</li>
+ *     <li>FindByIdContaAndTipoForUpdate deve retornar limite.</li>
+ *     <li>Save deve atualizar limite existente.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @Import(LimiteJpaAdapter.class)
+@DisplayName("Limite Jpa Adapter")
 class LimiteJpaAdapterTest {
 
     @Autowired
     private LimiteJpaAdapter adapter;
 
     @Test
+    @DisplayName("findByIdContaAndTipo deve retornar limite correto")
     void findByIdContaAndTipo_deveRetornarLimiteCorreto() {
         UUID idConta = UUID.randomUUID();
         LimiteTransacional pix = adapter.save(novoLimite(idConta, TipoTransacao.PIX));
@@ -38,6 +66,7 @@ class LimiteJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("findByIdContaAndTipoForUpdate deve retornar limite")
     void findByIdContaAndTipoForUpdate_deveRetornarLimite() {
         LimiteTransacional salvo = adapter.save(novoLimite(UUID.randomUUID(), TipoTransacao.TEF));
 
@@ -50,6 +79,7 @@ class LimiteJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("save deve atualizar limite existente")
     void save_deveAtualizarLimiteExistente() {
         LimiteTransacional salvo = adapter.save(novoLimite(UUID.randomUUID(), TipoTransacao.PIX));
         LimiteTransacional alterado = LimiteTransacional.builder()

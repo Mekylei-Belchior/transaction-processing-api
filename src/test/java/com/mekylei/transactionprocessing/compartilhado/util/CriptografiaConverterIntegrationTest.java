@@ -23,22 +23,41 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
 /**
- * Testes de integração para CriptografiaConverter com JPA/Hibernate real.
+ * Testes unitários para {@link CriptografiaConverter}.
  *
- * Objetivo: validar que o converter atua corretamente na camada de persistência —
- * que dados são efetivamente criptografados antes de serem gravados no banco e
- * transparentemente descriptografados ao serem lidos pela entidade JPA.
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link CriptografiaConverter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code CriptografiaConverter}.</li>
+ * </ul>
  *
- * Configuração:
- *  - @DataJpaTest: contexto JPA restrito sem beans de serviço ou controller.
- *  - @AutoConfigureTestDatabase(replace = Replace.NONE): utiliza o datasource H2
- *    configurado em application-test.yml com MODE=PostgreSQL para compatibilidade
- *    com columnDefinition "jsonb" presente em outras entidades do projeto.
- *  - @Import(CriptografiaConverter.class): torna o converter disponível como
- *    bean Spring no contexto JPA de teste, necessário porque @DataJpaTest não
- *    carrega @Component genéricos automaticamente.
- *  - JdbcTemplate: consultas nativas para inspecionar o valor raw da coluna e
- *    confirmar que o plaintext jamais é persistido em texto claro.
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve salvar a entidade sem erros e retornar ID gerado.</li>
+ *     <li>Valor raw na coluna do banco NÃO deve conter o plaintext de numeroConta.</li>
+ *     <li>Valor raw na coluna do banco NÃO deve conter o plaintext de titular.</li>
+ *     <li>Valor raw armazenado deve ser um Base64 válido (formato criptografado esperado).</li>
+ *     <li>Payload raw deve ter tamanho mínimo de IV + ciphertext + tag GCM em Base64.</li>
+ *     <li>Deve retornar numeroConta descriptografado ao buscar por ID.</li>
+ *     <li>Deve retornar titular descriptografado ao buscar por ID.</li>
+ *     <li>FindById deve retornar Optional vazio para ID inexistente.</li>
+ *     <li>FindAll deve retornar todas as entidades com campos descriptografados.</li>
+ *     <li>Deve criptografar o novo valor de numeroConta após update.</li>
+ *     <li>Deve retornar novo valor descriptografado após update e reload.</li>
+ *     <li>Criptografias antes e após update devem ser distintas (novo IV a cada operação).</li>
+ *     <li>Deve suportar update para valor com caracteres especiais e acentos.</li>
+ *     <li>Valor raw no banco e valor via JPA devem ser sempre distintos.</li>
+ *     <li>Dois saves do mesmo plaintext devem gerar valores raw distintos no banco.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)

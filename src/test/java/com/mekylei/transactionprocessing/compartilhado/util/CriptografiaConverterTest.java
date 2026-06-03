@@ -12,20 +12,53 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Testes unitários para CriptografiaConverter.
+ * Testes unitários para {@link CriptografiaConverter}.
  *
- * Objetivo: validar toda a lógica de criptografia AES-256-GCM sem contexto Spring.
- * Cada cenário é construído diretamente via construtor, garantindo isolamento total
- * e execução rápida sem overhead de infraestrutura.
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link CriptografiaConverter} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code CriptografiaConverter}.</li>
+ * </ul>
  *
- * Por que AES/GCM exige esses cenários?
- *  - IV randômico (nonce): reutilizar IV com a mesma chave em GCM rompe a segurança
- *    catastroficamente; o teste garante que cada criptografia gera IV diferente.
- *  - Authentication tag: GCM fornece criptografia autenticada (AEAD); qualquer
- *    adulteração no ciphertext ou no IV causa falha na verificação da tag — proteção
- *    crítica contra ataques de bit-flipping em dados bancários.
- *  - Isolamento de chaves: dados cifrados com uma chave não podem ser decifrados por
- *    outra; fundamental para rotação segura de chaves em produção.
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve aceitar chave de exatamente 32 bytes (AES-256).</li>
+ *     <li>Deve lançar IllegalArgumentException para chave de 16 bytes (AES-128 não permitido).</li>
+ *     <li>Deve lançar IllegalArgumentException para chave de 64 bytes.</li>
+ *     <li>Deve lançar exceção para Base64 inválido no construtor.</li>
+ *     <li>Deve lançar IllegalArgumentException para chave de 1 byte.</li>
+ *     <li>Deve retornar null quando plaintext é null.</li>
+ *     <li>Deve produzir saída Base64 bem formada.</li>
+ *     <li>Deve gerar criptografias distintas para o mesmo plaintext (IV randômico por chamada).</li>
+ *     <li>Texto criptografado não deve conter o plaintext (segurança semântica).</li>
+ *     <li>Payload deve ter tamanho mínimo de IV (12) + plaintext + tag GCM (16) codificados em Base64.</li>
+ *     <li>Deve criptografar string vazia e produzir payload não nulo.</li>
+ *     <li>Deve suportar caracteres com acentos (UTF-8 Latin Extended).</li>
+ *     <li>Deve suportar emojis (UTF-8 supplementary plane, 4 bytes por caractere).</li>
+ *     <li>Deve suportar caracteres especiais e símbolos ASCII.</li>
+ *     <li>Deve criptografar strings longas (10.000 caracteres).</li>
+ *     <li>Payload codificado deve ser maior que o plaintext original.</li>
+ *     <li>Deve retornar null quando encrypted é null.</li>
+ *     <li>Deve descriptografar valor previamente criptografado corretamente.</li>
+ *     <li>Deve lançar IllegalStateException para Base64 inválido.</li>
+ *     <li>Deve lançar IllegalStateException para payload adulterado (falha GCM authentication tag).</li>
+ *     <li>Deve lançar IllegalStateException ao decifrar com chave diferente da usada na criptografia.</li>
+ *     <li>Deve lançar IllegalStateException para payload menor que o IV mínimo (12 bytes).</li>
+ *     <li>Deve lançar IllegalStateException para IV adulterado (authentication tag falha).</li>
+ *     <li>Deve preservar plaintext ASCII após ciclo completo encrypt → decrypt.</li>
+ *     <li>Deve preservar texto unicode multilíngue após roundtrip.</li>
+ *     <li>Deve processar múltiplos valores bancários independentes corretamente.</li>
+ *     <li>Dois conversores com a mesma chave devem ser interoperáveis.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
  */
 @DisplayName("CriptografiaConverter")
 class CriptografiaConverterTest {

@@ -15,6 +15,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Testes unitários para {@link LimiteTransacional}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link LimiteTransacional} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code LimiteTransacional}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve não lançar exceção quando valor está dentro dos limites.</li>
+ *     <li>Deve lançar RegraNegocioException quando valor acima do limite por transação.</li>
+ *     <li>Deve lançar RegraNegocioException quando utilizado hoje mais valor acima do limite diário.</li>
+ *     <li>Deve retornar nova instância com utilizadoHoje incrementado quando valor válido.</li>
+ *     <li>Deve lançar RegraNegocioException quando validar é violado.</li>
+ *     <li>Deve manter original imutável quando decrementar.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @DisplayName("LimiteTransacional")
 class LimiteTransacionalTest {
 

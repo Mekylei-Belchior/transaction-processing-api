@@ -5,6 +5,7 @@ import com.mekylei.transactionprocessing.infraestrutura.repositorio.EventoProces
 import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -19,7 +20,36 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link EventoProcessadoService}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link EventoProcessadoService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code EventoProcessadoService}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve retornar true para evento novo.</li>
+ *     <li>Deve retornar false para evento já registrado.</li>
+ *     <li>Deve retornar false em race condition de insert.</li>
+ *     <li>Deve persistir grupos consumidores independentes.</li>
+ *     <li>Deve persistir campos corretos da entidade.</li>
+ *     <li>Deve propagars exceção não esperada de save and flush.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Evento Processado Service")
 class EventoProcessadoServiceTest {
 
     @Mock
@@ -38,6 +68,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve retornar true para evento novo")
     void deveRetornarTrueParaEventoNovo() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-teste")).thenReturn(false);
 
@@ -48,6 +79,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve retornar false para evento já registrado")
     void deveRetornarFalseParaEventoJaRegistrado() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-teste")).thenReturn(true);
 
@@ -58,6 +90,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve retornar false em race condition de insert")
     void deveRetornarFalseEmRaceConditionDeInsert() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-teste")).thenReturn(false);
         when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("constraint violation"));
@@ -68,6 +101,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve persistir grupos consumidores independentes")
     void devePersistirGruposConsumidoresIndependentes() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-a")).thenReturn(false);
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-b")).thenReturn(false);
@@ -81,6 +115,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve persistir campos corretos da entidade")
     void devePersistirCamposCorretosDaEntidade() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-teste")).thenReturn(false);
 
@@ -98,6 +133,7 @@ class EventoProcessadoServiceTest {
     }
 
     @Test
+    @DisplayName("deve propagars exceção não esperada de save and flush")
     void devePropagarsExcecaoNaoEsperadaDeSaveAndFlush() {
         when(repository.existsByIdEventoAndGrupoConsumidor(idEvento, "grupo-teste")).thenReturn(false);
         when(repository.saveAndFlush(any())).thenThrow(new RuntimeException("erro de infra inesperado"));

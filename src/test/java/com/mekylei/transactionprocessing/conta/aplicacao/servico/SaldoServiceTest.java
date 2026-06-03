@@ -6,6 +6,7 @@ import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.Saldo
 import com.mekylei.transactionprocessing.conta.dominio.Saldo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -21,7 +22,36 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Testes unitários para {@link SaldoService}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link SaldoService} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code SaldoService}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve validar saldo sem lock pessimista.</li>
+ *     <li>Deve falhar ao validar saldo insuficiente sem lock pessimista.</li>
+ *     <li>Deve falhar ao validar saldo inexistente.</li>
+ *     <li>Deve debitar saldo usando lock pessimista.</li>
+ *     <li>Deve lançar exceção quando saldo não encontrado no débito.</li>
+ *     <li>Deve creditar saldo usando lock pessimista.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Saldo Service")
 class SaldoServiceTest {
 
     @Mock
@@ -37,6 +67,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve validar saldo sem lock pessimista")
     void deveValidarSaldoSemLockPessimista() {
         Saldo saldo = saldoComDisponivel("100.00");
         when(saldoRepository.findByIdConta(idConta)).thenReturn(Optional.of(saldo));
@@ -48,6 +79,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve falhar ao validar saldo insuficiente sem lock pessimista")
     void deveFalharAoValidarSaldoInsuficienteSemLockPessimista() {
         Saldo saldo = saldoComDisponivel("10.00");
         when(saldoRepository.findByIdConta(idConta)).thenReturn(Optional.of(saldo));
@@ -60,6 +92,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve falhar ao validar saldo inexistente")
     void deveFalharAoValidarSaldoInexistente() {
         when(saldoRepository.findByIdConta(idConta)).thenReturn(Optional.empty());
 
@@ -69,6 +102,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve debitar saldo usando lock pessimista")
     void deveDebitarSaldoUsandoLockPessimista() {
         Saldo saldo = saldoComDisponivel("100.00");
         when(saldoRepository.findByIdContaForUpdate(idConta)).thenReturn(Optional.of(saldo));
@@ -83,6 +117,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve lançar exceção quando saldo não encontrado no débito")
     void deveLancarExcecaoQuandoSaldoNaoEncontradoNoDebito() {
         when(saldoRepository.findByIdContaForUpdate(idConta)).thenReturn(Optional.empty());
 
@@ -91,6 +126,7 @@ class SaldoServiceTest {
     }
 
     @Test
+    @DisplayName("deve creditar saldo usando lock pessimista")
     void deveCreditarSaldoUsandoLockPessimista() {
         Saldo saldo = saldoComDisponivel("100.00");
         when(saldoRepository.findByIdContaForUpdate(idConta)).thenReturn(Optional.of(saldo));

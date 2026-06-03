@@ -7,6 +7,7 @@ import com.mekylei.transactionprocessing.infraestrutura.persistencia.OutboxEvent
 import com.mekylei.transactionprocessing.mensageria.produtor.KafkaEventoProdutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +20,37 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link EventoOutboxPublicadorScheduler}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link EventoOutboxPublicadorScheduler} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code EventoOutboxPublicadorScheduler}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Não deve interagir com produtor quando não há eventos pendentes.</li>
+ *     <li>Deve publicar evento pendente e marcar como publicado.</li>
+ *     <li>Deve marcar falha quando produtor lança exceção.</li>
+ *     <li>Deve continuar processando próximos eventos após uma falha.</li>
+ *     <li>Deve respeitar tamanho de lote na busca.</li>
+ *     <li>Deve publicar múltiplos eventos no mesmo lote.</li>
+ *     <li>Deve usar intervalo de reprocessamento correto na falha.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Evento Outbox Publicador Scheduler")
 class EventoOutboxPublicadorSchedulerTest {
 
     @Mock
@@ -38,6 +69,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("não deve interagir com produtor quando não há eventos pendentes")
     void naoDeveInteragirComProdutorQuandoNaoHaEventosPendentes() {
         when(eventoJpaAdapter.buscarParaPublicacao(properties.lotePublicacao())).thenReturn(List.of());
 
@@ -49,6 +81,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve publicar evento pendente e marcar como publicado")
     void devePublicarEventoPendenteEMarcarComoPublicado() {
         UUID id = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento(id, "TransacaoIniciada");
@@ -62,6 +95,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve marcar falha quando produtor lança exceção")
     void deveMarcarFalhaQuandoProdutorLancaExcecao() {
         UUID id = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento(id, "TransacaoFalhou");
@@ -76,6 +110,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve continuar processando próximos eventos após uma falha")
     void deveContinuarProcessandoProximosEventosAposUmaFalha() {
         UUID idFalhou = UUID.randomUUID();
         UUID idSucesso = UUID.randomUUID();
@@ -93,6 +128,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve respeitar tamanho de lote na busca")
     void deveRespeitarTamanhoDeLoteNaBusca() {
         OutboxProperties propriedadesLote10 = new OutboxProperties(10, Duration.ofSeconds(30), 5000L);
         EventoOutboxPublicador publicadorLote = new EventoOutboxPublicador(
@@ -105,6 +141,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve publicar múltiplos eventos no mesmo lote")
     void devePublicarMultiplosEventosNoMesmoLote() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
@@ -127,6 +164,7 @@ class EventoOutboxPublicadorSchedulerTest {
     }
 
     @Test
+    @DisplayName("deve usar intervalo de reprocessamento correto na falha")
     void deveUsarIntervaloDeReprocessamentoCorretoNaFalha() {
         Duration intervaloEsperado = Duration.ofMinutes(2);
         OutboxProperties propriedadesCustom = new OutboxProperties(50, intervaloEsperado, 5000L);

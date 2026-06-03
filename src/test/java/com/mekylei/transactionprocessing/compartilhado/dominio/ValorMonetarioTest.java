@@ -10,6 +10,34 @@ import java.util.Currency;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Testes unitários para {@link ValorMonetario}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link ValorMonetario} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code ValorMonetario}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve lançar IllegalArgumentException quando valor é null.</li>
+ *     <li>Deve lançar IllegalArgumentException quando valor é zero.</li>
+ *     <li>Deve lançar IllegalArgumentException quando valor é negativo.</li>
+ *     <li>Deve lançar IllegalArgumentException quando moeda é null.</li>
+ *     <li>Deve criar com escala de duas casas decimais quando valor positivo.</li>
+ *     <li>Deve criar em real quando usar paraReal.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @DisplayName("ValorMonetario")
 class ValorMonetarioTest {
 

@@ -19,6 +19,7 @@ import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -44,9 +45,50 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Testes unitários para {@link TransacaoController}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link TransacaoController} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code TransacaoController}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve retornar 201 quando Pix processado com sucesso.</li>
+ *     <li>Deve retornar 401 quando sem autenticação.</li>
+ *     <li>Deve retornar 400 quando body inválido.</li>
+ *     <li>Deve retornar 400 quando header idempotência ausente.</li>
+ *     <li>Deve retornar 201 quando TED processado com sucesso.</li>
+ *     <li>Deve retornar 422 quando TED fora do horário.</li>
+ *     <li>Deve retornar 201 quando TEF processado com sucesso.</li>
+ *     <li>Deve retornar 200 quando transação encontrada.</li>
+ *     <li>Deve retornar 404 quando transação não encontrada.</li>
+ *     <li>Deve retornar 200 quando estorno com sucesso.</li>
+ *     <li>Deve retornar 422 quando transação não elegível.</li>
+ *     <li>Deve retornar 403 quando role insuficiente.</li>
+ *     <li>Deve retornar 422 com problem detail quando regra negocio exception.</li>
+ *     <li>Deve retornar 400 com problem detail quando method argument not valid exception.</li>
+ *     <li>Deve retornar 422 com problem detail quando saldo insuficiente exception.</li>
+ *     <li>Deve retornar 409 com problem detail quando object optimistic locking failure exception.</li>
+ *     <li>Deve retornar 409 com problem detail quando data integrity violation exception.</li>
+ *     <li>Deve retornar 500 com problem detail quando exception genérica.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @WebMvcTest(TransacaoController.class)
 @ActiveProfiles("test")
 @Import({SecurityConfig.class, ApiAutenticacaoEntryPoint.class, ApiAcessoNegadoHandler.class, JwtClaimsConverter.class})
+@DisplayName("Transacao Controller")
 class TransacaoControllerTest {
 
     private static final UUID ID_TRANSACAO = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -74,6 +116,7 @@ class TransacaoControllerTest {
     private RateLimitResposta rateLimitResposta;
 
     @Test
+    @DisplayName("deve retornar 201 quando Pix processado com sucesso")
     void deveRetornar201QuandoPixProcessadoComSucesso() throws Exception {
         Transacao transacao = transacao(TipoTransacao.PIX, StatusTransacao.COMPLETADA);
         when(processaTransacaoService.processa(
@@ -94,6 +137,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 401 quando sem autenticação")
     void deveRetornar401QuandoSemAutenticacao() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,6 +147,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 400 quando body inválido")
     void deveRetornar400QuandoBodyInvalido() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(cliente())
@@ -121,6 +166,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 400 quando header idempotência ausente")
     void deveRetornar400QuandoHeaderIdempotenciaAusente() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(cliente())
@@ -132,6 +178,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 201 quando TED processado com sucesso")
     void deveRetornar201QuandoTedProcessadoComSucesso() throws Exception {
         Transacao transacao = transacao(TipoTransacao.TED, StatusTransacao.COMPLETADA);
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.TED), any(), any(), any()))
@@ -147,6 +194,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 422 quando TED fora do horário")
     void deveRetornar422QuandoTedForaDoHorario() throws Exception {
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.TED), any(), any(), any()))
                 .thenThrow(new RegraNegocioException("TED_FORA_DO_HORARIO", "TED fora do horário permitido"));
@@ -162,6 +210,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 201 quando TEF processado com sucesso")
     void deveRetornar201QuandoTefProcessadoComSucesso() throws Exception {
         Transacao transacao = transacao(TipoTransacao.TEF, StatusTransacao.COMPLETADA);
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.TEF), any(), any(), any()))
@@ -177,6 +226,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 200 quando transação encontrada")
     void deveRetornar200QuandoTransacaoEncontrada() throws Exception {
         when(consultaTransacaoService.consultar(ID_TRANSACAO))
                 .thenReturn(transacao(TipoTransacao.PIX, StatusTransacao.COMPLETADA));
@@ -188,6 +238,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 404 quando transação não encontrada")
     void deveRetornar404QuandoTransacaoNaoEncontrada() throws Exception {
         when(consultaTransacaoService.consultar(ID_TRANSACAO))
                 .thenThrow(new RecursoNaoEncontradoException("TRANSACAO_NAO_ENCONTRADA", "Transação não encontrada"));
@@ -200,6 +251,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 200 quando estorno com sucesso")
     void deveRetornar200QuandoEstornoComSucesso() throws Exception {
         EstornoResposta resposta = new EstornoResposta(
                 ID_TRANSACAO,
@@ -218,6 +270,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 422 quando transação não elegível")
     void deveRetornar422QuandoTransacaoNaoElegivel() throws Exception {
         when(estornoTransacaoService.estornar(ID_TRANSACAO, "Transação não reconhecida"))
                 .thenThrow(new RegraNegocioException("ESTORNO_INVALIDO", "Transação não elegível para estorno"));
@@ -232,6 +285,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 403 quando role insuficiente")
     void deveRetornar403QuandoRoleInsuficiente() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(jwt().authorities(() -> "ROLE_INVALIDA"))
@@ -244,6 +298,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 422 com problem detail quando regra negocio exception")
     void deveRetornar422ComProblemDetailQuandoRegraNegocioException() throws Exception {
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.PIX), any(), any(), any()))
                 .thenThrow(new RegraNegocioException("REGRA_NEGOCIO", "Regra violada"));
@@ -259,6 +314,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 400 com problem detail quando method argument not valid exception")
     void deveRetornar400ComProblemDetailQuandoMethodArgumentNotValidException() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(cliente())
@@ -277,6 +333,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 422 com problem detail quando saldo insuficiente exception")
     void deveRetornar422ComProblemDetailQuandoSaldoInsuficienteException() throws Exception {
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.PIX), any(), any(), any()))
                 .thenThrow(new SaldoInsuficienteException(ID_CONTA_ORIGEM, new BigDecimal("10.00"), new BigDecimal("150.00")));
@@ -292,6 +349,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 409 com problem detail quando object optimistic locking failure exception")
     void deveRetornar409ComProblemDetailQuandoObjectOptimisticLockingFailureException() throws Exception {
         when(estornoTransacaoService.estornar(ID_TRANSACAO, "Transação não reconhecida"))
                 .thenThrow(new ObjectOptimisticLockingFailureException(Transacao.class, ID_TRANSACAO));
@@ -306,6 +364,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 409 com problem detail quando data integrity violation exception")
     void deveRetornar409ComProblemDetailQuandoDataIntegrityViolationException() throws Exception {
         when(processaTransacaoService.processa(any(), eq(TipoTransacao.PIX), any(), any(), any()))
                 .thenThrow(new DataIntegrityViolationException("Chave duplicada"));
@@ -321,6 +380,7 @@ class TransacaoControllerTest {
     }
 
     @Test
+    @DisplayName("deve retornar 500 com problem detail quando exception genérica")
     void deveRetornar500ComProblemDetailQuandoExceptionGenerica() throws Exception {
         when(consultaTransacaoService.consultar(ID_TRANSACAO))
                 .thenThrow(new RuntimeException("Erro inesperado"));

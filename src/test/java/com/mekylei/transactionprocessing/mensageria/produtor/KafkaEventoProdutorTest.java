@@ -5,6 +5,7 @@ import com.mekylei.transactionprocessing.configuracao.kafka.OutboxProperties;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,7 +21,36 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes unitários para {@link KafkaEventoProdutor}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link KafkaEventoProdutor} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code KafkaEventoProdutor}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Deve enviar mensagem para Kafka com tópico chave e payload.</li>
+ *     <li>Deve lançar Kafka publicar exception com codigo falha publicar evento quando broker falha.</li>
+ *     <li>Deve lançar Kafka publicar exception com codigo falha publicar evento em timeout.</li>
+ *     <li>Deve lançar Kafka publicar exception com codigo falha iniciar send quando send lança exceção.</li>
+ *     <li>Deve incluir ID etipo evento na mensagem de erro para falha do broker.</li>
+ *     <li>Deve incluir ID etipo evento na mensagem de erro para falha de início de envio.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Kafka Evento Produtor")
 class KafkaEventoProdutorTest {
 
     @Mock
@@ -36,6 +66,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve enviar mensagem para Kafka com tópico chave e payload")
     void deveEnviarMensagemParaKafkaComTopicoChaveEPayload() {
         String topico = "transacoes.iniciadas";
         String chave = UUID.randomUUID().toString();
@@ -51,6 +82,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve lançar Kafka publicar exception com codigo falha publicar evento quando broker falha")
     void deveLancarKafkaPublicarExceptionComCodigoFalhaPublicarEventoQuandoBrokerFalha() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("transacoes.falhas", "chave", "{}");
@@ -70,6 +102,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve lançar Kafka publicar exception com codigo falha publicar evento em timeout")
     void deveLancarKafkaPublicarExceptionComCodigoFalhaPublicarEventoEmTimeout() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
@@ -91,6 +124,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve lançar Kafka publicar exception com codigo falha iniciar send quando send lança exceção")
     void deveLancarKafkaPublicarExceptionComCodigoFalhaIniciarSendQuandoSendLancaExcecao() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
@@ -109,6 +143,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve incluir ID etipo evento na mensagem de erro para falha do broker")
     void deveIncluirIdEtipoEventoNaMensagemDeErroParaFalhaDoBroker() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");
@@ -128,6 +163,7 @@ class KafkaEventoProdutorTest {
     }
 
     @Test
+    @DisplayName("deve incluir ID etipo evento na mensagem de erro para falha de início de envio")
     void deveIncluirIdEtipoEventoNaMensagemDeErroParaFalhaDeInicioDeEnvio() {
         UUID idEvento = UUID.randomUUID();
         OutboxEventoEntity evento = criarEvento("topico", "chave", "{}");

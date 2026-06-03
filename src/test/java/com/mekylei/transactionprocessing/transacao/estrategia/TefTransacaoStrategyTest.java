@@ -7,6 +7,7 @@ import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -19,7 +20,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Testes unitários para {@link TefTransacaoStrategy}.
+ *
+ * <p>Objetivo:</p>
+ * <ul>
+ *     <li>Validar o comportamento esperado de {@link TefTransacaoStrategy} nos cenários exercitados pela suíte.</li>
+ *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
+ *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code TefTransacaoStrategy}.</li>
+ * </ul>
+ *
+ * <p>Cenários cobertos:</p>
+ * <ul>
+ *     <li>Suporta deve retornar true para TEF.</li>
+ *     <li>Suporta deve retornar false para Pix.</li>
+ *     <li>Suporta deve retornar false para TED.</li>
+ *     <li>Processa deve retornar transação COMPLETADA quando anti fraude autoriza.</li>
+ *     <li>Processa deve retornar transação FALHOU quando anti fraude rejeita.</li>
+ *     <li>Processa deve passar a transação correta para o anti fraude.</li>
+ * </ul>
+ *
+ * <p>Cenários não cobertos:</p>
+ * <ul>
+ *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ * </ul>
+ *
+ * @author Mekylei Belchior
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tef Transacao Strategy")
 class TefTransacaoStrategyTest {
 
     @Mock
@@ -33,21 +63,25 @@ class TefTransacaoStrategyTest {
     }
 
     @Test
+    @DisplayName("suporta deve retornar true para TEF")
     void suporta_deveRetornarTrueParaTEF() {
         assertThat(strategy.suporta(TipoTransacao.TEF)).isTrue();
     }
 
     @Test
+    @DisplayName("suporta deve retornar false para Pix")
     void suporta_deveRetornarFalseParaPIX() {
         assertThat(strategy.suporta(TipoTransacao.PIX)).isFalse();
     }
 
     @Test
+    @DisplayName("suporta deve retornar false para TED")
     void suporta_deveRetornarFalseParaTED() {
         assertThat(strategy.suporta(TipoTransacao.TED)).isFalse();
     }
 
     @Test
+    @DisplayName("processa deve retornar transação COMPLETADA quando anti fraude autoriza")
     void processa_deveRetornarTransacaoCOMPLETADAQuandoAntiFraudeAutoriza() {
         Transacao transacao = transacao(TipoTransacao.TEF);
         when(antiFraudeGateway.autorizar(transacao)).thenReturn(true);
@@ -60,6 +94,7 @@ class TefTransacaoStrategyTest {
     }
 
     @Test
+    @DisplayName("processa deve retornar transação FALHOU quando anti fraude rejeita")
     void processa_deveRetornarTransacaoFALHOUQuandoAntiFraudeRejeita() {
         Transacao transacao = transacao(TipoTransacao.TEF);
         when(antiFraudeGateway.autorizar(transacao)).thenReturn(false);
@@ -72,6 +107,7 @@ class TefTransacaoStrategyTest {
     }
 
     @Test
+    @DisplayName("processa deve passar a transação correta para o anti fraude")
     void processa_devePassarATransacaoCorretaParaOAntiFraude() {
         Transacao transacao = transacao(TipoTransacao.TEF);
         when(antiFraudeGateway.autorizar(transacao)).thenReturn(true);
