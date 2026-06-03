@@ -29,17 +29,17 @@ Estado da documentação: junho/2026.
 
 ## Módulos Existentes
 
-| Módulo            | Responsabilidade                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| `transacao`       | Processamento de PIX, TED e TEF — domínio central                                       |
-| `conta`           | Domínio de conta, saldo e limite transacional                                           |
-| `auditoria`       | Registro de eventos de auditoria regulatória                                            |
-| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC e constantes transversais            |
-| `configuracao`    | Configurações Spring: segurança, beans e filtros                                        |
-| `infraestrutura`  | Adaptadores JPA e repositórios Spring Data                                              |
-| `integracao`      | Adaptadores para integrações externas (antifraude stub)                                 |
-| `mensageria`      | Outbox Pattern, publicação Kafka, consumo, roteamento de eventos e monitoramento de DLQ |
-| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON                  |
+| Módulo            | Responsabilidade                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `transacao`       | Processamento de PIX, TED e TEF — domínio central, casos de uso, controller, DTOs, eventos e strategies |
+| `conta`           | Domínio de conta, saldo e limite transacional                                                           |
+| `auditoria`       | Registro de eventos de auditoria regulatória                                                            |
+| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC, idempotência e constantes transversais              |
+| `configuracao`    | Configurações Spring: segurança, Kafka, persistência, beans e filtros                                   |
+| `infraestrutura`  | Adaptadores JPA, entidades e repositórios Spring Data                                                   |
+| `integracao`      | Adaptadores para integrações externas (antifraude stub implementado; Bacen/STR/SPB ainda planejados)    |
+| `mensageria`      | Outbox Pattern, publicação Kafka, consumo, roteamento de eventos e monitoramento de DLQ                 |
+| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON                                  |
 
 ## Organização do Código
 
@@ -54,6 +54,7 @@ Estado da documentação: junho/2026.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 - Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
 - Consumo resiliente: consumidor Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ` e idempotência de consumo por `evento_processado`.
+- Cobertura de testes: 47 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC e mascaramento de logs.
 
 ---
 
@@ -65,6 +66,7 @@ Estado da documentação: junho/2026.
 - Camada de aplicação (`ProcessaTransacaoService`, `CriaTransacaoService`, `ConsultaTransacaoService`, `EstornoTransacaoService`) orquestrando casos de uso sem dependência direta de infraestrutura.
 - Camada de domínio (`Transacao`, `Conta`, `Saldo`, `LimiteTransacional`, `ValorMonetario`) sem dependência de frameworks.
 - Camada de infraestrutura (`TransacaoJpaAdapter`, `ContaJpaAdapter`, `SaldoJpaAdapter`, `LimiteJpaAdapter`, `AuditoriaJpaAdapter`) implementando interfaces de porta.
+- Validações específicas por tipo de transação via strategies: PIX simula envio ao SPI/BACEN, TED valida dia útil e horário bancário, TEF consulta antifraude stub.
 - Filtros transversais (`ContextoRequisicaoFilter`, `RateLimitFilter`) na camada de entrada.
 - Criptografia em repouso via `CriptografiaConverter` (AES-256-GCM, `AttributeConverter` JPA).
 - Mascaramento de dados sensíveis nos logs via subsistema `observabilidade/mascaramento` integrado ao Logback com logging estruturado em JSON (`logstash-logback-encoder`).
@@ -75,13 +77,13 @@ Estado da documentação: junho/2026.
 
 ## Parcialmente Implementado
 
-- Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações SPI, STR e DICT sem implementação de produção.
+- Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações reais com SPI/BACEN, STR, SPB e DICT ainda sem implementação de produção.
 - Auditoria: captura automática via `AuditoriaListener` (JPA lifecycle callbacks) operacional; mascaramento de dados sensíveis nos eventos de auditoria não implementado.
 - Consumidores de negócio por tipo de transação: consumidor de `transacoes.iniciadas` já identifica PIX/TED/TEF, garante idempotência de consumo e mantém ponto de extensão para regras específicas de cada tipo.
 
 ## Planejado
 
-- Bounded context para `PIX`, `TED` e `TEF`.
+- Bounded contexts separados para `cliente`, `PIX`, `TED` e `TEF` já existem como diretórios iniciais/planejados, mas a implementação funcional ainda está concentrada em `transacao`.
 - Camada de resiliência (circuit breaker, retry, bulkhead por integração).
 - Domínio de `Cliente` e `ChavePix`.
 - Integração real com SPI/BACEN, STR e DICT.
@@ -110,6 +112,7 @@ transaction-processing-api/
 │   │   │   │       ├── AuditoriaContextGateway.java
 │   │   │   │       ├── AuditoriaContextWriter.java
 │   │   │   │       └── AuditoriaRepository.java
+│   │   │   ├── cliente/                           (diretório inicial — planejado)
 │   │   │   ├── compartilhado/
 │   │   │   │   ├── adaptador/
 │   │   │   │   │   └── Jackson3FormatMapper.java
@@ -140,6 +143,7 @@ transaction-processing-api/
 │   │   │   │       ├── CriptografiaConverter.java
 │   │   │   │       └── DateTimeUtil.java
 │   │   │   ├── configuracao/
+│   │   │   │   ├── docs/                          (vazio — planejado)
 │   │   │   │   ├── kafka/
 │   │   │   │   │   ├── KafkaConfig.java
 │   │   │   │   │   ├── KafkaDlqProperties.java
@@ -147,6 +151,7 @@ transaction-processing-api/
 │   │   │   │   │   └── TopicosProperties.java
 │   │   │   │   ├── persistencia/
 │   │   │   │   │   └── HmacProperties.java
+│   │   │   │   ├── resiliencia/                   (vazio — planejado)
 │   │   │   │   ├── seguranca/
 │   │   │   │   │   ├── ApiAcessoNegadoHandler.java
 │   │   │   │   │   ├── ApiAutenticacaoEntryPoint.java
@@ -206,6 +211,9 @@ transaction-processing-api/
 │   │   │   ├── integracao/
 │   │   │   │   ├── antifraude/
 │   │   │   │   │   └── AntiFraudeStubAdapter.java
+│   │   │   │   ├── bacen/                         (vazio — planejado)
+│   │   │   │   ├── spb/                           (vazio — planejado)
+│   │   │   │   └── str/                           (vazio — planejado)
 │   │   │   ├── mensageria/
 │   │   │   │   ├── consumidor/
 │   │   │   │   │   ├── DlqMonitorConsumidor.java
@@ -235,6 +243,11 @@ transaction-processing-api/
 │   │   │   │   │       ├── MensagemMascaradaStrategy.java
 │   │   │   │   │       ├── StacktraceMascaradoStrategy.java
 │   │   │   │   │       └── StrategyMascaramentoResolver.java
+│   │   │   │   ├── metrica/                       (vazio — planejado)
+│   │   │   │   └── rastreamento/                  (vazio — planejado)
+│   │   │   ├── pix/                               (diretório inicial — planejado)
+│   │   │   ├── ted/                               (diretório inicial — planejado)
+│   │   │   ├── tef/                               (diretório inicial — planejado)
 │   │   │   └── transacao/
 │   │   │       ├── aplicacao/
 │   │   │       │   ├── porta/
@@ -286,19 +299,38 @@ transaction-processing-api/
 │   └── test/
 │       ├── java/com/mekylei/transactionprocessing/
 │       │   ├── compartilhado/
+│       │   │   ├── dominio/
+│       │   │   │   └── ValorMonetarioTest.java
+│       │   │   ├── idempotencia/
+│       │   │   │   └── IdempotenciaServiceTest.java
 │       │   │   ├── seguranca/
 │       │   │   │   ├── HmacServiceTest.java
 │       │   │   │   └── HmacUtilsTest.java
 │       │   │   └── util/
+│       │   │       ├── CalendarioStubBacenServiceTest.java
+│       │   │       ├── CorrelacaoUtilTest.java
 │       │   │       ├── CriptografiaConverterIntegrationTest.java
 │       │   │       └── CriptografiaConverterTest.java
+│       │   ├── configuracao/spring/filter/
+│       │   │   ├── ContextoRequisicaoFilterTest.java
+│       │   │   └── RateLimitFilterTest.java
 │       │   ├── conta/
-│       │   │   └── aplicacao/servico/
-│       │   │       ├── LimiteServiceTest.java
-│       │   │       └── SaldoServiceTest.java
+│       │   │   ├── aplicacao/servico/
+│       │   │   │   ├── LimiteServiceTest.java
+│       │   │   │   └── SaldoServiceTest.java
+│       │   │   └── dominio/
+│       │   │       ├── ContaTest.java
+│       │   │       ├── LimiteTransacionalTest.java
+│       │   │       └── SaldoTest.java
 │       │   ├── infraestrutura/
 │       │   │   ├── entidade/
 │       │   │   │   └── ContaBancariaEntity.java
+│       │   │   ├── persistencia/
+│       │   │   │   ├── AuditoriaJpaAdapterTest.java
+│       │   │   │   ├── ContaJpaAdapterTest.java
+│       │   │   │   ├── LimiteJpaAdapterTest.java
+│       │   │   │   ├── SaldoJpaAdapterTest.java
+│       │   │   │   └── TransacaoJpaAdapterTest.java
 │       │   │   └── repositorio/
 │       │   │       └── ContaBancariaTestRepository.java
 │       │   ├── mensageria/
@@ -314,9 +346,30 @@ transaction-processing-api/
 │       │   │   │   └── OutboxEventoJpaAdapterTest.java
 │       │   │   └── produtor/
 │       │   │       └── KafkaEventoProdutorTest.java
+│       │   ├── observabilidade/mascaramento/
+│       │   │   ├── DadosSensiveisMaskerTest.java
+│       │   │   └── estrategia/
+│       │   │       ├── HeaderMascaradoStrategyTest.java
+│       │   │       ├── JsonMascaradoStrategyTest.java
+│       │   │       ├── MensagemMascaradaStrategyTest.java
+│       │   │       └── StrategyMascaramentoResolverTest.java
 │       │   ├── transacao/
-│       │   │   └── aplicacao/servico/
-│       │   │       └── ProcessaTransacaoServiceTest.java
+│       │   │   ├── aplicacao/servico/
+│       │   │   │   ├── ConsultaTransacaoServiceTest.java
+│       │   │   │   ├── CriaTransacaoServiceTest.java
+│       │   │   │   ├── EstornoTransacaoServiceTest.java
+│       │   │   │   └── ProcessaTransacaoServiceTest.java
+│       │   │   ├── controle/
+│       │   │   │   └── TransacaoControllerTest.java
+│       │   │   ├── dominio/
+│       │   │   │   ├── TransacaoTest.java
+│       │   │   │   └── evento/
+│       │   │   │       └── TransacaoEventosTest.java
+│       │   │   └── estrategia/
+│       │   │       ├── PixTransacaoStrategyTest.java
+│       │   │       ├── StrategyResolverTest.java
+│       │   │       ├── TedTransacaoStrategyTest.java
+│       │   │       └── TefTransacaoStrategyTest.java
 │       │   └── TransactionProcessingApiApplicationTests.java
 │       └── resources/
 │           └── application-test.yml
@@ -488,7 +541,7 @@ Rodo o Keycloak em um servidor homelab e utilizo um `.env` para definir os dados
 
 ### .env para variáveis de ambiente de exemplo
 
-**Importante:** salvar o arquivo `.env` na raiz do projeto para que o `docker compose` consiga lê-lo automaticamente ou definir as variáveis na sua IDE. O `docker-compose.yml` atual sobe a aplicação e o PostgreSQL; para usar Kafka com o broker externo do homelab, mantenha as variáveis Kafka disponíveis para a aplicação ou ajuste o compose para repassá-las ao container. É fundamental adicionar o arquivo `.env` no `.gitignore` para não versioná-lo.
+**Importante:** salvar o arquivo `.env` na raiz do projeto para que o `docker compose` consiga lê-lo automaticamente ou definir as variáveis na sua IDE. O `docker-compose.yml` atual sobe a aplicação e o PostgreSQL, mas repassa ao container apenas banco, OAuth2, criptografia, rate limit e antifraude; para executar via compose com Kafka habilitado, inclua as variáveis Kafka no bloco `environment` da app. Se não for usar Kafka no compose, inclua `EVENTOS_KAFKA_ENABLED=false` no `environment` da app, pois o perfil `dev` habilita Kafka por padrão. É fundamental adicionar o arquivo `.env` no `.gitignore` para não versioná-lo.
 
 ```env
 POSTGRES_DB=transacaodb
@@ -529,6 +582,7 @@ KAFKA_BOOTSTRAP_SERVERS=kafka.lab.home:9094
 KAFKA_PASSWORD=trocar-esta-senha
 KAFKA_SSL_TRUSTSTORE_LOCATION=file:/<CAMINHO_DO_CERTIFICADO>/kafka-client-truststore.p12
 KAFKA_SSL_TRUSTSTORE_PASSWORD=changeit
+KAFKA_SSL_TRUSTSTORE_TYPE=PKCS12
 KAFKA_USERNAME=app-prod
 ```
 
@@ -1047,9 +1101,9 @@ POSTGRES_PASSWORD=keycloak
 
 - [x] Implementar testes unitários de segurança (`HmacServiceTest`, `HmacUtilsTest`, `CriptografiaConverterTest`)
 - [x] Implementar testes de integração de criptografia (`CriptografiaConverterIntegrationTest`)
-- [ ] Implementar testes unitários de domínio
-- [x] Implementar testes unitários iniciais de serviços de aplicação (`ProcessaTransacaoServiceTest`, `LimiteServiceTest`, `SaldoServiceTest`)
-- [ ] Implementar testes unitários de estratégias
+- [x] Implementar testes unitários de domínio (`TransacaoTest`, `TransacaoEventosTest`, `ContaTest`, `SaldoTest`, `LimiteTransacionalTest`, `ValorMonetarioTest`)
+- [x] Implementar testes unitários de serviços de aplicação (`ProcessaTransacaoServiceTest`, `CriaTransacaoServiceTest`, `ConsultaTransacaoServiceTest`, `EstornoTransacaoServiceTest`, `LimiteServiceTest`, `SaldoServiceTest`)
+- [x] Implementar testes unitários de estratégias (`PixTransacaoStrategyTest`, `TedTransacaoStrategyTest`, `TefTransacaoStrategyTest`, `StrategyResolverTest`)
 - [ ] Implementar testes de integração com Testcontainers
 - [ ] Implementar testes arquiteturais com ArchUnit
 - [ ] Configurar relatório de cobertura de código (JaCoCo)
