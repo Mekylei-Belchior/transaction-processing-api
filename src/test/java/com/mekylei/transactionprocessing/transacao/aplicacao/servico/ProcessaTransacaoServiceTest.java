@@ -1,11 +1,13 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
+import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.ContaRepository;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.LimiteService;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.SaldoService;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
+import com.mekylei.transactionprocessing.conta.dominio.StatusConta;
 import com.mekylei.transactionprocessing.conta.dominio.TipoConta;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.EventoPublicador;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
@@ -17,6 +19,7 @@ import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,8 +27,13 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -98,12 +106,111 @@ class ProcessaTransacaoServiceTest {
         verify(saldoService).debitar(idContaOrigem, valor);
     }
 
+    @Test
+    void deveRetornarTransacaoExistenteQuandoIdempotenciaJaRegistrada() {
+        BigDecimal valor = new BigDecimal("50.00");
+        String contaDestino = "email@email.com";
+        UUID idIdempotencia = UUID.randomUUID();
+        Transacao transacaoExistente = transacao(valor, contaDestino, StatusTransacao.COMPLETADA);
+
+        when(idempotenciaService.verificar(idIdempotencia)).thenReturn(Optional.of(transacaoExistente));
+
+        Transacao resultado = service.processa(valor, TipoTransacao.PIX, idContaOrigem, contaDestino, idIdempotencia);
+
+        assertThat(resultado).isSameAs(transacaoExistente);
+        verifyNoInteractions(contaRepository, saldoService, limiteService, criaTransacaoService, strategyResolver,
+                transacaoRepository, eventoPublicador);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoContaNaoEncontrada() {
+        BigDecimal valor = new BigDecimal("50.00");
+        UUID idIdempotencia = UUID.randomUUID();
+
+        when(idempotenciaService.verificar(idIdempotencia)).thenReturn(Optional.empty());
+        when(contaRepository.findById(idContaOrigem)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.processa(valor, TipoTransacao.PIX, idContaOrigem, "email@email.com", idIdempotencia))
+                .isInstanceOf(RegraNegocioException.class)
+                .extracting("codigoErro")
+                .isEqualTo("CONTA_INVALIDA");
+
+        verifyNoInteractions(saldoService, limiteService, criaTransacaoService, strategyResolver, transacaoRepository,
+                eventoPublicador);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoContaEstaBloqueada() {
+        BigDecimal valor = new BigDecimal("50.00");
+        UUID idIdempotencia = UUID.randomUUID();
+
+        when(idempotenciaService.verificar(idIdempotencia)).thenReturn(Optional.empty());
+        when(contaRepository.findById(idContaOrigem)).thenReturn(Optional.of(contaComStatus(StatusConta.BLOQUEADA)));
+
+        assertThatThrownBy(() -> service.processa(valor, TipoTransacao.PIX, idContaOrigem, "email@email.com", idIdempotencia))
+                .isInstanceOf(RegraNegocioException.class)
+                .extracting("codigoErro")
+                .isEqualTo("CONTA_INVALIDA");
+
+        verifyNoInteractions(saldoService, limiteService, criaTransacaoService, strategyResolver, transacaoRepository,
+                eventoPublicador);
+    }
+
+    @Test
+    void deveNaoDebitarSaldoQuandoTransacaoFalhou() {
+        BigDecimal valor = new BigDecimal("50.00");
+        String contaDestino = "email@email.com";
+        UUID idIdempotencia = UUID.randomUUID();
+        Transacao transacao = transacao(valor, contaDestino, StatusTransacao.PENDENTE);
+        Transacao falhou = transacao.comStatus(StatusTransacao.FALHOU);
+
+        when(idempotenciaService.verificar(idIdempotencia)).thenReturn(Optional.empty());
+        when(contaRepository.findById(idContaOrigem)).thenReturn(Optional.of(contaAtiva()));
+        when(criaTransacaoService.cria(valor, TipoTransacao.PIX, idContaOrigem, contaDestino, idIdempotencia))
+                .thenReturn(transacao);
+        when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
+        when(strategy.processa(transacao)).thenReturn(falhou);
+        when(transacaoRepository.update(falhou)).thenReturn(falhou);
+
+        service.processa(valor, TipoTransacao.PIX, idContaOrigem, contaDestino, idIdempotencia);
+
+        verify(saldoService, never()).debitar(idContaOrigem, valor);
+    }
+
+    @Test
+    void devePublicarEventoAposTransacaoConcluida() {
+        BigDecimal valor = new BigDecimal("50.00");
+        String contaDestino = "email@email.com";
+        UUID idIdempotencia = UUID.randomUUID();
+        Transacao transacao = transacao(valor, contaDestino, StatusTransacao.PENDENTE);
+        Transacao concluida = transacao.comStatus(StatusTransacao.COMPLETADA);
+
+        when(idempotenciaService.verificar(idIdempotencia)).thenReturn(Optional.empty());
+        when(contaRepository.findById(idContaOrigem)).thenReturn(Optional.of(contaAtiva()));
+        when(criaTransacaoService.cria(valor, TipoTransacao.PIX, idContaOrigem, contaDestino, idIdempotencia))
+                .thenReturn(transacao);
+        when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
+        when(strategy.processa(transacao)).thenReturn(concluida);
+        when(transacaoRepository.update(concluida)).thenReturn(concluida);
+
+        service.processa(valor, TipoTransacao.PIX, idContaOrigem, contaDestino, idIdempotencia);
+
+        InOrder inOrder = inOrder(transacaoRepository, eventoPublicador);
+        inOrder.verify(transacaoRepository).update(concluida);
+        inOrder.verify(eventoPublicador).publica(any());
+    }
+
     private Conta contaAtiva() {
+        return contaComStatus(StatusConta.ATIVA);
+    }
+
+    private Conta contaComStatus(StatusConta status) {
         return Conta.builder()
                 .numeroConta("12345")
                 .agencia("0001")
                 .idCliente(UUID.randomUUID())
                 .tipo(TipoConta.CORRENTE)
+                .status(status)
                 .build();
     }
 
