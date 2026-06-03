@@ -121,14 +121,14 @@ class TransacaoControllerTest {
     }
 
     @Test
-    void deveRetornar500QuandoHeaderIdempotenciaAusente() throws Exception {
+    void deveRetornar400QuandoHeaderIdempotenciaAusente() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(cliente())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(transacaoRequisicaoJson("150.00", ID_CONTA_ORIGEM, "destino-pix")))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.codigoErro").value("ERRO_INTERNO_SERVIDOR"));
+                .andExpect(jsonPath("$.codigoErro").value("CABECALHO_AUSENTE"));
     }
 
     @Test
@@ -232,15 +232,15 @@ class TransacaoControllerTest {
     }
 
     @Test
-    void deveRetornar500QuandoRoleInsuficiente() throws Exception {
+    void deveRetornar403QuandoRoleInsuficiente() throws Exception {
         mockMvc.perform(post("/api/v1/transacoes/pix")
                         .with(jwt().authorities(() -> "ROLE_INVALIDA"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HeadersHttp.IDEMPOTENCIA_HEADER, ID_IDEMPOTENCIA)
                         .content(transacaoRequisicaoJson("150.00", ID_CONTA_ORIGEM, "destino-pix")))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath("$.codigoErro").value("ERRO_INTERNO_SERVIDOR"));
+                .andExpect(jsonPath("$.codigoErro").value("ACESSO_NEGADO"));
     }
 
     @Test

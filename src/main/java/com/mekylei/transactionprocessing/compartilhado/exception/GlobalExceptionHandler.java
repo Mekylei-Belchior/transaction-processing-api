@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -95,6 +97,28 @@ public class GlobalExceptionHandler {
         problema.setProperty(CODIGO_ERRO_PROPERTY, "CONFLITO_CONCORRENCIA");
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problema);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ProblemDetail> trataCabecalhoObrigatorioAusente(MissingRequestHeaderException e) {
+        logger.warn("Cabeçalho obrigatório ausente: {}", e.getHeaderName());
+
+        ProblemDetail problema = criaProblema("Cabeçalho obrigatório ausente", HttpStatus.BAD_REQUEST);
+        problema.setDetail("O cabeçalho '" + e.getHeaderName() + "' é obrigatório.");
+        problema.setProperty(CODIGO_ERRO_PROPERTY, "CABECALHO_AUSENTE");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problema);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> trataAcessoNegado(AccessDeniedException e) {
+        logger.warn("Acesso negado: {}", e.getMessage());
+
+        ProblemDetail problema = criaProblema("Acesso negado", HttpStatus.FORBIDDEN);
+        problema.setDetail("Sem permissão para executar esta operação.");
+        problema.setProperty(CODIGO_ERRO_PROPERTY, "ACESSO_NEGADO");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problema);
     }
 
     @ExceptionHandler(Exception.class)
