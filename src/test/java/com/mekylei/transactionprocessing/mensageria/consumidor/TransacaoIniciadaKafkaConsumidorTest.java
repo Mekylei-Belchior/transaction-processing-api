@@ -71,6 +71,9 @@ class TransacaoIniciadaKafkaConsumidorTest {
     @Mock
     private TedTransacaoKafkaConsumidor tedTransacaoKafkaConsumidor;
 
+    @Mock
+    private TefTransacaoKafkaConsumidor tefTransacaoKafkaConsumidor;
+
     private TransacaoIniciadaKafkaConsumidor consumidor;
 
     @BeforeEach
@@ -79,7 +82,8 @@ class TransacaoIniciadaKafkaConsumidorTest {
                 eventoProcessadoService,
                 new ObjectMapper(),
                 pixTransacaoKafkaConsumidor,
-                tedTransacaoKafkaConsumidor);
+                tedTransacaoKafkaConsumidor,
+                tefTransacaoKafkaConsumidor);
     }
 
     @Test
@@ -342,7 +346,8 @@ class TransacaoIniciadaKafkaConsumidorTest {
     void deveProcessarMensagemTefValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
-        String payload = payloadValido("TEF", idEvento, idCorrelacao);
+        UUID idAgregado = UUID.randomUUID();
+        String payload = payloadValido("TEF", idEvento, idCorrelacao, idAgregado);
 
         when(eventoProcessadoService.registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO))
                 .thenReturn(true);
@@ -352,6 +357,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
         verifyNoInteractions(pixTransacaoKafkaConsumidor);
         verifyNoInteractions(tedTransacaoKafkaConsumidor);
+        verify(tefTransacaoKafkaConsumidor).processar(idAgregado, idCorrelacao);
     }
 
     @Test
