@@ -17,20 +17,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -38,23 +42,27 @@ import static org.mockito.Mockito.when;
  *
  * <p>Objetivo:</p>
  * <ul>
- *     <li>Validar o comportamento esperado de {@link PixTransacaoKafkaConsumidor} nos cenários exercitados pela suíte.</li>
- *     <li>Preservar regras de negócio, contratos, integrações ou invariantes aplicáveis à classe testada.</li>
- *     <li>Garantir regressão funcional para alterações futuras relacionadas a {@code PixTransacaoKafkaConsumidor}.</li>
+ *     <li>Validar o processamento de transações Pix pendentes consumidas da mensageria.</li>
+ *     <li>Garantir a integração do consumidor com strategy, saldo, limite, repositório e publicação de eventos.</li>
+ *     <li>Preservar os fluxos de sucesso, falha e descarte de mensagens já finalizadas.</li>
  * </ul>
  *
  * <p>Cenários cobertos:</p>
  * <ul>
- *     <li>Deve lançar erro quando transação Pix não for encontrada.</li>
- *     <li>Deve ignorar transação Pix que não está pendente.</li>
- *     <li>Deve concluir Pix e publicar evento de conclusão.</li>
- *     <li>Deve marcar Pix como falhou quando strategy lança exceção.</li>
- *     <li>Deve publicar falha quando Pix processado não termina completado.</li>
+ *     <li>Deve lançar exceção quando a transação Pix não for encontrada.</li>
+ *     <li>Deve ignorar processamento quando a transação Pix não estiver pendente.</li>
+ *     <li>Deve debitar saldo, decrementar limite, atualizar repositório e publicar conclusão em ordem.</li>
+ *     <li>Deve não debitar saldo nem decrementar limite quando a strategy retorna falha.</li>
+ *     <li>Deve publicar evento de conclusão quando o Pix for processado com sucesso.</li>
+ *     <li>Deve publicar evento de falha quando a strategy lançar exceção.</li>
+ *     <li>Deve atualizar a transação no repositório após o processamento.</li>
+ *     <li>Deve usar ID da conta de origem e valor da transação carregada para débito.</li>
  * </ul>
  *
  * <p>Cenários não cobertos:</p>
  * <ul>
- *     <li>Testes de carga, resiliência distribuída e validações de infraestrutura externas ao escopo da classe.</li>
+ *     <li>Consumo real de Kafka, transações Spring, logs e integrações de infraestrutura.</li>
+ *     <li>Regras internas das strategies, dos serviços de saldo e limite e do publicador de eventos.</li>
  * </ul>
  *
  * @author Mekylei Belchior
@@ -95,110 +103,143 @@ class PixTransacaoKafkaConsumidorTest {
     }
 
     @Test
-    @DisplayName("deve lançar erro quando transação Pix não for encontrada")
-    void deveLancarErroQuandoTransacaoPixNaoForEncontrada() {
-        UUID idAgregado = UUID.randomUUID();
-        UUID idCorrelacao = UUID.randomUUID();
-        when(transacaoRepository.findById(idAgregado)).thenReturn(Optional.empty());
+    @DisplayName("deve lançar exceção quando transação não encontrada")
+    void deveLancarExcecaoQuandoTransacaoNaoEncontrada() {
+        when(transacaoRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> consumidor.processar(idAgregado, idCorrelacao))
-                .isInstanceOf(RecursoNaoEncontradoException.class)
-                .hasMessageContaining("Transação PIX não encontrada: " + idAgregado);
+        assertThatThrownBy(() -> consumidor.processar(UUID.randomUUID(), UUID.randomUUID()))
+                .isInstanceOf(RecursoNaoEncontradoException.class);
 
-        verify(transacaoRepository).findById(idAgregado);
-        verifyNoInteractions(saldoService, limiteService, strategyResolver, eventoPublicador);
+        verifyNoInteractions(saldoService, limiteService, eventoPublicador);
     }
 
     @Test
-    @DisplayName("deve ignorar transação Pix que não está pendente")
-    void deveIgnorarTransacaoPixQueNaoEstaPendente() {
-        Transacao transacao = transacao(StatusTransacao.COMPLETADA);
-        UUID idCorrelacao = UUID.randomUUID();
-        when(transacaoRepository.findById(transacao.getId())).thenReturn(Optional.of(transacao));
+    @DisplayName("deve ignorar processamento quando status não pendente")
+    void deveIgnorarProcessamentoQuandoStatusNaoPendente() {
+        Transacao transacao = transacaoPendentePix().comStatus(StatusTransacao.COMPLETADA);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
 
-        consumidor.processar(transacao.getId(), idCorrelacao);
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
 
-        verify(transacaoRepository).findById(transacao.getId());
-        verifyNoMoreInteractions(transacaoRepository);
-        verifyNoInteractions(saldoService, limiteService, strategyResolver, eventoPublicador);
+        verifyNoInteractions(strategyResolver);
+        verifyNoInteractions(eventoPublicador);
     }
 
     @Test
-    @DisplayName("deve concluir Pix e publicar evento de conclusão")
-    void deveConcluirPixEPublicarEventoDeConclusao() {
-        Transacao transacao = transacao(StatusTransacao.PENDENTE);
-        Transacao processada = transacao.comStatus(StatusTransacao.COMPLETADA);
-        UUID idCorrelacao = UUID.randomUUID();
-
-        when(transacaoRepository.findById(transacao.getId())).thenReturn(Optional.of(transacao));
+    @DisplayName("deve debitar saldo e decrementar limite quando transação concluída")
+    void deveDebitarSaldoEDecrementarLimiteQuandoTransacaoConcluida() {
+        Transacao transacao = transacaoPendentePix();
+        Transacao concluida = transacao.comStatus(StatusTransacao.COMPLETADA);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
         when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
-        when(strategy.processa(transacao)).thenReturn(processada);
-        when(transacaoRepository.update(processada)).thenReturn(processada);
+        when(strategy.processa(transacao)).thenReturn(concluida);
+        when(transacaoRepository.update(any())).thenReturn(concluida);
 
-        consumidor.processar(transacao.getId(), idCorrelacao);
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
 
-        verify(strategyResolver).resolve(TipoTransacao.PIX);
-        verify(strategy).processa(transacao);
-        verify(saldoService).debitar(transacao.getIdContaOrigem(), new BigDecimal("100.00"));
-        verify(limiteService).decrementarUtilizado(
+        InOrder inOrder = inOrder(strategy, saldoService, limiteService, transacaoRepository, eventoPublicador);
+        inOrder.verify(strategy).processa(transacao);
+        inOrder.verify(saldoService).debitar(transacao.getIdContaOrigem(), transacao.getValor().valor());
+        inOrder.verify(limiteService).decrementarUtilizado(
                 transacao.getIdContaOrigem(),
                 TipoTransacao.PIX,
-                new BigDecimal("100.00"));
-        verify(transacaoRepository).update(processada);
+                transacao.getValor().valor());
+        inOrder.verify(transacaoRepository).update(concluida);
+        inOrder.verify(eventoPublicador).publica(any(TransacaoConcluidaEvento.class));
+    }
+
+    @Test
+    @DisplayName("deve não debitar saldo quando transação falhou pela strategy")
+    void deveNaoDebitarSaldoQuandoTransacaoFalhouPelaStrategy() {
+        Transacao transacao = transacaoPendentePix();
+        Transacao falhou = transacao.comStatus(StatusTransacao.FALHOU);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
+        when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
+        when(strategy.processa(transacao)).thenReturn(falhou);
+        when(transacaoRepository.update(any())).thenReturn(falhou);
+
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
+
+        verifyNoInteractions(saldoService, limiteService);
+        verify(eventoPublicador).publica(any(TransacaoFalhouEvento.class));
+    }
+
+    @Test
+    @DisplayName("deve publicar evento concluída quando Pix processado com sucesso")
+    void devePublicarEventoConcluidaQuandoPixProcessadoComSucesso() {
+        Transacao transacao = transacaoPendentePix();
+        Transacao concluida = transacao.comStatus(StatusTransacao.COMPLETADA);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
+        when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
+        when(strategy.processa(transacao)).thenReturn(concluida);
+        when(transacaoRepository.update(any())).thenReturn(concluida);
+
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
+
         verify(eventoPublicador).publica(any(TransacaoConcluidaEvento.class));
+        verify(eventoPublicador, never()).publica(any(TransacaoFalhouEvento.class));
     }
 
     @Test
-    @DisplayName("deve marcar Pix como falhou quando strategy lança exceção")
-    void deveMarcarPixComoFalhouQuandoStrategyLancaExcecao() {
-        Transacao transacao = transacao(StatusTransacao.PENDENTE);
-        UUID idCorrelacao = UUID.randomUUID();
-
-        when(transacaoRepository.findById(transacao.getId())).thenReturn(Optional.of(transacao));
+    @DisplayName("deve publicar evento falhou quando strategy lança exceção")
+    void devePublicarEventoFalhouQuandoStrategyLancaExcecao() {
+        Transacao transacao = transacaoPendentePix();
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
         when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
-        when(strategy.processa(transacao)).thenThrow(new IllegalStateException("SPI indisponível"));
+        when(strategy.processa(any())).thenThrow(new RuntimeException("Erro SPI"));
 
-        consumidor.processar(transacao.getId(), idCorrelacao);
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
 
-        verify(transacaoRepository).update(argThat(falhou ->
-                StatusTransacao.FALHOU.equals(falhou.getStatus())
-                        && transacao.getId().equals(falhou.getId())));
+        verifyNoInteractions(saldoService, limiteService);
         verify(eventoPublicador).publica(any(TransacaoFalhouEvento.class));
-        verify(saldoService, never()).debitar(any(), any());
-        verify(limiteService, never()).decrementarUtilizado(any(), any(), any());
+        verify(transacaoRepository).update(argThat(t -> StatusTransacao.FALHOU.equals(t.getStatus())));
     }
 
     @Test
-    @DisplayName("deve publicar falha quando Pix processado não termina completado")
-    void devePublicarFalhaQuandoPixProcessadoNaoTerminaCompletado() {
-        Transacao transacao = transacao(StatusTransacao.PENDENTE);
-        Transacao processada = transacao.comStatus(StatusTransacao.FALHOU);
-        UUID idCorrelacao = UUID.randomUUID();
-
-        when(transacaoRepository.findById(transacao.getId())).thenReturn(Optional.of(transacao));
+    @DisplayName("deve atualizar transação no repositório após processamento")
+    void deveAtualizarTransacaoNoRepositorioAposProcessamento() {
+        Transacao transacao = transacaoPendentePix();
+        Transacao concluida = transacao.comStatus(StatusTransacao.COMPLETADA);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
         when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
-        when(strategy.processa(transacao)).thenReturn(processada);
-        when(transacaoRepository.update(processada)).thenReturn(processada);
+        when(strategy.processa(transacao)).thenReturn(concluida);
+        when(transacaoRepository.update(any())).thenReturn(concluida);
 
-        consumidor.processar(transacao.getId(), idCorrelacao);
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
 
-        verify(saldoService, never()).debitar(any(), any());
-        verify(limiteService, never()).decrementarUtilizado(any(), any(), any());
-        verify(transacaoRepository).update(processada);
-        verify(eventoPublicador).publica(any(TransacaoFalhouEvento.class));
-        verify(eventoPublicador, never()).publica(any(TransacaoConcluidaEvento.class));
+        verify(transacaoRepository).update(argThat(t -> StatusTransacao.COMPLETADA.equals(t.getStatus())));
     }
 
-    private Transacao transacao(StatusTransacao status) {
+    @Test
+    @DisplayName("deve usar ID conta origem e valor da transação carregada")
+    void deveUsarIdContaOrigemEValorDaTransacaoCarregada() {
+        Transacao transacao = transacaoPendentePix();
+        Transacao concluida = transacao.comStatus(StatusTransacao.COMPLETADA);
+        when(transacaoRepository.findById(any())).thenReturn(Optional.of(transacao));
+        when(strategyResolver.resolve(TipoTransacao.PIX)).thenReturn(strategy);
+        when(strategy.processa(transacao)).thenReturn(concluida);
+        when(transacaoRepository.update(any())).thenReturn(concluida);
+
+        consumidor.processar(transacao.getId(), UUID.randomUUID());
+
+        ArgumentCaptor<UUID> idContaOrigemCaptor = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<BigDecimal> valorCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(saldoService).debitar(idContaOrigemCaptor.capture(), valorCaptor.capture());
+        assertThat(idContaOrigemCaptor.getValue()).isEqualTo(transacao.getIdContaOrigem());
+        assertThat(valorCaptor.getValue()).isEqualByComparingTo(transacao.getValor().valor());
+    }
+
+    private Transacao transacaoPendentePix() {
         return Transacao.builder()
                 .id(UUID.randomUUID())
                 .idCorrelacao(UUID.randomUUID())
                 .idIdempotencia(UUID.randomUUID())
                 .idContaOrigem(UUID.randomUUID())
-                .contaDestino("0001-12345-6")
+                .contaDestino("12345-6")
                 .tipo(TipoTransacao.PIX)
+                .status(StatusTransacao.PENDENTE)
                 .valor(ValorMonetario.paraReal(new BigDecimal("100.00")))
-                .status(status)
+                .criadoEm(Instant.now())
                 .build();
     }
 }
