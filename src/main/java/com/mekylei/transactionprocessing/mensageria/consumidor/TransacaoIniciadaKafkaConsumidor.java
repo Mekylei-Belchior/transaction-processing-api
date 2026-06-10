@@ -25,13 +25,16 @@ public class TransacaoIniciadaKafkaConsumidor {
     private final EventoProcessadoService eventoProcessadoService;
     private final ObjectMapper objectMapper;
     private final PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor;
+    private final TedTransacaoKafkaConsumidor tedTransacaoKafkaConsumidor;
 
     public TransacaoIniciadaKafkaConsumidor(EventoProcessadoService eventoProcessadoService,
                                             ObjectMapper objectMapper,
-                                            PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor) {
+                                            PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor,
+                                            TedTransacaoKafkaConsumidor tedTransacaoKafkaConsumidor) {
         this.eventoProcessadoService = eventoProcessadoService;
         this.objectMapper = objectMapper;
         this.pixTransacaoKafkaConsumidor = pixTransacaoKafkaConsumidor;
+        this.tedTransacaoKafkaConsumidor = tedTransacaoKafkaConsumidor;
     }
 
     @KafkaListener(
@@ -137,7 +140,8 @@ public class TransacaoIniciadaKafkaConsumidor {
                 evento.tipo(), evento.idAgregado(), evento.idCorrelacao());
         switch (evento.tipo()) {
             case PIX -> pixTransacaoKafkaConsumidor.processar(evento.idAgregado(), evento.idCorrelacao());
-            case TED, TEF -> {}
+            case TED -> tedTransacaoKafkaConsumidor.processar(evento.idAgregado(), evento.idCorrelacao());
+            case TEF -> {}
             default -> logger.warn("Tipo sem consumidor registrado: tipo={}, idAgregado={}",
                     evento.tipo(), evento.idAgregado());
         }

@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
  *     <li>Deve descartar mensagem sem campo ID correlação.</li>
  *     <li>Deve descartar mensagem sem campo ID agregado.</li>
  *     <li>Deve descartar mensagem com ID evento inválido.</li>
- *     <li>Deve descartar mensagem com ID correlação inválido.</li>
+ *     <li>Deve descartar mensagem com ID correlação inválida.</li>
  *     <li>Deve descartar mensagem com ID agregado inválido.</li>
  *     <li>Deve descartar mensagem já processada.</li>
  *     <li>Deve solicitar registro de idempotência antes de processar.</li>
@@ -68,6 +68,9 @@ class TransacaoIniciadaKafkaConsumidorTest {
     @Mock
     private PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor;
 
+    @Mock
+    private TedTransacaoKafkaConsumidor tedTransacaoKafkaConsumidor;
+
     private TransacaoIniciadaKafkaConsumidor consumidor;
 
     @BeforeEach
@@ -75,7 +78,8 @@ class TransacaoIniciadaKafkaConsumidorTest {
         consumidor = new TransacaoIniciadaKafkaConsumidor(
                 eventoProcessadoService,
                 new ObjectMapper(),
-                pixTransacaoKafkaConsumidor);
+                pixTransacaoKafkaConsumidor,
+                tedTransacaoKafkaConsumidor);
     }
 
     @Test
@@ -320,7 +324,8 @@ class TransacaoIniciadaKafkaConsumidorTest {
     void deveProcessarMensagemTedValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
-        String payload = payloadValido("TED", idEvento, idCorrelacao);
+        UUID idAgregado = UUID.randomUUID();
+        String payload = payloadValido("TED", idEvento, idCorrelacao, idAgregado);
 
         when(eventoProcessadoService.registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO))
                 .thenReturn(true);
@@ -329,6 +334,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
 
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
         verifyNoInteractions(pixTransacaoKafkaConsumidor);
+        verify(tedTransacaoKafkaConsumidor).processar(idAgregado, idCorrelacao);
     }
 
     @Test
@@ -345,6 +351,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
 
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
         verifyNoInteractions(pixTransacaoKafkaConsumidor);
+        verifyNoInteractions(tedTransacaoKafkaConsumidor);
     }
 
     @Test
