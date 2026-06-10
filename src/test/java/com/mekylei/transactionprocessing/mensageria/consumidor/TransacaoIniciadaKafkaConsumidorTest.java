@@ -65,11 +65,17 @@ class TransacaoIniciadaKafkaConsumidorTest {
     @Mock
     private EventoProcessadoService eventoProcessadoService;
 
+    @Mock
+    private PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor;
+
     private TransacaoIniciadaKafkaConsumidor consumidor;
 
     @BeforeEach
     void setUp() {
-        consumidor = new TransacaoIniciadaKafkaConsumidor(eventoProcessadoService, new ObjectMapper());
+        consumidor = new TransacaoIniciadaKafkaConsumidor(
+                eventoProcessadoService,
+                new ObjectMapper(),
+                pixTransacaoKafkaConsumidor);
     }
 
     @Test
@@ -297,7 +303,8 @@ class TransacaoIniciadaKafkaConsumidorTest {
     void deveProcessarMensagemPixValida() {
         UUID idEvento = UUID.randomUUID();
         UUID idCorrelacao = UUID.randomUUID();
-        String payload = payloadValido("PIX", idEvento, idCorrelacao);
+        UUID idAgregado = UUID.randomUUID();
+        String payload = payloadValido("PIX", idEvento, idCorrelacao, idAgregado);
 
         when(eventoProcessadoService.registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO))
                 .thenReturn(true);
@@ -305,6 +312,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
         consumidor.consumir(new ConsumerRecord<>(TOPICO, 0, 12L, "key", payload));
 
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
+        verify(pixTransacaoKafkaConsumidor).processar(idAgregado, idCorrelacao);
     }
 
     @Test
@@ -320,6 +328,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
         consumidor.consumir(new ConsumerRecord<>(TOPICO, 0, 13L, "key", payload));
 
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
+        verifyNoInteractions(pixTransacaoKafkaConsumidor);
     }
 
     @Test
@@ -335,6 +344,7 @@ class TransacaoIniciadaKafkaConsumidorTest {
         consumidor.consumir(new ConsumerRecord<>(TOPICO, 0, 14L, "key", payload));
 
         verify(eventoProcessadoService).registrarSeNaoProcessado(idEvento, idCorrelacao, GRUPO, TOPICO);
+        verifyNoInteractions(pixTransacaoKafkaConsumidor);
     }
 
     @Test
@@ -355,6 +365,10 @@ class TransacaoIniciadaKafkaConsumidorTest {
     }
 
     private String payloadValido(String tipo, UUID idEvento, UUID idCorrelacao) {
+        return payloadValido(tipo, idEvento, idCorrelacao, UUID.randomUUID());
+    }
+
+    private String payloadValido(String tipo, UUID idEvento, UUID idCorrelacao, UUID idAgregado) {
         return """
                 {
                   "tipo": "%s",
@@ -362,6 +376,6 @@ class TransacaoIniciadaKafkaConsumidorTest {
                   "idCorrelacao": "%s",
                   "idAgregado": "%s"
                 }
-                """.formatted(tipo, idEvento, idCorrelacao, UUID.randomUUID());
+                """.formatted(tipo, idEvento, idCorrelacao, idAgregado);
     }
 }

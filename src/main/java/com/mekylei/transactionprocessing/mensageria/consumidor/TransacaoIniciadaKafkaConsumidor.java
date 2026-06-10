@@ -24,10 +24,14 @@ public class TransacaoIniciadaKafkaConsumidor {
 
     private final EventoProcessadoService eventoProcessadoService;
     private final ObjectMapper objectMapper;
+    private final PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor;
 
-    public TransacaoIniciadaKafkaConsumidor(EventoProcessadoService eventoProcessadoService, ObjectMapper objectMapper) {
+    public TransacaoIniciadaKafkaConsumidor(EventoProcessadoService eventoProcessadoService,
+                                            ObjectMapper objectMapper,
+                                            PixTransacaoKafkaConsumidor pixTransacaoKafkaConsumidor) {
         this.eventoProcessadoService = eventoProcessadoService;
         this.objectMapper = objectMapper;
+        this.pixTransacaoKafkaConsumidor = pixTransacaoKafkaConsumidor;
     }
 
     @KafkaListener(
@@ -129,9 +133,14 @@ public class TransacaoIniciadaKafkaConsumidor {
     }
 
     private void processar(@NonNull EventoRecebido evento) {
-        logger.info("Transacao {} iniciada recebida: idEvento={}, idTransacao={}",
-                evento.tipo(), evento.idEvento(), evento.idAgregado());
-        // implementação para PIX, TED e TEF
+        logger.info("Roteando transacao iniciada: tipo={}, idAgregado={}, idCorrelacao={}",
+                evento.tipo(), evento.idAgregado(), evento.idCorrelacao());
+        switch (evento.tipo()) {
+            case PIX -> pixTransacaoKafkaConsumidor.processar(evento.idAgregado(), evento.idCorrelacao());
+            case TED, TEF -> {}
+            default -> logger.warn("Tipo sem consumidor registrado: tipo={}, idAgregado={}",
+                    evento.tipo(), evento.idAgregado());
+        }
     }
 
     private record EventoRecebido(TipoTransacao tipo, UUID idEvento, UUID idCorrelacao, UUID idAgregado) {
