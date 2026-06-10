@@ -14,12 +14,14 @@ import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Component
+@ConditionalOnProperty(prefix = "app.eventos.kafka", name = "enabled", havingValue = "true")
 public class PixTransacaoKafkaConsumidor {
 
     private static final Logger logger = LoggerFactory.getLogger(PixTransacaoKafkaConsumidor.class);
