@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.transacao.estrategia;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
+import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.when;
  *     <li>Suporta deve retornar false para Pix.</li>
  *     <li>Suporta deve retornar false para TED.</li>
  *     <li>Processa deve retornar transação COMPLETADA quando anti fraude autoriza.</li>
- *     <li>Processa deve retornar transação FALHOU quando anti fraude rejeita.</li>
+ *     <li>Processa deve lançar exceção quando anti fraude rejeita.</li>
  *     <li>Processa deve passar a transação correta para o anti fraude.</li>
  * </ul>
  *
@@ -94,16 +96,14 @@ class TefTransacaoStrategyTest {
     }
 
     @Test
-    @DisplayName("processa deve retornar transação FALHOU quando anti fraude rejeita")
-    void processa_deveRetornarTransacaoFALHOUQuandoAntiFraudeRejeita() {
+    @DisplayName("processa deve lançar exceção quando anti fraude rejeita")
+    void processa_deveLancarExcecaoQuandoAntiFraudeRejeita() {
         Transacao transacao = transacao(TipoTransacao.TEF);
         when(antiFraudeGateway.autorizar(transacao)).thenReturn(false);
 
-        Transacao processada = strategy.processa(transacao);
-
-        assertThat(processada).isNotSameAs(transacao);
-        assertThat(processada.getStatus()).isEqualTo(StatusTransacao.FALHOU);
-        assertThat(transacao.getStatus()).isEqualTo(StatusTransacao.PENDENTE);
+        assertThatThrownBy(() -> strategy.processa(transacao))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasFieldOrPropertyWithValue("codigoErro", "TEF_RECUSADO_ANTIFRAUDE");
     }
 
     @Test

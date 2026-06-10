@@ -1,0 +1,30 @@
+app:
+  eventos:
+    kafka:
+      enabled: false
+  criptografia:
+    chave: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+  hmac:
+    chave: "chave-hmac-testes-unitarios-32b!"
+
+spring:
+  datasource:
+    url:
+    username:
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwks-uri: http://localhost:9999/realms/test/protocol/openid-connect/certs
+          issuer-uri: http://localhost:9999/realms/test
+
+antifraude:
+  limite-aprovacao-automatica: 10000.00

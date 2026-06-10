@@ -1,6 +1,7 @@
 package com.mekylei.transactionprocessing.transacao.estrategia;
 
 
+import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
@@ -32,7 +33,9 @@ public class TefTransacaoStrategy implements TransacaoStrategy {
 
         if (!autorizado) {
             logger.warn("TEF não autorizado pelo antifraude: id={}", transacao.getId());
-            return transacao.comStatus(StatusTransacao.FALHOU);
+            throw new RegraNegocioException(
+                    "TEF_RECUSADO_ANTIFRAUDE",
+                    "TEF recusada pelo antifraude para a transação: " + transacao.getId());
         }
 
         return transacao.comStatus(StatusTransacao.COMPLETADA);
