@@ -53,7 +53,7 @@ Estado da documentação: junho/2026.
 - Integridade com HMAC: `HmacService` com HMAC-SHA256 para geração de assinaturas determinísticas de dados sensíveis pesquisáveis, configurável via `HmacProperties`.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 - Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
-- Consumo resiliente: consumidor Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ` e idempotência de consumo por `evento_processado`.
+- Consumo resiliente: consumidores Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ`, idempotência de consumo por `evento_processado` e roteamento de `transacoes.iniciadas` para processadores específicos de PIX, TED e TEF.
 - Cobertura de testes: 47 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC e mascaramento de logs.
 
 ---
@@ -72,18 +72,18 @@ Estado da documentação: junho/2026.
 - Mascaramento de dados sensíveis nos logs via subsistema `observabilidade/mascaramento` integrado ao Logback com logging estruturado em JSON (`logstash-logback-encoder`).
 - HMAC-SHA256 para geração de assinaturas determinísticas de dados sensíveis (`HmacService`, `HmacUtils`).
 - Eventos de domínio e outbox (`DominioEventoOutboxPublicador`, `OutboxEventoJpaAdapter`, `EventoOutboxPublicador`) com publicação Kafka assíncrona.
-- Consumidores Kafka iniciais (`TransacaoIniciadaKafkaConsumidor`, `DlqMonitorConsumidor`) com idempotência por `EventoProcessadoService`.
+- Consumidores Kafka (`TransacaoIniciadaKafkaConsumidor`, `PixTransacaoKafkaConsumidor`, `TedTransacaoKafkaConsumidor`, `TefTransacaoKafkaConsumidor`, `DlqMonitorConsumidor`) com idempotência por `EventoProcessadoService`, roteamento por tipo de transação e publicação de eventos finais.
 - Configuração de Kafka + DLQ + tópicos (`KafkaConfig`, `KafkaDlqProperties`, `OutboxProperties`, `TopicosProperties`) condicionada por `app.eventos.kafka.enabled`.
 
 ## Parcialmente Implementado
 
 - Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações reais com SPI/BACEN, STR, SPB e DICT ainda sem implementação de produção.
 - Auditoria: captura automática via `AuditoriaListener` (JPA lifecycle callbacks) operacional; mascaramento de dados sensíveis nos eventos de auditoria não implementado.
-- Consumidores de negócio por tipo de transação: consumidor de `transacoes.iniciadas` já identifica PIX/TED/TEF, garante idempotência de consumo e mantém ponto de extensão para regras específicas de cada tipo.
+- Bounded contexts separados para `cliente`, `PIX`, `TED` e `TEF` já possuem estrutura inicial de pacotes, mas ainda sem implementação funcional própria; o domínio e os casos de uso permanecem concentrados em `transacao`.
 
 ## Planejado
 
-- Bounded contexts separados para `cliente`, `PIX`, `TED` e `TEF` já existem como diretórios iniciais/planejados, mas a implementação funcional ainda está concentrada em `transacao`.
+- Consumidores Kafka por tipo estão implementados, mas ainda operam sobre o domínio central de `transacao`; a separação funcional completa por bounded context segue planejada.
 - Camada de resiliência (circuit breaker, retry, bulkhead por integração).
 - Domínio de `Cliente` e `ChavePix`.
 - Integração real com SPI/BACEN, STR e DICT.
@@ -112,7 +112,11 @@ transaction-processing-api/
 │   │   │   │       ├── AuditoriaContextGateway.java
 │   │   │   │       ├── AuditoriaContextWriter.java
 │   │   │   │       └── AuditoriaRepository.java
-│   │   │   ├── cliente/                           (diretório inicial — planejado)
+│   │   │   ├── cliente/                           (estrutura inicial — planejado)
+│   │   │   │   ├── aplicacao/
+│   │   │   │   │   └── porta/
+│   │   │   │   │       └── repositorio/
+│   │   │   │   └── dominio/
 │   │   │   ├── compartilhado/
 │   │   │   │   ├── adaptador/
 │   │   │   │   │   └── Jackson3FormatMapper.java
@@ -217,6 +221,9 @@ transaction-processing-api/
 │   │   │   ├── mensageria/
 │   │   │   │   ├── consumidor/
 │   │   │   │   │   ├── DlqMonitorConsumidor.java
+│   │   │   │   │   ├── PixTransacaoKafkaConsumidor.java
+│   │   │   │   │   ├── TedTransacaoKafkaConsumidor.java
+│   │   │   │   │   ├── TefTransacaoKafkaConsumidor.java
 │   │   │   │   │   └── TransacaoIniciadaKafkaConsumidor.java
 │   │   │   │   ├── aplicacao/
 │   │   │   │   │   └── EventoProcessadoService.java
@@ -245,9 +252,28 @@ transaction-processing-api/
 │   │   │   │   │       └── StrategyMascaramentoResolver.java
 │   │   │   │   ├── metrica/                       (vazio — planejado)
 │   │   │   │   └── rastreamento/                  (vazio — planejado)
-│   │   │   ├── pix/                               (diretório inicial — planejado)
-│   │   │   ├── ted/                               (diretório inicial — planejado)
-│   │   │   ├── tef/                               (diretório inicial — planejado)
+│   │   │   ├── pix/                               (estrutura inicial — planejado)
+│   │   │   │   ├── aplicacao/
+│   │   │   │   │   ├── porta/
+│   │   │   │   │   │   └── integracao/
+│   │   │   │   │   └── servico/
+│   │   │   │   ├── controle/
+│   │   │   │   ├── dominio/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── enums/
+│   │   │   │   ├── mapper/
+│   │   │   │   └── validador/
+│   │   │   ├── ted/                               (estrutura inicial — planejado)
+│   │   │   │   ├── aplicacao/
+│   │   │   │   │   ├── porta/
+│   │   │   │   │   │   └── integracao/
+│   │   │   │   │   └── servico/
+│   │   │   │   ├── controle/
+│   │   │   │   └── dto/
+│   │   │   ├── tef/                               (estrutura inicial — planejado)
+│   │   │   │   ├── aplicacao/
+│   │   │   │   │   └── servico/
+│   │   │   │   └── controle/
 │   │   │   └── transacao/
 │   │   │       ├── aplicacao/
 │   │   │       │   ├── porta/
@@ -275,11 +301,12 @@ transaction-processing-api/
 │   │   │       │   ├── TipoEventoTransacao.java
 │   │   │       │   ├── TipoTransacao.java
 │   │   │       │   ├── Transacao.java
-│   │   │       │   └── evento/
-│   │   │       │       ├── TransacaoConcluidaEvento.java
-│   │   │       │       ├── TransacaoEstornadaEvento.java
-│   │   │       │       ├── TransacaoFalhouEvento.java
-│   │   │       │       └── TransacaoIniciadaEvento.java
+│   │   │       │   ├── evento/
+│   │   │       │   │   ├── TransacaoConcluidaEvento.java
+│   │   │       │   │   ├── TransacaoEstornadaEvento.java
+│   │   │       │   │   ├── TransacaoFalhouEvento.java
+│   │   │       │   │   └── TransacaoIniciadaEvento.java
+│   │   │       │   └── vo/
 │   │   │       └── estrategia/
 │   │   │           ├── PixTransacaoStrategy.java
 │   │   │           ├── StrategyResolver.java
@@ -337,6 +364,9 @@ transaction-processing-api/
 │       │   │   ├── consumidor/
 │       │   │   │   ├── DlqMonitorConsumidorTest.java
 │       │   │   │   ├── EventoProcessadoServiceTest.java
+│       │   │   │   ├── PixTransacaoKafkaConsumidorTest.java
+│       │   │   │   ├── TedTransacaoKafkaConsumidorTest.java
+│       │   │   │   ├── TefTransacaoKafkaConsumidorTest.java
 │       │   │   │   └── TransacaoIniciadaKafkaConsumidorTest.java
 │       │   │   ├── evento/
 │       │   │   │   └── TransacaoEventoRouterTest.java
@@ -397,11 +427,11 @@ transaction-processing-api/
 │  │  1. Valida idempotência                                       │  │
 │  │  2. Valida conta de origem                                    │  │
 │  │  3. Valida saldo e limite                                     │  │
-│  │  4. Cria transação PENDENTE                                   │  │
+│  │  4. Cria transação PENDENTE e publica evento iniciado         │  │
 │  │  5. Resolve a strategy e processa a transação                 │  │
 │  │  6. Debita saldo e atualiza limite quando COMPLETADA          │  │
 │  │  7. Persiste o estado final                                   │  │
-│  │  8. Publica evento de domínio via Outbox                      │  │
+│  │  8. Publica evento final via Outbox                           │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │  ┌────────────────────┐  ┌──────────────────┐  ┌────────────────┐   │
 │  │ ConsultaTransacao  │  │ EstornoTransacao │  │ CriaTransacao  │   │
@@ -1070,7 +1100,7 @@ POSTGRES_PASSWORD=keycloak
 - [x] Implementar publicador agendado (Outbox Publisher)
 - [x] Adicionar dependência Spring Kafka ao `pom.xml`
 - [x] Implementar produtores Kafka para eventos de domínio (`transacoes.iniciadas`, `transacoes.concluidas`, `transacoes.falhas`, `transacoes.estornadas`)
-- [ ] Implementar lógica de negócio completa nos consumidores Kafka para PIX, TED e TEF (consumidor inicial com identificação do tipo e idempotência já existe)
+- [x] Implementar lógica de negócio nos consumidores Kafka para PIX, TED e TEF (`PixTransacaoKafkaConsumidor`, `TedTransacaoKafkaConsumidor`, `TefTransacaoKafkaConsumidor`)
 - [x] Implementar Dead Letter Queue com reprocessamento configurável
 - [x] Implementar Domain Events: `TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`
 - [x] Implementar idempotência de consumidor via tabela `evento_processado`
