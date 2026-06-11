@@ -35,6 +35,8 @@
         <springdoc-openapi.version>3.0.3</springdoc-openapi.version>
         <bucket4j-core.version>8.19.0</bucket4j-core.version>
         <logstash-logback.version>9.0</logstash-logback.version>
+        <jacoco.version>0.8.15</jacoco.version>
+        <jacoco.check.skip>false</jacoco.check.skip>
     </properties>
 
     <dependencies>
@@ -206,10 +208,245 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <argLine>@{argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <formats>
+                                <format>HTML</format>
+                                <format>XML</format>
+                                <format>CSV</format>
+                            </formats>
+                            <excludes>
+                                <!-- Bootstrap da aplicacao Spring Boot, sem regra de negocio propria. -->
+                                <exclude>**/TransactionProcessingApiApplication.class</exclude>
+                                <!-- Configuracoes Spring, Kafka, Security, filtros e beans de infraestrutura. -->
+                                <exclude>**/configuracao/**</exclude>
+                                <!-- Entidades JPA sem comportamento de dominio relevante para cobertura. -->
+                                <exclude>**/infraestrutura/entidade/**</exclude>
+                                <!-- Interfaces Spring Data implementadas pelo framework em tempo de execucao. -->
+                                <exclude>**/infraestrutura/repositorio/**</exclude>
+                                <!-- Constantes compartilhadas sem comportamento executavel. -->
+                                <exclude>**/compartilhado/constantes/**</exclude>
+                                <!-- Handler HTTP generico, acoplado ao ciclo de excecoes do Spring MVC. -->
+                                <exclude>**/compartilhado/exception/GlobalExceptionHandler.class</exclude>
+                                <!-- DTOs de borda HTTP sem logica de negocio. -->
+                                <exclude>**/*DTO.class</exclude>
+                                <exclude>**/*Requisicao.class</exclude>
+                                <exclude>**/*Resposta.class</exclude>
+                                <!-- Pacotes dedicados a DTOs de controle e contratos externos. -->
+                                <exclude>**/dto/**</exclude>
+                                <!-- Adaptadores Jackson e integracoes de serializacao acopladas ao framework. -->
+                                <exclude>**/compartilhado/adaptador/**</exclude>
+                                <!-- Integracao Logback, de baixo valor para cobertura isolada. -->
+                                <exclude>**/observabilidade/logging/**</exclude>
+                                <!-- Consumidores Kafka condicionais por app.eventos.kafka.enabled=true; nos testes de integracao atuais Kafka fica desabilitado. -->
+                                <exclude>**/mensageria/consumidor/**</exclude>
+                                <!-- Produtor Kafka condicional por app.eventos.kafka.enabled=true; sera coberto quando Testcontainers Kafka for habilitado. -->
+                                <exclude>**/mensageria/produtor/**</exclude>
+                                <!-- Implementacao Kafka do publicador de outbox, tambem condicional; DominioEventoOutboxPublicador permanece incluido. -->
+                                <exclude>**/mensageria/outbox/EventoOutboxPublicador.class</exclude>
+                                <!-- Bounded context de cliente planejado, ainda sem comportamento implementado. -->
+                                <exclude>**/cliente/**</exclude>
+                                <!-- Bounded contexts PIX, TED e TEF planejados como pacotes top-level. -->
+                                <exclude>**/pix/**</exclude>
+                                <exclude>**/ted/**</exclude>
+                                <exclude>**/tef/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jacoco.check.skip}</skip>
+                            <excludes>
+                                <!-- Bootstrap da aplicacao Spring Boot, sem regra de negocio propria. -->
+                                <exclude>**/TransactionProcessingApiApplication.class</exclude>
+                                <!-- Configuracoes Spring, Kafka, Security, filtros e beans de infraestrutura. -->
+                                <exclude>**/configuracao/**</exclude>
+                                <!-- Entidades JPA sem comportamento de dominio relevante para cobertura. -->
+                                <exclude>**/infraestrutura/entidade/**</exclude>
+                                <!-- Interfaces Spring Data implementadas pelo framework em tempo de execucao. -->
+                                <exclude>**/infraestrutura/repositorio/**</exclude>
+                                <!-- Constantes compartilhadas sem comportamento executavel. -->
+                                <exclude>**/compartilhado/constantes/**</exclude>
+                                <!-- Handler HTTP generico, acoplado ao ciclo de excecoes do Spring MVC. -->
+                                <exclude>**/compartilhado/exception/GlobalExceptionHandler.class</exclude>
+                                <!-- DTOs de borda HTTP sem logica de negocio. -->
+                                <exclude>**/*DTO.class</exclude>
+                                <exclude>**/*Requisicao.class</exclude>
+                                <exclude>**/*Resposta.class</exclude>
+                                <!-- Pacotes dedicados a DTOs de controle e contratos externos. -->
+                                <exclude>**/dto/**</exclude>
+                                <!-- Adaptadores Jackson e integracoes de serializacao acopladas ao framework. -->
+                                <exclude>**/compartilhado/adaptador/**</exclude>
+                                <!-- Integracao Logback, de baixo valor para cobertura isolada. -->
+                                <exclude>**/observabilidade/logging/**</exclude>
+                                <!-- Consumidores Kafka condicionais por app.eventos.kafka.enabled=true; nos testes de integracao atuais Kafka fica desabilitado. -->
+                                <exclude>**/mensageria/consumidor/**</exclude>
+                                <!-- Produtor Kafka condicional por app.eventos.kafka.enabled=true; sera coberto quando Testcontainers Kafka for habilitado. -->
+                                <exclude>**/mensageria/produtor/**</exclude>
+                                <!-- Implementacao Kafka do publicador de outbox, tambem condicional; DominioEventoOutboxPublicador permanece incluido. -->
+                                <exclude>**/mensageria/outbox/EventoOutboxPublicador.class</exclude>
+                                <!-- Bounded context de cliente planejado, ainda sem comportamento implementado. -->
+                                <exclude>**/cliente/**</exclude>
+                                <!-- Bounded contexts PIX, TED e TEF planejados como pacotes top-level. -->
+                                <exclude>**/pix/**</exclude>
+                                <exclude>**/ted/**</exclude>
+                                <exclude>**/tef/**</exclude>
+                            </excludes>
+                            <rules>
+                                <rule>
+                                    <!-- Regra global: minimo absoluto de cobertura do projeto. -->
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.60</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <!-- Regra por camada de dominio: pacotes de dominio de transacao e conta. -->
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com/mekylei/transactionprocessing/transacao/dominio*</include>
+                                        <include>com/mekylei/transactionprocessing/conta/dominio*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.75</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <!-- Regra por camada de aplicacao: servicos de transacao e conta. -->
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com/mekylei/transactionprocessing/transacao/aplicacao/servico*</include>
+                                        <include>com/mekylei/transactionprocessing/conta/aplicacao/servico*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+
+                    <!-- TODO: habilitar para separar cobertura de testes de integracao em fase propria.
+                         Os testes *IntegrationTest.java ja existem e hoje sao executados pelo Surefire,
+                         pois o padrao **/*Test.java os inclui. Para ativar o Failsafe futuramente,
+                         adicione excludes no Surefire para **/*IntegrationTest.java e includes no
+                         Failsafe para **/*IntegrationTest.java. As execucoes abaixo preparam relatorios
+                         separados de cobertura unitaria e de integracao usando o padrao real do projeto.
+
+                    <execution>
+                        <id>prepare-agent-integration</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>report-integration</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-integration</goal>
+                        </goals>
+                        <configuration>
+                            <formats>
+                                <format>HTML</format>
+                                <format>XML</format>
+                                <format>CSV</format>
+                            </formats>
+                        </configuration>
+                    </execution>
+                    -->
+                </executions>
+            </plugin>
+
+            <!-- TODO: habilitar para separar cobertura de testes de integracao em fase propria.
+                 Os testes *IntegrationTest.java ja existem e atualmente sao executados pelo Surefire.
+                 Ao ativar este plugin, configure tambem o Surefire para excluir **/*IntegrationTest.java. -->
+            <!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*IntegrationTest.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>coverage</id>
+            <properties>
+                <!-- Desabilita apenas o check do JaCoCo para analise local sem falhar o build. -->
+                <jacoco.check.skip>true</jacoco.check.skip>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
