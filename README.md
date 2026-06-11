@@ -26,6 +26,9 @@ Estado da documentação: junho/2026.
 | SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)     |
 | Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                        |
 | Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)     |
+| Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers      |
+| ArchUnit                    | 1.3.0                  | Testes de arquitetura                    |
+| H2                          | (gerenciado pelo Boot) | Banco em memória para testes             |
 
 ## Módulos Existentes
 
@@ -54,7 +57,7 @@ Estado da documentação: junho/2026.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 - Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
 - Consumo resiliente: consumidores Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ`, idempotência de consumo por `evento_processado` e roteamento de `transacoes.iniciadas` para processadores específicos de PIX, TED e TEF.
-- Cobertura de testes: 47 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC e mascaramento de logs.
+- Cobertura de testes: 56 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC, arquitetura, integrações com Testcontainers e mascaramento de logs.
 
 ---
 
@@ -65,13 +68,13 @@ Estado da documentação: junho/2026.
 - Camada de controle HTTP (`TransacaoController`) separada da camada de aplicação.
 - Camada de aplicação (`ProcessaTransacaoService`, `CriaTransacaoService`, `ConsultaTransacaoService`, `EstornoTransacaoService`) orquestrando casos de uso sem dependência direta de infraestrutura.
 - Camada de domínio (`Transacao`, `Conta`, `Saldo`, `LimiteTransacional`, `ValorMonetario`) sem dependência de frameworks.
-- Camada de infraestrutura (`TransacaoJpaAdapter`, `ContaJpaAdapter`, `SaldoJpaAdapter`, `LimiteJpaAdapter`, `AuditoriaJpaAdapter`) implementando interfaces de porta.
+- Camada de infraestrutura (`TransacaoJpaAdapter`, `ContaJpaAdapter`, `SaldoJpaAdapter`, `LimiteJpaAdapter`, `AuditoriaJpaAdapter`, `OutboxEventoJpaAdapter`, `EventoProcessadoJpaAdapter`) implementando interfaces de porta.
 - Validações específicas por tipo de transação via strategies: PIX simula envio ao SPI/BACEN, TED valida dia útil e horário bancário, TEF consulta antifraude stub.
 - Filtros transversais (`ContextoRequisicaoFilter`, `RateLimitFilter`) na camada de entrada.
 - Criptografia em repouso via `CriptografiaConverter` (AES-256-GCM, `AttributeConverter` JPA).
 - Mascaramento de dados sensíveis nos logs via subsistema `observabilidade/mascaramento` integrado ao Logback com logging estruturado em JSON (`logstash-logback-encoder`).
 - HMAC-SHA256 para geração de assinaturas determinísticas de dados sensíveis (`HmacService`, `HmacUtils`).
-- Eventos de domínio e outbox (`DominioEventoOutboxPublicador`, `OutboxEventoJpaAdapter`, `EventoOutboxPublicador`) com publicação Kafka assíncrona.
+- Eventos de domínio e outbox (`DominioEventoOutboxPublicador`, `OutboxEvento`, `OutboxEventoRepository`, `OutboxEventoJpaAdapter`, `EventoOutboxPublicador`) com publicação Kafka assíncrona.
 - Consumidores Kafka (`TransacaoIniciadaKafkaConsumidor`, `PixTransacaoKafkaConsumidor`, `TedTransacaoKafkaConsumidor`, `TefTransacaoKafkaConsumidor`, `DlqMonitorConsumidor`) com idempotência por `EventoProcessadoService`, roteamento por tipo de transação e publicação de eventos finais.
 - Configuração de Kafka + DLQ + tópicos (`KafkaConfig`, `KafkaDlqProperties`, `OutboxProperties`, `TopicosProperties`) condicionada por `app.eventos.kafka.enabled`.
 
@@ -124,6 +127,7 @@ transaction-processing-api/
 │   │   │   │   │   ├── HeadersHttp.java
 │   │   │   │   │   └── ProblemaDetailConstantes.java
 │   │   │   │   ├── dominio/
+│   │   │   │   │   ├── TipoTransacao.java
 │   │   │   │   │   └── ValorMonetario.java
 │   │   │   │   ├── evento/
 │   │   │   │   │   └── EventoDominio.java
@@ -200,6 +204,7 @@ transaction-processing-api/
 │   │   │   │   ├── persistencia/
 │   │   │   │   │   ├── AuditoriaJpaAdapter.java
 │   │   │   │   │   ├── ContaJpaAdapter.java
+│   │   │   │   │   ├── EventoProcessadoJpaAdapter.java
 │   │   │   │   │   ├── LimiteJpaAdapter.java
 │   │   │   │   │   ├── OutboxEventoJpaAdapter.java
 │   │   │   │   │   ├── SaldoJpaAdapter.java
@@ -231,7 +236,9 @@ transaction-processing-api/
 │   │   │   │   │   └── TransacaoEventoRouter.java
 │   │   │   │   ├── outbox/
 │   │   │   │   │   ├── DominioEventoOutboxPublicador.java
-│   │   │   │   │   └── EventoOutboxPublicador.java
+│   │   │   │   │   ├── EventoOutboxPublicador.java
+│   │   │   │   │   ├── OutboxEvento.java
+│   │   │   │   │   └── OutboxEventoRepository.java
 │   │   │   │   └── produtor/
 │   │   │   │       └── KafkaEventoProdutor.java
 │   │   │   ├── observabilidade/
@@ -299,7 +306,6 @@ transaction-processing-api/
 │   │   │       ├── dominio/
 │   │   │       │   ├── StatusTransacao.java
 │   │   │       │   ├── TipoEventoTransacao.java
-│   │   │       │   ├── TipoTransacao.java
 │   │   │       │   ├── Transacao.java
 │   │   │       │   ├── evento/
 │   │   │       │   │   ├── TransacaoConcluidaEvento.java
@@ -325,6 +331,10 @@ transaction-processing-api/
 │   │           └── V4__limite_versao.sql
 │   └── test/
 │       ├── java/com/mekylei/transactionprocessing/
+│       │   ├── arquitetura/
+│       │   │   ├── ArquiteturaHexagonalTest.java
+│       │   │   ├── CamadaSegurancaTest.java
+│       │   │   └── NamingConventionTest.java
 │       │   ├── compartilhado/
 │       │   │   ├── dominio/
 │       │   │   │   └── ValorMonetarioTest.java
@@ -344,6 +354,7 @@ transaction-processing-api/
 │       │   ├── conta/
 │       │   │   ├── aplicacao/servico/
 │       │   │   │   ├── LimiteServiceTest.java
+│       │   │   │   ├── SaldoIntegrationTest.java
 │       │   │   │   └── SaldoServiceTest.java
 │       │   │   └── dominio/
 │       │   │       ├── ContaTest.java
@@ -355,6 +366,7 @@ transaction-processing-api/
 │       │   │   ├── persistencia/
 │       │   │   │   ├── AuditoriaJpaAdapterTest.java
 │       │   │   │   ├── ContaJpaAdapterTest.java
+│       │   │   │   ├── EventoProcessadoJpaAdapterTest.java
 │       │   │   │   ├── LimiteJpaAdapterTest.java
 │       │   │   │   ├── SaldoJpaAdapterTest.java
 │       │   │   │   └── TransacaoJpaAdapterTest.java
@@ -373,6 +385,7 @@ transaction-processing-api/
 │       │   │   ├── outbox/
 │       │   │   │   ├── EventoOutboxPublicadorSchedulerTest.java
 │       │   │   │   ├── EventoOutboxPublicadorTest.java
+│       │   │   │   ├── OutboxEventoIntegrationTest.java
 │       │   │   │   └── OutboxEventoJpaAdapterTest.java
 │       │   │   └── produtor/
 │       │   │       └── KafkaEventoProdutorTest.java
@@ -387,7 +400,9 @@ transaction-processing-api/
 │       │   │   ├── aplicacao/servico/
 │       │   │   │   ├── ConsultaTransacaoServiceTest.java
 │       │   │   │   ├── CriaTransacaoServiceTest.java
+│       │   │   │   ├── EstornoIntegrationTest.java
 │       │   │   │   ├── EstornoTransacaoServiceTest.java
+│       │   │   │   ├── ProcessaTransacaoIntegrationTest.java
 │       │   │   │   └── ProcessaTransacaoServiceTest.java
 │       │   │   ├── controle/
 │       │   │   │   └── TransacaoControllerTest.java
@@ -400,8 +415,10 @@ transaction-processing-api/
 │       │   │       ├── StrategyResolverTest.java
 │       │   │       ├── TedTransacaoStrategyTest.java
 │       │   │       └── TefTransacaoStrategyTest.java
+│       │   ├── IntegrationTestBase.java
 │       │   └── TransactionProcessingApiApplicationTests.java
 │       └── resources/
+│           ├── application-integration-test.yml
 │           └── application-test.yml
 ```
 
@@ -1073,21 +1090,26 @@ POSTGRES_PASSWORD=keycloak
 
 # Dependências Principais
 
-| Tecnologia                                   | Finalidade                             |
-| -------------------------------------------- | -------------------------------------- |
-| `spring-boot-starter-web`                    | API REST com Spring MVC                |
-| `spring-boot-starter-data-jpa`               | Persistência via Hibernate/JPA         |
-| `spring-boot-starter-security`               | Framework de segurança                 |
-| `spring-boot-starter-oauth2-resource-server` | Validação de JWT OAuth2                |
-| `spring-boot-starter-validation`             | Bean Validation (Jakarta Validation)   |
-| `spring-boot-starter-actuator`               | Health checks e endpoints operacionais |
-| `spring-boot-starter-json`                   | Serialização Jackson 3                 |
-| `spring-boot-starter-kafka`                  | Publicação e consumo de eventos Kafka  |
-| `springdoc-openapi-starter-webmvc-ui`        | Documentação OpenAPI / Swagger UI      |
-| `postgresql`                                 | Driver JDBC PostgreSQL                 |
-| `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema     |
-| `bucket4j_jdk17-core`                        | Rate limiting via token bucket         |
-| `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)   |
+| Tecnologia                                   | Finalidade                              |
+| -------------------------------------------- | --------------------------------------- |
+| `spring-boot-starter-web`                    | API REST com Spring MVC                 |
+| `spring-boot-starter-data-jpa`               | Persistência via Hibernate/JPA          |
+| `spring-boot-starter-security`               | Framework de segurança                  |
+| `spring-boot-starter-oauth2-resource-server` | Validação de JWT OAuth2                 |
+| `spring-boot-starter-validation`             | Bean Validation (Jakarta Validation)    |
+| `spring-boot-starter-actuator`               | Health checks e endpoints operacionais  |
+| `spring-boot-starter-json`                   | Serialização Jackson 3                  |
+| `spring-boot-starter-kafka`                  | Publicação e consumo de eventos Kafka   |
+| `springdoc-openapi-starter-webmvc-ui`        | Documentação OpenAPI / Swagger UI       |
+| `postgresql`                                 | Driver JDBC PostgreSQL                  |
+| `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema      |
+| `bucket4j_jdk17-core`                        | Rate limiting via token bucket          |
+| `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)    |
+| `spring-boot-testcontainers`                 | Integração Spring Boot + Testcontainers |
+| `testcontainers-postgresql`                  | PostgreSQL em testes de integração      |
+| `testcontainers-kafka`                       | Kafka em testes de integração           |
+| `archunit-junit5`                            | Testes de regras arquiteturais          |
+| `h2`                                         | Banco em memória para testes            |
 
 ---
 
@@ -1134,6 +1156,6 @@ POSTGRES_PASSWORD=keycloak
 - [x] Implementar testes unitários de domínio (`TransacaoTest`, `TransacaoEventosTest`, `ContaTest`, `SaldoTest`, `LimiteTransacionalTest`, `ValorMonetarioTest`)
 - [x] Implementar testes unitários de serviços de aplicação (`ProcessaTransacaoServiceTest`, `CriaTransacaoServiceTest`, `ConsultaTransacaoServiceTest`, `EstornoTransacaoServiceTest`, `LimiteServiceTest`, `SaldoServiceTest`)
 - [x] Implementar testes unitários de estratégias (`PixTransacaoStrategyTest`, `TedTransacaoStrategyTest`, `TefTransacaoStrategyTest`, `StrategyResolverTest`)
-- [ ] Implementar testes de integração com Testcontainers
-- [ ] Implementar testes arquiteturais com ArchUnit
+- [x] Implementar testes de integração com Testcontainers (`IntegrationTestBase`, `ProcessaTransacaoIntegrationTest`, `EstornoIntegrationTest`, `SaldoIntegrationTest`, `OutboxEventoIntegrationTest`)
+- [x] Implementar testes arquiteturais com ArchUnit (`ArquiteturaHexagonalTest`, `CamadaSegurancaTest`, `NamingConventionTest`)
 - [ ] Configurar relatório de cobertura de código (JaCoCo)
