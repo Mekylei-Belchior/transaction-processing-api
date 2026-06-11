@@ -189,6 +189,11 @@ public class ArquiteturaHexagonalTest {
     /**
      * Verifica que value objects compartilhados são records ou classes finais.
      * Essa regra protege a imutabilidade dos objetos de valor usados pelos contextos de domínio.
+     * Ponto de atenção: {@code TipoTransacao} está no escopo desta regra por residir em
+     * {@code compartilhado.dominio}. Como o enum é simples, sem corpos de constante e sem métodos
+     * abstratos, o compilador Java emite {@code ACC_FINAL} no bytecode e o ArchUnit o reconhece
+     * como final. Se futuramente o enum ganhar constant-specific class bodies, por exemplo para
+     * implementar método abstrato por constante, esta regra passará a reportá-lo.
      *
      * @author Mekylei Belchior
      * @since 1.0
