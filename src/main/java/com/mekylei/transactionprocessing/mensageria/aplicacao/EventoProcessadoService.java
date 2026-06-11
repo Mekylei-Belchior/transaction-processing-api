@@ -1,39 +1,20 @@
 package com.mekylei.transactionprocessing.mensageria.aplicacao;
 
-import com.mekylei.transactionprocessing.infraestrutura.entidade.EventoProcessadoEntity;
-import com.mekylei.transactionprocessing.infraestrutura.repositorio.EventoProcessadoJpaRepository;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.mekylei.transactionprocessing.mensageria.aplicacao.porta.EventoProcessadoRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Service
 public class EventoProcessadoService {
 
-    private final EventoProcessadoJpaRepository repository;
+    private final EventoProcessadoRepository repository;
 
-    public EventoProcessadoService(EventoProcessadoJpaRepository repository) {
+    public EventoProcessadoService(EventoProcessadoRepository repository) {
         this.repository = repository;
     }
 
     public boolean registrarSeNaoProcessado(UUID idEvento, UUID idCorrelacao, String grupoConsumidor, String topico) {
-        if (repository.existsByIdEventoAndGrupoConsumidor(idEvento, grupoConsumidor)) {
-            return false;
-        }
-
-        EventoProcessadoEntity evento = new EventoProcessadoEntity();
-        evento.setIdEvento(idEvento);
-        evento.setIdCorrelacao(idCorrelacao);
-        evento.setGrupoConsumidor(grupoConsumidor);
-        evento.setTopico(topico);
-        evento.setProcessadoEm(Instant.now());
-
-        try {
-            repository.saveAndFlush(evento);
-            return true;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        return repository.registrarSeNaoProcessado(idEvento, idCorrelacao, grupoConsumidor, topico);
     }
 }
