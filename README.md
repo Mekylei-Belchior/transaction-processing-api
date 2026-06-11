@@ -28,7 +28,7 @@ Estado da documentação: junho/2026.
 | Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)      |
 | JaCoCo                      | 0.8.15                 | Relatórios e gates de cobertura de testes |
 | Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers       |
-| ArchUnit                    | 1.3.0                  | Testes de arquitetura                     |
+| ArchUnit                    | 1.4.2                  | Testes de arquitetura                     |
 | H2                          | (gerenciado pelo Boot) | Banco em memória para testes              |
 
 ## Módulos Existentes
