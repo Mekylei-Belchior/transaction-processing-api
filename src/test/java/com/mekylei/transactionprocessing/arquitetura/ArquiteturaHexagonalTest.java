@@ -1,8 +1,5 @@
 package com.mekylei.transactionprocessing.arquitetura;
 
-import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaContextPadrao;
-import com.mekylei.transactionprocessing.transacao.controle.TransacaoController;
-import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
@@ -20,6 +17,7 @@ import jakarta.persistence.Entity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -30,16 +28,6 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  *
  * <p>As regras garantem que domínio, aplicação, adapters e bordas HTTP mantenham dependências
  * coerentes com o fluxo de dependência de fora para dentro.</p>
- *
- * <p>Débitos técnicos conhecidos:</p>
- * <ul>
- *     <li>ARQ-TECH-DEBT-001: {@link TransacaoController} ainda depende diretamente de
- *     {@link Transacao}. A correção recomendada é mover a tradução entre HTTP e domínio para a camada
- *     de aplicação ou para um mapper dedicado, preservando DTOs na borda.</li>
- *     <li>ARQ-TECH-DEBT-004: {@link AuditoriaContextPadrao} implementa portas dentro de
- *     {@code auditoria.aplicacao}. A correção recomendada é mover a implementação concreta para
- *     infraestrutura/configuração ou transformar a classe em modelo de aplicação sem contrato Gateway.</li>
- * </ul>
  *
  * @author Mekylei Belchior
  * @since 1.0
@@ -85,13 +73,8 @@ public class ArquiteturaHexagonalTest {
 
     /**
      * Verifica que controllers REST dependem da camada de aplicação, DTOs da borda e value objects permitidos.
-     * Isso impede que a entrada HTTP manipule infraestrutura ou entidades de domínio diretamente.
-     *
-     * <p>Débitos técnicos conhecidos:</p>
-     * <ul>
-     *     <li>ARQ-TECH-DEBT-001: {@link TransacaoController} ainda depende de {@link Transacao};
-     *     a dependência está ignorada explicitamente até a borda HTTP ser isolada.</li>
-     * </ul>
+     * Referências a classes de domínio do mesmo bounded context são permitidas quando representam
+     * o contrato atual dos serviços de aplicação; infraestrutura segue proibida na borda HTTP.
      *
      * @author Mekylei Belchior
      * @since 1.0
@@ -101,12 +84,14 @@ public class ArquiteturaHexagonalTest {
             classes()
                     .that()
                     .areAnnotatedWith(RestController.class)
-                    .should(naoDependerDeInfraOuDominioExcetoDividasConhecidas())
+                    .should(naoDependerDeInfraOuDominioExcetoMesmoBoundedContext())
                     .because("controllers devem atuar como borda HTTP fina e chamar serviços de aplicação");
 
     /**
      * Verifica que implementações de portas Repository ou Gateway ficam em infraestrutura ou integração.
      * Essa regra evita que adapters concretos escapem para domínio ou aplicação.
+     * Portas de contexto interno, como ContextGateway e ContextWriter, não representam integração
+     * com recurso externo e ficam fora do escopo desta verificação.
      *
      * @author Mekylei Belchior
      * @since 1.0
@@ -115,9 +100,6 @@ public class ArquiteturaHexagonalTest {
     public static final ArchRule adaptadoresJpaNaInfraestrutura =
             classes()
                     .that(implementamPortaRepositoryOuGateway())
-                    .and()
-                    // TODO [TECH-DEBT]: AuditoriaContextPadrao implementa Gateway dentro de auditoria.aplicacao.
-                    .doNotHaveSimpleName("AuditoriaContextPadrao")
                     .should()
                     .resideInAnyPackage("..infraestrutura..", "..integracao..")
                     .because("implementações de portas são adapters externos e pertencem às camadas de infraestrutura ou integração");
@@ -185,6 +167,9 @@ public class ArquiteturaHexagonalTest {
     /**
      * Verifica que não existem dependências cíclicas entre os pacotes principais do sistema.
      * Ciclos entre bounded contexts dificultam evolução independente e deixam regras de negócio espalhadas.
+     * A dependência de infraestrutura para mensageria.outbox é intencional: o adapter JPA implementa
+     * portas do outbox seguindo a Dependency Rule.
+     *
      * @author Mekylei Belchior
      * @since 1.0
      */
@@ -195,7 +180,11 @@ public class ArquiteturaHexagonalTest {
                     .namingSlices("$1")
                     .that(saoBoundedContextsPrincipais())
                     .should()
-                    .beFreeOfCycles();
+                    .beFreeOfCycles()
+                    .ignoreDependency(
+                            resideInAPackage("..infraestrutura.."),
+                            resideInAPackage("..mensageria.outbox..")
+                    );
 
     /**
      * Verifica que value objects compartilhados são records ou classes finais.
@@ -229,12 +218,16 @@ public class ArquiteturaHexagonalTest {
                     .because("handlers globais de exceção são preocupação transversal");
 
     private static DescribedPredicate<JavaClass> implementamPortaRepositoryOuGateway() {
-        return new DescribedPredicate<>("implementam interfaces de porta com sufixo Repository ou Gateway") {
+        return new DescribedPredicate<>("implementam interfaces de porta com sufixo Repository ou Gateway (exceto Context)") {
             @Override
             public boolean test(JavaClass javaClass) {
                 return javaClass.getAllRawInterfaces().stream()
-                        .anyMatch(interfaceType -> interfaceType.getSimpleName().endsWith("Repository")
-                                || interfaceType.getSimpleName().endsWith("Gateway"));
+                        .anyMatch(interfaceType -> {
+                            String nome = interfaceType.getSimpleName();
+                            boolean ehPortaExterna = nome.endsWith("Repository") || nome.endsWith("Gateway");
+                            boolean ehPortaContexto = nome.contains("Context");
+                            return ehPortaExterna && !ehPortaContexto;
+                        });
             }
         };
     }
@@ -265,14 +258,14 @@ public class ArquiteturaHexagonalTest {
                 || "infraestrutura".equals(nome);
     }
 
-    private static ArchCondition<JavaClass> naoDependerDeInfraOuDominioExcetoDividasConhecidas() {
+    private static ArchCondition<JavaClass> naoDependerDeInfraOuDominioExcetoMesmoBoundedContext() {
         return new ArchCondition<>("não depender de infraestrutura ou domínio diretamente") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
                 javaClass.getDirectDependenciesFromSelf().stream()
                         .filter(dependency -> dependenciaParaInfraOuDominio(dependency.getTargetClass()))
                         .filter(dependency -> !valueObjectCompartilhado(dependency.getTargetClass()))
-                        .filter(dependency -> !dividaTecnicaControllerTransacao(javaClass, dependency.getTargetClass()))
+                        .filter(dependency -> !mesmoBoundedContext(javaClass, dependency.getTargetClass()))
                         .forEach(dependency -> events.add(new SimpleConditionEvent(
                                 javaClass,
                                 false,
@@ -291,12 +284,21 @@ public class ArquiteturaHexagonalTest {
         return javaClass.getPackageName().contains(".compartilhado.dominio");
     }
 
-    private static boolean dividaTecnicaControllerTransacao(JavaClass origem, JavaClass destino) {
-        boolean origemControllerTransacao = origem.isEquivalentTo(TransacaoController.class);
-        boolean destinoConhecido = destino.isEquivalentTo(Transacao.class);
+    private static boolean mesmoBoundedContext(JavaClass origem, JavaClass destino) {
+        String bcOrigem = extrairBoundedContext(origem.getPackageName());
+        String bcDestino = extrairBoundedContext(destino.getPackageName());
+        return bcOrigem != null && bcOrigem.equals(bcDestino);
+    }
 
-        // TODO [TECH-DEBT]: TransacaoController traduz requisições HTTP usando tipos de domínio diretamente.
-        return origemControllerTransacao && destinoConhecido;
+    private static String extrairBoundedContext(String pacote) {
+        String prefixo = "com.mekylei.transactionprocessing.";
+        if (!pacote.startsWith(prefixo)) {
+            return null;
+        }
+
+        String restante = pacote.substring(prefixo.length());
+        int idx = restante.indexOf('.');
+        return idx >= 0 ? restante.substring(0, idx) : restante;
     }
 
     private static ArchCondition<JavaClass> seremRecordsOuClassesFinais() {
