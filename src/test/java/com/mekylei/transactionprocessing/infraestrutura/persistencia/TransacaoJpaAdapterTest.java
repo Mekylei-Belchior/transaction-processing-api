@@ -3,7 +3,7 @@ package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.TransacaoJpaRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

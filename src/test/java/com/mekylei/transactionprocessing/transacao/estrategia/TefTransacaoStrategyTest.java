@@ -4,7 +4,7 @@ import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.integracao.AntiFraudeGateway;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

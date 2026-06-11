@@ -3,7 +3,7 @@ package com.mekylei.transactionprocessing.conta.aplicacao.servico;
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

@@ -9,7 +9,7 @@ import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.Evento
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.controle.dto.EstornoResposta;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoEstornadaEvento;
 import org.junit.jupiter.api.BeforeEach;

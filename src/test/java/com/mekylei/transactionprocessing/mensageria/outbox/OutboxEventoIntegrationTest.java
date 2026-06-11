@@ -5,7 +5,7 @@ import com.mekylei.transactionprocessing.IntegrationTestBase;
 import com.mekylei.transactionprocessing.compartilhado.constantes.HeadersHttp;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.StatusOutboxEvento;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

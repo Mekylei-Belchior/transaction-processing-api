@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.infraestrutura.persistencia;
 
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;

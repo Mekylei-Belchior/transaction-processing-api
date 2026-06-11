@@ -18,7 +18,7 @@ import com.mekylei.transactionprocessing.infraestrutura.repositorio.OutboxEvento
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.SaldoJpaRepository;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.TransacaoJpaRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

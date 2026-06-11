@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.conta.dominio;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

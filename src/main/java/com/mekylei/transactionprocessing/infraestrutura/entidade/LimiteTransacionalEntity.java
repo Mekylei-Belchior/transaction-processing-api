@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.infraestrutura.entidade;
 
 import com.mekylei.transactionprocessing.auditoria.AuditoriaListener;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

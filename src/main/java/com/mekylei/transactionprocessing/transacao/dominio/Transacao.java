@@ -1,5 +1,6 @@
 package com.mekylei.transactionprocessing.transacao.dominio;
 
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 
 import java.time.Instant;

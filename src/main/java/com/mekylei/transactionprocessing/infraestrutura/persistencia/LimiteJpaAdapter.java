@@ -4,7 +4,7 @@ import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.Limit
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.LimiteTransacionalEntity;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.LimiteJpaRepository;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

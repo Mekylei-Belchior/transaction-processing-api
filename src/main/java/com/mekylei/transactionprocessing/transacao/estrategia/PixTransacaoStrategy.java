@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.transacao.estrategia;
 
 
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -8,7 +8,7 @@ import com.mekylei.transactionprocessing.transacao.controle.dto.EstornoRequisica
 import com.mekylei.transactionprocessing.transacao.controle.dto.EstornoResposta;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoRequisicao;
 import com.mekylei.transactionprocessing.transacao.controle.dto.TransacaoResposta;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.transacao.controle.dto;
 
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import io.swagger.v3.oas.annotations.media.Schema;
 

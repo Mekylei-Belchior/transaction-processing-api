@@ -6,7 +6,7 @@ import com.mekylei.transactionprocessing.compartilhado.constantes.HeadersHttp;
 import com.mekylei.transactionprocessing.compartilhado.util.CalendarioStubBacenService;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.TransacaoEntity;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.transacao.dominio.evento;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoEventoTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

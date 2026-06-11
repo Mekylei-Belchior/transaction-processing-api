@@ -1,7 +1,7 @@
 package com.mekylei.transactionprocessing.infraestrutura.repositorio;
 
 import com.mekylei.transactionprocessing.infraestrutura.entidade.LimiteTransacionalEntity;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

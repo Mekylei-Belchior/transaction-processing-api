@@ -5,7 +5,7 @@ import com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.EventoPublicador;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoIniciadaEvento;
 import org.junit.jupiter.api.BeforeEach;

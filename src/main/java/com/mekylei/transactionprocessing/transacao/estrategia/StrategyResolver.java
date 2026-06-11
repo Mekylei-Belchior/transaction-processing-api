@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.transacao.estrategia;
 
 
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 
 import java.util.List;
 

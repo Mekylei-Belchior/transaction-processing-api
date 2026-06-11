@@ -1,12 +1,8 @@
 package com.mekylei.transactionprocessing.arquitetura;
 
 import com.mekylei.transactionprocessing.auditoria.aplicacao.AuditoriaContextPadrao;
-import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.LimiteRepository;
-import com.mekylei.transactionprocessing.conta.aplicacao.servico.LimiteService;
-import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.mensageria.aplicacao.EventoProcessadoService;
 import com.mekylei.transactionprocessing.transacao.controle.TransacaoController;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
 import com.tngtech.archunit.base.DescribedPredicate;
@@ -39,12 +35,8 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  * <p>Débitos técnicos conhecidos:</p>
  * <ul>
  *     <li>ARQ-TECH-DEBT-001: {@link TransacaoController} ainda depende diretamente de
- *     {@link Transacao} e {@link TipoTransacao}. A correção recomendada é mover a tradução entre
- *     HTTP e domínio para a camada de aplicação ou para um mapper dedicado, preservando DTOs na borda.</li>
- *     <li>ARQ-TECH-DEBT-002: o contexto de conta ainda conhece {@link TipoTransacao} em
- *     {@link LimiteTransacional}, {@link LimiteRepository} e {@link LimiteService}, criando ciclo
- *     com o contexto de transação. A correção recomendada é introduzir um tipo de operação/limite
- *     próprio de conta ou uma porta anticorrupção.</li>
+ *     {@link Transacao}. A correção recomendada é mover a tradução entre HTTP e domínio para a camada
+ *     de aplicação ou para um mapper dedicado, preservando DTOs na borda.</li>
  *     <li>ARQ-TECH-DEBT-004: {@link AuditoriaContextPadrao} implementa portas dentro de
  *     {@code auditoria.aplicacao}. A correção recomendada é mover a implementação concreta para
  *     infraestrutura/configuração ou transformar a classe em modelo de aplicação sem contrato Gateway.</li>
@@ -101,8 +93,8 @@ public class ArquiteturaHexagonalTest {
      *
      * <p>Débitos técnicos conhecidos:</p>
      * <ul>
-     *     <li>ARQ-TECH-DEBT-001: {@link TransacaoController} ainda depende de {@link Transacao}
-     *     e {@link TipoTransacao}; a dependência está ignorada explicitamente até a borda HTTP ser isolada.</li>
+     *     <li>ARQ-TECH-DEBT-001: {@link TransacaoController} ainda depende de {@link Transacao};
+     *     a dependência está ignorada explicitamente até a borda HTTP ser isolada.</li>
      * </ul>
      *
      * @author Mekylei Belchior
@@ -200,13 +192,6 @@ public class ArquiteturaHexagonalTest {
     /**
      * Verifica que não existem dependências cíclicas entre os pacotes principais do sistema.
      * Ciclos entre bounded contexts dificultam evolução independente e deixam regras de negócio espalhadas.
-     *
-     * <p>Débitos técnicos conhecidos:</p>
-     * <ul>
-     *     <li>ARQ-TECH-DEBT-002: dependências de conta para {@link TipoTransacao} estão ignoradas
-     *     temporariamente para registrar o ciclo atual entre conta e transação.</li>
-     * </ul>
-     *
      * @author Mekylei Belchior
      * @since 1.0
      */
@@ -217,15 +202,7 @@ public class ArquiteturaHexagonalTest {
                     .namingSlices("$1")
                     .that(saoBoundedContextsPrincipais())
                     .should()
-                    .beFreeOfCycles()
-                    // TODO [TECH-DEBT]: conta usa TipoTransacao para modelar limites, criando ciclo com transacao.
-                    .ignoreDependency(LimiteTransacional.class, TipoTransacao.class)
-                    // TODO [TECH-DEBT]: Builder de limite também expõe TipoTransacao; substituir por tipo próprio de conta.
-                    .ignoreDependency(LimiteTransacional.Builder.class, TipoTransacao.class)
-                    // TODO [TECH-DEBT]: porta de limite expõe TipoTransacao; criar tipo próprio do contexto conta.
-                    .ignoreDependency(LimiteRepository.class, TipoTransacao.class)
-                    // TODO [TECH-DEBT]: serviço de limite recebe TipoTransacao; mover tradução para aplicação de transação.
-                    .ignoreDependency(LimiteService.class, TipoTransacao.class);
+                    .beFreeOfCycles();
 
     /**
      * Verifica que value objects compartilhados são records ou classes finais.
@@ -323,10 +300,9 @@ public class ArquiteturaHexagonalTest {
 
     private static boolean dividaTecnicaControllerTransacao(JavaClass origem, JavaClass destino) {
         boolean origemControllerTransacao = origem.isEquivalentTo(TransacaoController.class);
-        boolean destinoConhecido = destino.isEquivalentTo(Transacao.class) || destino.isEquivalentTo(TipoTransacao.class);
+        boolean destinoConhecido = destino.isEquivalentTo(Transacao.class);
 
         // TODO [TECH-DEBT]: TransacaoController traduz requisições HTTP usando tipos de domínio diretamente.
-        // TODO [TECH-DEBT]: TransacaoController escolhe TipoTransacao na borda HTTP; mover decisão para aplicação.
         return origemControllerTransacao && destinoConhecido;
     }
 

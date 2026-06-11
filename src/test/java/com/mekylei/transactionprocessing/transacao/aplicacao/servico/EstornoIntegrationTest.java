@@ -3,7 +3,7 @@ package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 import com.mekylei.transactionprocessing.IntegrationTestBase;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.TransacaoEntity;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.transacao.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
