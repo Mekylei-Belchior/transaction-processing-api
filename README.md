@@ -12,23 +12,24 @@ Estado da documentação: junho/2026.
 
 ## Tecnologias Utilizadas
 
-| Tecnologia                  | Versão                 | Finalidade                               |
-| --------------------------- | ---------------------- | ---------------------------------------- |
-| Java                        | 21                     | Linguagem principal                      |
-| Spring Boot                 | 4.0.6                  | Framework de aplicação                   |
-| Spring Security             | (gerenciado pelo Boot) | Autenticação e autorização               |
-| Spring Data JPA / Hibernate | (gerenciado pelo Boot) | Persistência                             |
-| Spring for Apache Kafka     | (gerenciado pelo Boot) | Publicação e consumo de eventos          |
-| Spring Boot Actuator        | (gerenciado pelo Boot) | Health checks e informações operacionais |
-| PostgreSQL                  | 42.7.11                | Banco de dados relacional                |
-| Flyway                      | 12.6.2                 | Versionamento de schema                  |
-| Bucket4j                    | 8.19.0                 | Rate limiting por token bucket           |
-| SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)     |
-| Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                        |
-| Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)     |
-| Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers      |
-| ArchUnit                    | 1.3.0                  | Testes de arquitetura                    |
-| H2                          | (gerenciado pelo Boot) | Banco em memória para testes             |
+| Tecnologia                  | Versão                 | Finalidade                                |
+| --------------------------- | ---------------------- | ----------------------------------------- |
+| Java                        | 21                     | Linguagem principal                       |
+| Spring Boot                 | 4.0.6                  | Framework de aplicação                    |
+| Spring Security             | (gerenciado pelo Boot) | Autenticação e autorização                |
+| Spring Data JPA / Hibernate | (gerenciado pelo Boot) | Persistência                              |
+| Spring for Apache Kafka     | (gerenciado pelo Boot) | Publicação e consumo de eventos           |
+| Spring Boot Actuator        | (gerenciado pelo Boot) | Health checks e informações operacionais  |
+| PostgreSQL                  | 42.7.11                | Banco de dados relacional                 |
+| Flyway                      | 12.6.2                 | Versionamento de schema                   |
+| Bucket4j                    | 8.19.0                 | Rate limiting por token bucket            |
+| SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)      |
+| Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                         |
+| Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)      |
+| JaCoCo                      | 0.8.15                 | Relatórios e gates de cobertura de testes |
+| Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers       |
+| ArchUnit                    | 1.3.0                  | Testes de arquitetura                     |
+| H2                          | (gerenciado pelo Boot) | Banco em memória para testes              |
 
 ## Módulos Existentes
 
@@ -57,7 +58,7 @@ Estado da documentação: junho/2026.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 - Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
 - Consumo resiliente: consumidores Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ`, idempotência de consumo por `evento_processado` e roteamento de `transacoes.iniciadas` para processadores específicos de PIX, TED e TEF.
-- Cobertura de testes: 56 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC, arquitetura, integrações com Testcontainers e mascaramento de logs.
+- Cobertura de testes: 56 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC, arquitetura, integrações com Testcontainers e mascaramento de logs; JaCoCo configurado com relatórios HTML/XML/CSV e gates de cobertura por bundle, domínio e aplicação.
 
 ---
 
@@ -664,6 +665,12 @@ O artefato gerado fica no formato `target/transaction-processing-<versao>.jar` e
 
 # Executar teste específico
 ./mvnw test -Dtest=TransactionProcessingApiApplicationTests
+
+# Executar verificação com gates de cobertura JaCoCo
+./mvnw verify
+
+# Gerar relatórios de cobertura sem falhar no gate local
+./mvnw test -Pcoverage
 ```
 
 ### Rodar usando o Dockerfile e docker-compose.yml
@@ -1105,6 +1112,7 @@ POSTGRES_PASSWORD=keycloak
 | `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema      |
 | `bucket4j_jdk17-core`                        | Rate limiting via token bucket          |
 | `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)    |
+| `jacoco-maven-plugin`                        | Relatórios e validação de cobertura     |
 | `spring-boot-testcontainers`                 | Integração Spring Boot + Testcontainers |
 | `testcontainers-postgresql`                  | PostgreSQL em testes de integração      |
 | `testcontainers-kafka`                       | Kafka em testes de integração           |
@@ -1158,4 +1166,4 @@ POSTGRES_PASSWORD=keycloak
 - [x] Implementar testes unitários de estratégias (`PixTransacaoStrategyTest`, `TedTransacaoStrategyTest`, `TefTransacaoStrategyTest`, `StrategyResolverTest`)
 - [x] Implementar testes de integração com Testcontainers (`IntegrationTestBase`, `ProcessaTransacaoIntegrationTest`, `EstornoIntegrationTest`, `SaldoIntegrationTest`, `OutboxEventoIntegrationTest`)
 - [x] Implementar testes arquiteturais com ArchUnit (`ArquiteturaHexagonalTest`, `CamadaSegurancaTest`, `NamingConventionTest`)
-- [ ] Configurar relatório de cobertura de código (JaCoCo)
+- [x] Configurar relatório de cobertura de código (JaCoCo)
