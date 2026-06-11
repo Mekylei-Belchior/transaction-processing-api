@@ -4,6 +4,8 @@ import com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
 import com.mekylei.transactionprocessing.infraestrutura.entidade.StatusOutboxEvento;
 import com.mekylei.transactionprocessing.infraestrutura.repositorio.OutboxEventoJpaRepository;
+import com.mekylei.transactionprocessing.mensageria.outbox.OutboxEvento;
+import com.mekylei.transactionprocessing.mensageria.outbox.OutboxEventoRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import tools.jackson.databind.ObjectMapper;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public class OutboxEventoJpaAdapter {
+public class OutboxEventoJpaAdapter implements OutboxEventoRepository {
 
     private final OutboxEventoJpaRepository repository;
     private final ObjectMapper objectMapper;
@@ -24,7 +26,8 @@ public class OutboxEventoJpaAdapter {
         this.objectMapper = objectMapper;
     }
 
-    public OutboxEventoEntity salvar(EventoDominio evento, String topico, String chave) {
+    @Override
+    public OutboxEvento salvar(EventoDominio evento, String topico, String chave) {
         Instant agora = Instant.now();
 
         OutboxEventoEntity entity = new OutboxEventoEntity();
@@ -42,17 +45,19 @@ public class OutboxEventoJpaAdapter {
         entity.setTentativas(0);
         entity.setProximaTentativaEm(agora);
 
-        return repository.save(entity);
+        return toOutboxEvento(repository.save(entity));
     }
 
-    public List<OutboxEventoEntity> buscarParaPublicacao(int tamanhoLote) {
+    @Override
+    public List<OutboxEvento> buscarParaPublicacao(int tamanhoLote) {
         return repository.buscarParaPublicacao(
                 List.of(StatusOutboxEvento.PENDENTE, StatusOutboxEvento.FALHOU),
                 Instant.now(),
                 PageRequest.of(0, tamanhoLote)
-        );
+        ).stream().map(this::toOutboxEvento).toList();
     }
 
+    @Override
     public void marcarPublicado(UUID idEvento) {
         OutboxEventoEntity entity = repository.findById(idEvento).orElseThrow(() ->
                 new IllegalStateException("OutboxEvento não encontrado para marcar como publicado: " + idEvento));
@@ -64,6 +69,7 @@ public class OutboxEventoJpaAdapter {
         repository.save(entity);
     }
 
+    @Override
     public void marcarFalha(UUID idEvento, Throwable erro, Duration intervaloReprocessamento) {
         OutboxEventoEntity entity = repository.findById(idEvento).orElseThrow(() ->
                 new IllegalStateException("OutboxEvento não encontrado para marcar falha: " + idEvento));
@@ -74,6 +80,17 @@ public class OutboxEventoJpaAdapter {
         entity.setProximaTentativaEm(Instant.now().plus(intervaloReprocessamento));
 
         repository.save(entity);
+    }
+
+    private OutboxEvento toOutboxEvento(OutboxEventoEntity entity) {
+        return new OutboxEvento(
+                entity.getId(),
+                entity.getTipoEvento(),
+                entity.getTopico(),
+                entity.getChave(),
+                entity.getPayload(),
+                entity.getTentativas()
+        );
     }
 
     private String truncarMensagemErro(Throwable erro) {

@@ -1,6 +1,5 @@
 package com.mekylei.transactionprocessing.arquitetura;
 
-import com.mekylei.transactionprocessing.mensageria.outbox.DominioEventoOutboxPublicador;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -19,13 +18,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
  *
  * <p>As regras tornam explícitos os sufixos esperados para adapters, repositories, entities,
  * services, controllers e filters, facilitando leitura e descoberta por responsabilidade.</p>
- *
- * <p>Débitos técnicos conhecidos:</p>
- * <ul>
- *     <li>ARQ-TECH-DEBT-003: {@link DominioEventoOutboxPublicador} está anotado com {@code @Service},
- *     mas não usa o sufixo Service. A correção recomendada é renomear a classe ou trocar a
- *     estereotipagem para um componente mais adequado ao papel de publicador.</li>
- * </ul>
  *
  * @author Mekylei Belchior
  * @since 1.0
@@ -92,9 +84,6 @@ public class NamingConventionTest {
             classes()
                     .that()
                     .areAnnotatedWith(Service.class)
-                    .and()
-                    // TODO [TECH-DEBT]: classe anotada com @Service sem sufixo Service; renomear quando aprovado.
-                    .doNotHaveSimpleName("DominioEventoOutboxPublicador")
                     .should()
                     .haveSimpleNameEndingWith("Service")
                     .because("classes anotadas com @Service devem declarar esse papel no nome");

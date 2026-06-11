@@ -2,7 +2,7 @@ package com.mekylei.transactionprocessing.mensageria.produtor;
 
 import com.mekylei.transactionprocessing.compartilhado.exception.KafkaPublicarException;
 import com.mekylei.transactionprocessing.configuracao.kafka.OutboxProperties;
-import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
+import com.mekylei.transactionprocessing.mensageria.outbox.OutboxEvento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,15 +29,15 @@ public class KafkaEventoProdutor {
         this.properties = properties;
     }
 
-    public void enviar(OutboxEventoEntity evento) {
-        String contextoEvento = "id=" + evento.getId() + ", tipo=" + evento.getTipoEvento();
+    public void enviar(OutboxEvento evento) {
+        String contextoEvento = "id=" + evento.id() + ", tipo=" + evento.tipoEvento();
 
         CompletableFuture<SendResult<String, String>> future;
         try {
             future = kafkaTemplate.send(
-                    evento.getTopico(),
-                    evento.getChave(),
-                    evento.getPayload().toString()
+                    evento.topico(),
+                    evento.chave(),
+                    evento.payload().toString()
             );
         } catch (RuntimeException exception) {
             throw new KafkaPublicarException(

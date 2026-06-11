@@ -1,7 +1,6 @@
 package com.mekylei.transactionprocessing.mensageria.outbox;
 
 import com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio;
-import com.mekylei.transactionprocessing.infraestrutura.persistencia.OutboxEventoJpaAdapter;
 import com.mekylei.transactionprocessing.mensageria.evento.TransacaoEventoRouter;
 import com.mekylei.transactionprocessing.transacao.dominio.TipoEventoTransacao;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ class EventoOutboxPublicadorTest {
     private static final String TRANSACOES_FALHAS = "transacoes.falhas";
 
     @Mock
-    private OutboxEventoJpaAdapter adapter;
+    private OutboxEventoRepository repository;
 
     @Mock
     private TransacaoEventoRouter router;
@@ -70,8 +69,8 @@ class EventoOutboxPublicadorTest {
 
         publicador.publica(evento);
 
-        verify(adapter).salvar(evento, topicoEsperado, chaveEsperada);
-        verifyNoMoreInteractions(adapter);
+        verify(repository).salvar(evento, topicoEsperado, chaveEsperada);
+        verifyNoMoreInteractions(repository);
     }
 
     @Test
@@ -100,6 +99,6 @@ class EventoOutboxPublicadorTest {
 
         publicador.publica(eventoFalha);
 
-        verify(adapter).salvar(eventoFalha, TRANSACOES_FALHAS, chave);
+        verify(repository).salvar(eventoFalha, TRANSACOES_FALHAS, chave);
     }
 }

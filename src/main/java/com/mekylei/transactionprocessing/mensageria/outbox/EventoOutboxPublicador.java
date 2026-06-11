@@ -1,8 +1,6 @@
 package com.mekylei.transactionprocessing.mensageria.outbox;
 
 import com.mekylei.transactionprocessing.configuracao.kafka.OutboxProperties;
-import com.mekylei.transactionprocessing.infraestrutura.entidade.OutboxEventoEntity;
-import com.mekylei.transactionprocessing.infraestrutura.persistencia.OutboxEventoJpaAdapter;
 import com.mekylei.transactionprocessing.mensageria.produtor.KafkaEventoProdutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +17,14 @@ public class EventoOutboxPublicador {
 
     private static final Logger logger = LoggerFactory.getLogger(EventoOutboxPublicador.class);
 
-    private final OutboxEventoJpaAdapter eventoJpaAdapter;
+    private final OutboxEventoRepository eventoRepository;
     private final KafkaEventoProdutor eventoProdutor;
     private final OutboxProperties properties;
 
-    public EventoOutboxPublicador(OutboxEventoJpaAdapter eventoJpaAdapter,
+    public EventoOutboxPublicador(OutboxEventoRepository eventoRepository,
                                   KafkaEventoProdutor eventoProdutor,
                                   OutboxProperties properties) {
-        this.eventoJpaAdapter = eventoJpaAdapter;
+        this.eventoRepository = eventoRepository;
         this.eventoProdutor = eventoProdutor;
         this.properties = properties;
     }
@@ -38,24 +36,24 @@ public class EventoOutboxPublicador {
     @Scheduled(fixedDelayString = "${app.eventos.outbox.intervalo-publicacao-ms:5000}")
     @Transactional
     public void publicarPendentes() {
-        List<OutboxEventoEntity> eventos = eventoJpaAdapter.buscarParaPublicacao(properties.lotePublicacao());
+        List<OutboxEvento> eventos = eventoRepository.buscarParaPublicacao(properties.lotePublicacao());
         if (eventos.isEmpty()) {
             return;
         }
 
         logger.info("Iniciando a publicação de {} evento(s) pendente(s)", eventos.size());
 
-        for (OutboxEventoEntity evento : eventos) {
+        for (OutboxEvento evento : eventos) {
             try {
                 eventoProdutor.enviar(evento);
-                eventoJpaAdapter.marcarPublicado(evento.getId());
+                eventoRepository.marcarPublicado(evento.id());
 
                 logger.info("Evento publicado: id={}, tipo={}, topico={}",
-                        evento.getId(), evento.getTipoEvento(), evento.getTopico());
+                        evento.id(), evento.tipoEvento(), evento.topico());
             } catch (RuntimeException e) {
-                eventoJpaAdapter.marcarFalha(evento.getId(), e, properties.intervaloReprocessamento());
+                eventoRepository.marcarFalha(evento.id(), e, properties.intervaloReprocessamento());
                 logger.warn("Falha ao publicar evento id={}, tipo={}, tentativas={}",
-                        evento.getId(), evento.getTipoEvento(), evento.getTentativas());
+                        evento.id(), evento.tipoEvento(), evento.tentativas());
             }
         }
     }
