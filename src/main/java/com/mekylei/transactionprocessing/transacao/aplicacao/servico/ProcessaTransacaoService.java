@@ -1,22 +1,26 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioException;
 import com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.ContaRepository;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.LimiteService;
 import com.mekylei.transactionprocessing.conta.aplicacao.servico.SaldoService;
 import com.mekylei.transactionprocessing.conta.dominio.Conta;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasNoop;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasPort;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.EventoPublicador;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
 import com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao;
-import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoConcluidaEvento;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoFalhouEvento;
 import com.mekylei.transactionprocessing.transacao.estrategia.StrategyResolver;
 import com.mekylei.transactionprocessing.transacao.estrategia.TransacaoStrategy;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,14 +41,18 @@ public class ProcessaTransacaoService {
     private final StrategyResolver strategyResolver;
     private final TransacaoRepository transacaoRepository;
     private final EventoPublicador eventoPublicador;
+    private final TransacaoMetricasPort transacaoMetricas;
 
+    @Autowired
     public ProcessaTransacaoService(IdempotenciaService idempotenciaService,
                                     ContaRepository contaRepository,
                                     SaldoService saldoService,
                                     LimiteService limiteService,
                                     CriaTransacaoService criaTransacaoService,
                                     StrategyResolver strategyResolver,
-                                    TransacaoRepository transacaoRepository, EventoPublicador eventoPublicador) {
+                                    TransacaoRepository transacaoRepository,
+                                    EventoPublicador eventoPublicador,
+                                    TransacaoMetricasPort transacaoMetricas) {
         this.idempotenciaService = idempotenciaService;
         this.contaRepository = contaRepository;
         this.saldoService = saldoService;
@@ -53,6 +61,19 @@ public class ProcessaTransacaoService {
         this.strategyResolver = strategyResolver;
         this.transacaoRepository = transacaoRepository;
         this.eventoPublicador = eventoPublicador;
+        this.transacaoMetricas = transacaoMetricas;
+    }
+
+    ProcessaTransacaoService(IdempotenciaService idempotenciaService,
+                             ContaRepository contaRepository,
+                             SaldoService saldoService,
+                             LimiteService limiteService,
+                             CriaTransacaoService criaTransacaoService,
+                             StrategyResolver strategyResolver,
+                             TransacaoRepository transacaoRepository,
+                             EventoPublicador eventoPublicador) {
+        this(idempotenciaService, contaRepository, saldoService, limiteService, criaTransacaoService, strategyResolver,
+                transacaoRepository, eventoPublicador, new TransacaoMetricasNoop());
     }
 
     @Transactional
@@ -69,40 +90,52 @@ public class ProcessaTransacaoService {
             return existente.get();
         }
 
-        // 2. Validar se a conta de origem existe e está ativa
-        contaRepository.findById(idContaOrigem).filter(Conta::estaAtiva)
-                .orElseThrow(() -> new RegraNegocioException(
-                        "CONTA_INVALIDA",
-                        "A conta de origem não foi encontrada ou não está ativa: " + idContaOrigem));
+        Timer.Sample sample = transacaoMetricas.iniciarSample();
 
-        // 3. Pré-valida saldo disponível (leitura otimista — fail-fast antes de integrações externas)
-        saldoService.validaSaldo(idContaOrigem, valor);
+        try {
+            // 2. Validar se a conta de origem existe e está ativa
+            contaRepository.findById(idContaOrigem).filter(Conta::estaAtiva)
+                    .orElseThrow(() -> new RegraNegocioException(
+                            "CONTA_INVALIDA",
+                            "A conta de origem não foi encontrada ou não está ativa: " + idContaOrigem));
 
-        // 4. Valida o limite de transação
-        limiteService.validarLimite(idContaOrigem, tipo, valor);
+            // 3. Pré-valida saldo disponível (leitura otimista — fail-fast antes de integrações externas)
+            saldoService.validaSaldo(idContaOrigem, valor);
 
-        // 5. Cria a transação (status PENDENTE) e persiste
-        Transacao transacao = criaTransacaoService.cria(valor, tipo, idContaOrigem, contaDestino, idIdempotencia);
+            // 4. Valida o limite de transação
+            limiteService.validarLimite(idContaOrigem, tipo, valor);
 
-        // 6. Executa a strategy específica do tipo de transação — integrações externas (antifraude, SPI, STR, DICT)
-        TransacaoStrategy strategy = strategyResolver.resolve(tipo);
-        logger.info("Strategy selecionada: {} para transação: {}", strategy.getClass().getSimpleName(), transacao.getId());
+            // 5. Cria a transação (status PENDENTE) e persiste
+            Transacao transacao = criaTransacaoService.cria(valor, tipo, idContaOrigem, contaDestino, idIdempotencia);
 
-        Transacao processada = strategy.processa(transacao);
+            // 6. Executa a strategy específica do tipo de transação — integrações externas (antifraude, SPI, STR, DICT)
+            TransacaoStrategy strategy = strategyResolver.resolve(tipo);
+            logger.info("Strategy selecionada: {} para transação: {}", strategy.getClass().getSimpleName(), transacao.getId());
 
-        // 7. Efetiva o débito (lock pessimista + invariante de domínio) e decrementa o limite
-        if (StatusTransacao.COMPLETADA.equals(processada.getStatus())) {
-            saldoService.debitar(idContaOrigem, valor);
-            limiteService.decrementarUtilizado(idContaOrigem, tipo, valor);
+            Transacao processada = strategy.processa(transacao);
+
+            // 7. Efetiva o débito (lock pessimista + invariante de domínio) e decrementa o limite
+            if (StatusTransacao.COMPLETADA.equals(processada.getStatus())) {
+                saldoService.debitar(idContaOrigem, valor);
+                limiteService.decrementarUtilizado(idContaOrigem, tipo, valor);
+            }
+
+            // 8. Persiste o estado final da transação
+            Transacao transacaoFinalizada = transacaoRepository.update(processada);
+            publicarEventoEstadoFinal(transacaoFinalizada);
+
+            transacaoMetricas.registrarTransacaoProcessada(tipo, transacaoFinalizada.getStatus());
+            transacaoMetricas.registrarValor(tipo, valor);
+
+            logger.info("Transação finalizada: id={}, status={}", transacaoFinalizada.getId(), transacaoFinalizada.getStatus());
+
+            return transacaoFinalizada;
+        } catch (RuntimeException e) {
+            transacaoMetricas.registrarTransacaoProcessada(tipo, StatusTransacao.FALHOU);
+            throw e;
+        } finally {
+            transacaoMetricas.registrarDuracao(tipo, sample);
         }
-
-        // 8. Persiste o estado final da transação
-        Transacao transacaoFinalizada = transacaoRepository.update(processada);
-        publicarEventoEstadoFinal(transacaoFinalizada);
-
-        logger.info("Transação finalizada: id={}, status={}", transacaoFinalizada.getId(), transacaoFinalizada.getStatus());
-
-        return transacaoFinalizada;
     }
 
     private void publicarEventoEstadoFinal(Transacao transacao) {

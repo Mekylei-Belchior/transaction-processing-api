@@ -82,6 +82,11 @@ public class OutboxEventoJpaAdapter implements OutboxEventoRepository {
         repository.save(entity);
     }
 
+    @Override
+    public long countByStatus(com.mekylei.transactionprocessing.mensageria.outbox.StatusOutboxEvento status) {
+        return repository.countByStatus(StatusOutboxEvento.valueOf(status.name()));
+    }
+
     private OutboxEvento toOutboxEvento(OutboxEventoEntity entity) {
         return new OutboxEvento(
                 entity.getId(),

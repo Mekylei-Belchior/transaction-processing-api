@@ -1,12 +1,15 @@
 package com.mekylei.transactionprocessing.transacao.aplicacao.servico;
 
 import com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario;
+import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.compartilhado.util.CorrelacaoUtil;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasNoop;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasPort;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.evento.EventoPublicador;
 import com.mekylei.transactionprocessing.transacao.aplicacao.porta.repositorio.TransacaoRepository;
-import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
 import com.mekylei.transactionprocessing.transacao.dominio.Transacao;
 import com.mekylei.transactionprocessing.transacao.dominio.evento.TransacaoIniciadaEvento;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,13 +24,26 @@ public class CriaTransacaoService {
 
     private final TransacaoRepository repository;
     private final EventoPublicador eventoPublicador;
+    private final TransacaoMetricasPort transacaoMetricas;
 
-    public CriaTransacaoService(TransacaoRepository repository, EventoPublicador eventoPublicador) {
+    @Autowired
+    public CriaTransacaoService(TransacaoRepository repository,
+                                EventoPublicador eventoPublicador,
+                                TransacaoMetricasPort transacaoMetricas) {
         this.repository = repository;
         this.eventoPublicador = eventoPublicador;
+        this.transacaoMetricas = transacaoMetricas;
     }
 
-    public Transacao cria(BigDecimal valor, TipoTransacao tipoTransacao, UUID idContaOrigem, String contaDestino, UUID idIdempotencia) {
+    CriaTransacaoService(TransacaoRepository repository, EventoPublicador eventoPublicador) {
+        this(repository, eventoPublicador, new TransacaoMetricasNoop());
+    }
+
+    public Transacao cria(BigDecimal valor,
+                          TipoTransacao tipoTransacao,
+                          UUID idContaOrigem,
+                          String contaDestino,
+                          UUID idIdempotencia) {
         UUID idCorrelacao = CorrelacaoUtil.obter();
 
         logger.info("Criando transação: tipo={}, valor={}, idContaOrigem={}, idCorrelacao={}",
@@ -43,6 +59,7 @@ public class CriaTransacaoService {
                 .build();
 
         Transacao transacaoSalva = repository.save(transacao);
+        transacaoMetricas.registrarTransacaoCriada(transacaoSalva.getTipo(), transacaoSalva.getStatus());
         eventoPublicador.publica(TransacaoIniciadaEvento.de(transacaoSalva));
 
         logger.info("Transação criada: id={}", transacaoSalva.getId());

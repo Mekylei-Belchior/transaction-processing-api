@@ -5,6 +5,9 @@ import com.mekylei.transactionprocessing.compartilhado.exception.RegraNegocioExc
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.LimiteRepository;
 import com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional;
 import com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasNoop;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasPort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +19,16 @@ import java.util.UUID;
 public class LimiteService {
 
     private final LimiteRepository limiteRepository;
+    private final TransacaoMetricasPort transacaoMetricas;
 
-    public LimiteService(LimiteRepository limiteRepository) {
+    @Autowired
+    public LimiteService(LimiteRepository limiteRepository, TransacaoMetricasPort transacaoMetricas) {
         this.limiteRepository = limiteRepository;
+        this.transacaoMetricas = transacaoMetricas;
+    }
+
+    LimiteService(LimiteRepository limiteRepository) {
+        this(limiteRepository, new TransacaoMetricasNoop());
     }
 
     @Transactional(readOnly = true)
@@ -27,7 +37,12 @@ public class LimiteService {
                 .orElseThrow(() -> new RegraNegocioException(
                         "LIMITE_NAO_CONFIGURADO",
                         "Limite transacional não configurado para o tipo " + tipo + " na conta: " + idConta));
-        limite.validar(ValorMonetario.paraReal(valor));
+        try {
+            limite.validar(ValorMonetario.paraReal(valor));
+        } catch (RegraNegocioException e) {
+            transacaoMetricas.registrarLimiteExcedido(tipo);
+            throw e;
+        }
     }
 
     @Transactional

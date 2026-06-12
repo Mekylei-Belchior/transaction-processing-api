@@ -15,4 +15,6 @@ public interface OutboxEventoRepository {
     void marcarPublicado(UUID idEvento);
 
     void marcarFalha(UUID idEvento, Throwable erro, Duration intervaloReprocessamento);
+
+    long countByStatus(StatusOutboxEvento status);
 }

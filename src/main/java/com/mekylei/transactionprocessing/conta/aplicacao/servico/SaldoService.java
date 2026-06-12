@@ -5,6 +5,9 @@ import com.mekylei.transactionprocessing.compartilhado.exception.RecursoNaoEncon
 import com.mekylei.transactionprocessing.compartilhado.exception.SaldoInsuficienteException;
 import com.mekylei.transactionprocessing.conta.aplicacao.porta.repositorio.SaldoRepository;
 import com.mekylei.transactionprocessing.conta.dominio.Saldo;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasNoop;
+import com.mekylei.transactionprocessing.observabilidade.metrica.TransacaoMetricasPort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +18,23 @@ import java.util.UUID;
 public class SaldoService {
 
     private final SaldoRepository saldoRepository;
+    private final TransacaoMetricasPort transacaoMetricas;
 
-    public SaldoService(SaldoRepository saldoRepository) {
+    @Autowired
+    public SaldoService(SaldoRepository saldoRepository, TransacaoMetricasPort transacaoMetricas) {
         this.saldoRepository = saldoRepository;
+        this.transacaoMetricas = transacaoMetricas;
+    }
+
+    SaldoService(SaldoRepository saldoRepository) {
+        this(saldoRepository, new TransacaoMetricasNoop());
     }
 
     @Transactional(readOnly = true)
     public void validaSaldo(UUID idConta, BigDecimal valor) {
         Saldo saldo = buscarSaldo(idConta);
         if (saldo.getDisponivel().compareTo(valor) < 0) {
+            transacaoMetricas.registrarSaldoInsuficiente();
             throw new SaldoInsuficienteException(idConta, saldo.getDisponivel(), valor);
         }
     }

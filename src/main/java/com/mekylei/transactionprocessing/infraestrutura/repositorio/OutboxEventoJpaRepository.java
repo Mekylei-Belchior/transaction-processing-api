@@ -17,6 +17,8 @@ import java.util.UUID;
 
 public interface OutboxEventoJpaRepository extends JpaRepository<OutboxEventoEntity, UUID> {
 
+    long countByStatus(StatusOutboxEvento status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))
     @Query("""
