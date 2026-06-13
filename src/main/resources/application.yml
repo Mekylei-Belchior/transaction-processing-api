@@ -98,3 +98,13 @@ management:
         transacao.duracao: true
       percentiles:
         transacao.duracao: 0.50, 0.95, 0.99
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:https://otlp-jaeger.lab.home/v1/traces}
+          transport: http

@@ -54,6 +54,23 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
+        </dependency>
+
+        <!-- Bridge Micrometer -> OpenTelemetry -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+
+        <!-- Exportador OTLP (Jaeger, Grafana Tempo, Datadog) -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
@@ -266,6 +283,8 @@
                                 <exclude>**/compartilhado/adaptador/**</exclude>
                                 <!-- Integracao Logback, de baixo valor para cobertura isolada. -->
                                 <exclude>**/observabilidade/logging/**</exclude>
+                                <!-- TracingConfig e configuracao declarativa sem logica de negocio. -->
+                                <exclude>**/observabilidade/rastreamento/**</exclude>
                                 <!-- Consumidores Kafka condicionais por app.eventos.kafka.enabled=true; nos testes de integracao atuais Kafka fica desabilitado. -->
                                 <exclude>**/mensageria/consumidor/**</exclude>
                                 <!-- Produtor Kafka condicional por app.eventos.kafka.enabled=true; sera coberto quando Testcontainers Kafka for habilitado. -->
@@ -313,6 +332,8 @@
                                 <exclude>**/compartilhado/adaptador/**</exclude>
                                 <!-- Integracao Logback, de baixo valor para cobertura isolada. -->
                                 <exclude>**/observabilidade/logging/**</exclude>
+                                <!-- TracingConfig e configuracao declarativa sem logica de negocio. -->
+                                <exclude>**/observabilidade/rastreamento/**</exclude>
                                 <!-- Consumidores Kafka condicionais por app.eventos.kafka.enabled=true; nos testes de integracao atuais Kafka fica desabilitado. -->
                                 <exclude>**/mensageria/consumidor/**</exclude>
                                 <!-- Produtor Kafka condicional por app.eventos.kafka.enabled=true; sera coberto quando Testcontainers Kafka for habilitado. -->

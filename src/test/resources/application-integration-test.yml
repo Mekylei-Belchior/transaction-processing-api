@@ -26,5 +26,10 @@ spring:
           jwks-uri: http://localhost:9999/realms/test/protocol/openid-connect/certs
           issuer-uri: http://localhost:9999/realms/test
 
+management:
+  tracing:
+    sampling:
+      probability: 0.0
+
 antifraude:
   limite-aprovacao-automatica: 10000.00

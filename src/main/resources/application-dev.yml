@@ -73,9 +73,23 @@ logging:
     # Essencial para diagnosticar erros de autenticação (401) e acesso negado (403)
     # ATENÇÃO: logs contêm detalhes do token e decisões de acesso — NUNCA habilitar em produção.
     org.springframework.security: DEBUG
-
+    # Cliente Apache Kafka - nível WARN
+    # Reduz o ruído dos logs internos do cliente Kafka, exibindo apenas avisos e erros
+    # relevantes, como falhas de conexão, rebalanceamentos problemáticos ou timeouts.
     org.apache.kafka: WARN
+    # Integração Spring Kafka - nível WARN
+    # Limita os logs do ‘framework’ de integração com Kafka a situações de atenção,
+    # mantendo o ambiente de desenvolvimento mais legível durante o consumo e produção
+    # de mensagens.
     org.springframework.kafka: WARN
+    # Rastreamento distribuído via Micrometer - nível DEBUG
+    # Exibe detalhes da criação e propagação de spans, contexto de trace e correlação
+    # entre logs e requisições. Útil para validar observabilidade em ambiente local.
+    io.micrometer.tracing: DEBUG
+    # OpenTelemetry - nível DEBUG
+    # Mostra informações detalhadas da instrumentação, exportação de traces e integração
+    # com coletores. Ajuda a diagnosticar problemas na cadeia de observabilidade.
+    io.opentelemetry: DEBUG
 
 springdoc:
   api-docs:
@@ -83,6 +97,11 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
 antifraude:
   limite-aprovacao-automatica: ${ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA:10000.00}
