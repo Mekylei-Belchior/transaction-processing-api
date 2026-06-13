@@ -1,6 +1,6 @@
 # Transaction Processing API
 
-API de simulação de processamento de transações bancárias (PIX, TED e TEF) desenvolvida com Java 21 e Spring Boot 4.0.6. A aplicação segue os princípios de Arquitetura Hexagonal e Domain-Driven Design, com suporte a autenticação via OAuth2/JWT, controle de rate limiting, auditoria regulatória, validação de saldo e limites transacionais, criptografia em repouso, integridade por HMAC e mensageria com Outbox Pattern + Kafka.
+API de simulação de processamento de transações bancárias (PIX, TED e TEF) desenvolvida com Java 21 e Spring Boot 4.0.6. A aplicação segue os princípios de Arquitetura Hexagonal e Domain-Driven Design, com suporte a autenticação via OAuth2/JWT, controle de rate limiting, auditoria regulatória, validação de saldo e limites transacionais, criptografia em repouso, integridade por HMAC, mensageria com Outbox Pattern + Kafka, métricas Prometheus/Micrometer e tracing OpenTelemetry.
 
 Estado da documentação: junho/2026.
 
@@ -12,38 +12,40 @@ Estado da documentação: junho/2026.
 
 ## Tecnologias Utilizadas
 
-| Tecnologia                  | Versão                 | Finalidade                                |
-| --------------------------- | ---------------------- | ----------------------------------------- |
-| Java                        | 21                     | Linguagem principal                       |
-| Spring Boot                 | 4.0.6                  | Framework de aplicação                    |
-| Spring Security             | (gerenciado pelo Boot) | Autenticação e autorização                |
-| Spring Data JPA / Hibernate | (gerenciado pelo Boot) | Persistência                              |
-| Spring for Apache Kafka     | (gerenciado pelo Boot) | Publicação e consumo de eventos           |
-| Spring Boot Actuator        | (gerenciado pelo Boot) | Health checks e informações operacionais  |
-| PostgreSQL                  | 42.7.11                | Banco de dados relacional                 |
-| Flyway                      | 12.6.2                 | Versionamento de schema                   |
-| Bucket4j                    | 8.19.0                 | Rate limiting por token bucket            |
-| SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)      |
-| Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                         |
-| Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)      |
-| JaCoCo                      | 0.8.15                 | Relatórios e gates de cobertura de testes |
-| Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers       |
-| ArchUnit                    | 1.4.2                  | Testes de arquitetura                     |
-| H2                          | (gerenciado pelo Boot) | Banco em memória para testes              |
+| Tecnologia                  | Versão                 | Finalidade                                  |
+| --------------------------- | ---------------------- | ------------------------------------------- |
+| Java                        | 21                     | Linguagem principal                         |
+| Spring Boot                 | 4.0.6                  | Framework de aplicação                      |
+| Spring Security             | (gerenciado pelo Boot) | Autenticação e autorização                  |
+| Spring Data JPA / Hibernate | (gerenciado pelo Boot) | Persistência                                |
+| Spring for Apache Kafka     | (gerenciado pelo Boot) | Publicação e consumo de eventos             |
+| Spring Boot Actuator        | (gerenciado pelo Boot) | Health checks e informações operacionais    |
+| Micrometer + Prometheus     | (gerenciado pelo Boot) | Métricas customizadas e endpoint Prometheus |
+| OpenTelemetry               | (gerenciado pelo Boot) | Rastreamento distribuído via OTLP           |
+| PostgreSQL                  | 42.7.11                | Banco de dados relacional                   |
+| Flyway                      | 12.6.2                 | Versionamento de schema                     |
+| Bucket4j                    | 8.19.0                 | Rate limiting por token bucket              |
+| SpringDoc OpenAPI           | 3.0.3                  | Documentação interativa (Swagger UI)        |
+| Jackson 3                   | (gerenciado pelo Boot) | Serialização JSON                           |
+| Logstash Logback Encoder    | 9.0                    | Logs estruturados em JSON (Logstash)        |
+| JaCoCo                      | 0.8.15                 | Relatórios e gates de cobertura de testes   |
+| Testcontainers              | (gerenciado pelo Boot) | Testes de integração com containers         |
+| ArchUnit                    | 1.4.2                  | Testes de arquitetura                       |
+| H2                          | (gerenciado pelo Boot) | Banco em memória para testes                |
 
 ## Módulos Existentes
 
-| Módulo            | Responsabilidade                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-| `transacao`       | Processamento de PIX, TED e TEF — domínio central, casos de uso, controller, DTOs, eventos e strategies |
-| `conta`           | Domínio de conta, saldo e limite transacional                                                           |
-| `auditoria`       | Registro de eventos de auditoria regulatória                                                            |
-| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC, idempotência e constantes transversais              |
-| `configuracao`    | Configurações Spring: segurança, Kafka, persistência, beans e filtros                                   |
-| `infraestrutura`  | Adaptadores JPA, entidades e repositórios Spring Data                                                   |
-| `integracao`      | Adaptadores para integrações externas (antifraude stub implementado; Bacen/STR/SPB ainda planejados)    |
-| `mensageria`      | Outbox Pattern, publicação Kafka, consumo, roteamento de eventos e monitoramento de DLQ                 |
-| `observabilidade` | Mascaramento de dados sensíveis nos logs e logging estruturado em JSON                                  |
+| Módulo            | Responsabilidade                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `transacao`       | Processamento de PIX, TED e TEF — domínio central, casos de uso, controller, DTOs, eventos e strategies   |
+| `conta`           | Domínio de conta, saldo e limite transacional                                                             |
+| `auditoria`       | Registro de eventos de auditoria regulatória                                                              |
+| `compartilhado`   | Utilitários, filtros, exceções, criptografia, HMAC, idempotência e constantes transversais                |
+| `configuracao`    | Configurações Spring: segurança, Kafka, persistência, beans e filtros                                     |
+| `infraestrutura`  | Adaptadores JPA, entidades e repositórios Spring Data                                                     |
+| `integracao`      | Adaptadores para integrações externas (antifraude stub implementado; Bacen/STR/SPB ainda planejados)      |
+| `mensageria`      | Outbox Pattern, publicação Kafka, consumo, roteamento de eventos e monitoramento de DLQ                   |
+| `observabilidade` | Mascaramento de dados sensíveis, logging estruturado em JSON, métricas Micrometer e tracing OpenTelemetry |
 
 ## Organização do Código
 
@@ -58,7 +60,8 @@ Estado da documentação: junho/2026.
 - Mascaramento de logs: subsistema `observabilidade/mascaramento` com estratégias intercambiáveis (`MascaraStrategy`) para JSON, headers, mensagens e stack traces — integrado ao Logback via `LogMascaramentoConverter` e `JsonMascaradoProvider`.
 - Eventos de domínio + Outbox: eventos (`TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento`, `TransacaoEstornadaEvento`) persistidos na tabela de outbox e publicados no Kafka por job agendado.
 - Consumo resiliente: consumidores Kafka com tratamento de erro via `DefaultErrorHandler` + `DeadLetterPublishingRecoverer`, encaminhamento para `*.DLQ`, idempotência de consumo por `evento_processado` e roteamento de `transacoes.iniciadas` para processadores específicos de PIX, TED e TEF.
-- Cobertura de testes: 56 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC, arquitetura, integrações com Testcontainers e mascaramento de logs; JaCoCo configurado com relatórios HTML/XML/CSV e gates de cobertura por bundle, domínio e aplicação.
+- Observabilidade: métricas customizadas de transações, saldo, limite, idempotência e outbox via Micrometer/Prometheus; tracing OpenTelemetry configurado por perfil.
+- Cobertura de testes: 58 arquivos de teste cobrindo domínio, services, strategies, controller, persistência, mensageria, filtros, criptografia/HMAC, arquitetura, integrações com Testcontainers, métricas e mascaramento de logs; JaCoCo configurado com relatórios HTML/XML/CSV e gates de cobertura por bundle, domínio e aplicação.
 
 ---
 
@@ -78,12 +81,15 @@ Estado da documentação: junho/2026.
 - Eventos de domínio e outbox (`DominioEventoOutboxPublicador`, `OutboxEvento`, `OutboxEventoRepository`, `OutboxEventoJpaAdapter`, `EventoOutboxPublicador`) com publicação Kafka assíncrona.
 - Consumidores Kafka (`TransacaoIniciadaKafkaConsumidor`, `PixTransacaoKafkaConsumidor`, `TedTransacaoKafkaConsumidor`, `TefTransacaoKafkaConsumidor`, `DlqMonitorConsumidor`) com idempotência por `EventoProcessadoService`, roteamento por tipo de transação e publicação de eventos finais.
 - Configuração de Kafka + DLQ + tópicos (`KafkaConfig`, `KafkaDlqProperties`, `OutboxProperties`, `TopicosProperties`) condicionada por `app.eventos.kafka.enabled`.
+- Métricas customizadas via `TransacaoMetricas` e `OutboxMetricas`, com exportação Prometheus pelo Actuator.
+- Tracing distribuído via Micrometer Tracing/OpenTelemetry com exportação OTLP configurável por perfil.
 
 ## Parcialmente Implementado
 
 - Integrações externas: portas definidas (`AntiFraudeGateway`, `PixGateway`), adaptador de antifraude implementado como stub funcional com threshold configurável; integrações reais com SPI/BACEN, STR, SPB e DICT ainda sem implementação de produção.
 - Auditoria: captura automática via `AuditoriaListener` (JPA lifecycle callbacks) operacional; mascaramento de dados sensíveis nos eventos de auditoria não implementado.
 - Bounded contexts separados para `cliente`, `PIX`, `TED` e `TEF` já possuem estrutura inicial de pacotes, mas ainda sem implementação funcional própria; o domínio e os casos de uso permanecem concentrados em `transacao`.
+- Observabilidade: métricas e tracing estão instrumentados/configurados na aplicação; dashboards Grafana, alertas de SLO e coletores externos permanecem fora do repositório.
 
 ## Planejado
 
@@ -232,7 +238,9 @@ transaction-processing-api/
 │   │   │   │   │   ├── TefTransacaoKafkaConsumidor.java
 │   │   │   │   │   └── TransacaoIniciadaKafkaConsumidor.java
 │   │   │   │   ├── aplicacao/
-│   │   │   │   │   └── EventoProcessadoService.java
+│   │   │   │   │   ├── EventoProcessadoService.java
+│   │   │   │   │   └── porta/
+│   │   │   │   │       └── EventoProcessadoRepository.java
 │   │   │   │   ├── evento/
 │   │   │   │   │   └── TransacaoEventoRouter.java
 │   │   │   │   ├── outbox/
@@ -258,8 +266,13 @@ transaction-processing-api/
 │   │   │   │   │       ├── MensagemMascaradaStrategy.java
 │   │   │   │   │       ├── StacktraceMascaradoStrategy.java
 │   │   │   │   │       └── StrategyMascaramentoResolver.java
-│   │   │   │   ├── metrica/                       (vazio — planejado)
-│   │   │   │   └── rastreamento/                  (vazio — planejado)
+│   │   │   │   ├── metrica/
+│   │   │   │   │   ├── OutboxMetricas.java
+│   │   │   │   │   ├── TransacaoMetricas.java
+│   │   │   │   │   ├── TransacaoMetricasNoop.java
+│   │   │   │   │   └── TransacaoMetricasPort.java
+│   │   │   │   └── rastreamento/
+│   │   │   │       └── TracingConfig.java
 │   │   │   ├── pix/                               (estrutura inicial — planejado)
 │   │   │   │   ├── aplicacao/
 │   │   │   │   │   ├── porta/
@@ -397,6 +410,9 @@ transaction-processing-api/
 │       │   │       ├── JsonMascaradoStrategyTest.java
 │       │   │       ├── MensagemMascaradaStrategyTest.java
 │       │   │       └── StrategyMascaramentoResolverTest.java
+│       │   ├── observabilidade/metrica/
+│       │   │   ├── OutboxMetricasTest.java
+│       │   │   └── TransacaoMetricasTest.java
 │       │   ├── transacao/
 │       │   │   ├── aplicacao/servico/
 │       │   │   │   ├── ConsultaTransacaoServiceTest.java
@@ -576,6 +592,7 @@ AuditoriaEvento
 | `KAFKA_SSL_TRUSTSTORE_LOCATION`               | Local do truststore cliente Kafka              | `file:/caminho/kafka-client-truststore.p12`                           |
 | `KAFKA_SSL_TRUSTSTORE_PASSWORD`               | Senha do truststore cliente Kafka              | `changeit`                                                            |
 | `KAFKA_SSL_TRUSTSTORE_TYPE`                   | Tipo do truststore                             | `PKCS12`                                                              |
+| `OTLP_TRACING_ENDPOINT`                       | Endpoint OTLP para exportação de traces        | `https://otlp-jaeger.lab.home/v1/traces`                              |
 
 ## Execução Local
 
@@ -583,7 +600,7 @@ AuditoriaEvento
 
 Com o perfil `dev`, as variáveis de banco, criptografia, HMAC e OAuth2 possuem valores padrão, mas são normalmente sobrescritas via variáveis de ambiente na IDE, por exemplo, ou utilizando um arquivo `.env` para build com `docker compose`.
 
-Rodo o Keycloak em um servidor homelab e utilizo um `.env` para definir os dados de acesso ao banco dele. Este servidor possui uma unidade certificadora que, junto com o gateway (Traefik), possibilita a utilização de HTTPS entre os serviços na rede local. Dessa forma, a chave de criptografia e as URIs OAuth2 apontam para o recurso do homelab (`keycloak.lab.home`). Mais abaixo disponibilizo o script para criar os containers do Keycloak e o seu banco de dados. O broker do Kafka também roda na mesma infra.
+Rodo o Keycloak em um servidor homelab e utilizo um `.env` para definir os dados de acesso ao banco dele. Este servidor possui uma unidade certificadora que, junto com o gateway (Traefik), possibilita a utilização de HTTPS entre os serviços na rede local. Dessa forma, a chave de criptografia e as URIs OAuth2 apontam para o recurso do homelab (`keycloak.lab.home`). Mais abaixo disponibilizo o script para criar os containers do Keycloak e o seu banco de dados. O broker do Kafka e o Jaeger também rodam na mesma infra.
 
 É preciso configurar as `ROLES` [CLIENTE, OPERADOR, GERENTE, ADMIN, SERVICO_INTERNO] no provedor de autenticação e expô-las na claim `roles` do token.
 
@@ -844,10 +861,13 @@ select c.id as idconta,
 │   └── docker-compose.yml
 ├── infra-down.sh
 ├── infra-up.sh
+├── jaeger
+│   └── docker-compose.yml
 ├── k8s-states
 │   ├── myblog-dev.txt
 │   └── myblog.txt
 ├── kafka
+│   ├── atualizar-credenciais-usuario-broker.txt
 │   ├── certs
 │   ├── docker-compose.yml
 │   ├── generate-kafka-certs.sh
@@ -962,6 +982,49 @@ services:
 
 volumes:
   postgres-keycloak-data:
+
+networks:
+  infra-net:
+    external: true
+```
+
+### docker-compose.yml (jaeger no homelab)
+
+O Jaeger recebe traces via OTLP HTTP em `https://otlp-jaeger.lab.home/v1/traces` e expõe a interface web em `https://jaeger.lab.home`.
+
+```yml
+services:
+  jaeger-tracing:
+    image: jaegertracing/all-in-one:1.76.0
+    container_name: jaeger
+    restart: unless-stopped
+
+    networks:
+      - infra-net
+
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=infra-net"
+
+      # UI Jaeger: https://jaeger.lab.home
+      - "traefik.http.routers.jaeger-ui.rule=Host(`jaeger.lab.home`)"
+      - "traefik.http.routers.jaeger-ui.entrypoints=websecure"
+      - "traefik.http.routers.jaeger-ui.tls=true"
+      - "traefik.http.routers.jaeger-ui.tls.certresolver=step-ca"
+      - "traefik.http.routers.jaeger-ui.middlewares=rate-limit@file"
+      - "traefik.http.routers.jaeger-ui.service=jaeger-ui-svc"
+      - "traefik.http.services.jaeger-ui-svc.loadbalancer.server.port=16686"
+
+      # OTLP HTTP collector: https://otlp-jaeger.lab.home/v1/traces
+      - "traefik.http.routers.jaeger-otlp.rule=Host(`otlp-jaeger.lab.home`)"
+      - "traefik.http.routers.jaeger-otlp.entrypoints=websecure"
+      - "traefik.http.routers.jaeger-otlp.tls=true"
+      - "traefik.http.routers.jaeger-otlp.tls.certresolver=step-ca"
+      - "traefik.http.routers.jaeger-otlp.service=jaeger-otlp-svc"
+      - "traefik.http.services.jaeger-otlp-svc.loadbalancer.server.port=4318"
 
 networks:
   infra-net:
@@ -1097,27 +1160,31 @@ POSTGRES_PASSWORD=keycloak
 
 # Dependências Principais
 
-| Tecnologia                                   | Finalidade                              |
-| -------------------------------------------- | --------------------------------------- |
-| `spring-boot-starter-web`                    | API REST com Spring MVC                 |
-| `spring-boot-starter-data-jpa`               | Persistência via Hibernate/JPA          |
-| `spring-boot-starter-security`               | Framework de segurança                  |
-| `spring-boot-starter-oauth2-resource-server` | Validação de JWT OAuth2                 |
-| `spring-boot-starter-validation`             | Bean Validation (Jakarta Validation)    |
-| `spring-boot-starter-actuator`               | Health checks e endpoints operacionais  |
-| `spring-boot-starter-json`                   | Serialização Jackson 3                  |
-| `spring-boot-starter-kafka`                  | Publicação e consumo de eventos Kafka   |
-| `springdoc-openapi-starter-webmvc-ui`        | Documentação OpenAPI / Swagger UI       |
-| `postgresql`                                 | Driver JDBC PostgreSQL                  |
-| `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema      |
-| `bucket4j_jdk17-core`                        | Rate limiting via token bucket          |
-| `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)    |
-| `jacoco-maven-plugin`                        | Relatórios e validação de cobertura     |
-| `spring-boot-testcontainers`                 | Integração Spring Boot + Testcontainers |
-| `testcontainers-postgresql`                  | PostgreSQL em testes de integração      |
-| `testcontainers-kafka`                       | Kafka em testes de integração           |
-| `archunit-junit5`                            | Testes de regras arquiteturais          |
-| `h2`                                         | Banco em memória para testes            |
+| Tecnologia                                   | Finalidade                                 |
+| -------------------------------------------- | ------------------------------------------ |
+| `spring-boot-starter-web`                    | API REST com Spring MVC                    |
+| `spring-boot-starter-data-jpa`               | Persistência via Hibernate/JPA             |
+| `spring-boot-starter-security`               | Framework de segurança                     |
+| `spring-boot-starter-oauth2-resource-server` | Validação de JWT OAuth2                    |
+| `spring-boot-starter-validation`             | Bean Validation (Jakarta Validation)       |
+| `spring-boot-starter-actuator`               | Health checks e endpoints operacionais     |
+| `micrometer-registry-prometheus`             | Exportação de métricas Prometheus          |
+| `spring-boot-starter-opentelemetry`          | Auto-configuração de tracing OpenTelemetry |
+| `micrometer-tracing-bridge-otel`             | Bridge Micrometer Tracing para OTel        |
+| `opentelemetry-exporter-otlp`                | Exportador OTLP para traces                |
+| `spring-boot-starter-json`                   | Serialização Jackson 3                     |
+| `spring-boot-starter-kafka`                  | Publicação e consumo de eventos Kafka      |
+| `springdoc-openapi-starter-webmvc-ui`        | Documentação OpenAPI / Swagger UI          |
+| `postgresql`                                 | Driver JDBC PostgreSQL                     |
+| `flyway-core` + `flyway-database-postgresql` | Versionamento e migração de schema         |
+| `bucket4j_jdk17-core`                        | Rate limiting via token bucket             |
+| `logstash-logback-encoder`                   | Logs estruturados em JSON (Logstash)       |
+| `jacoco-maven-plugin`                        | Relatórios e validação de cobertura        |
+| `spring-boot-testcontainers`                 | Integração Spring Boot + Testcontainers    |
+| `testcontainers-postgresql`                  | PostgreSQL em testes de integração         |
+| `testcontainers-kafka`                       | Kafka em testes de integração              |
+| `archunit-junit5`                            | Testes de regras arquiteturais             |
+| `h2`                                         | Banco em memória para testes               |
 
 ---
 
@@ -1143,9 +1210,9 @@ POSTGRES_PASSWORD=keycloak
 
 ### 3. Observabilidade
 
-- [ ] Instrumentar serviços com métricas customizadas Micrometer (contadores, timers, gauges)
-- [ ] Adicionar dependência `micrometer-tracing-bridge-otel`
-- [ ] Configurar exportação de traces para Jaeger (dev) ou Grafana Tempo (prod)
+- [x] Instrumentar serviços com métricas customizadas Micrometer (contadores, timers, gauges)
+- [x] Adicionar dependência `micrometer-tracing-bridge-otel`
+- [x] Configurar exportação de traces via OTLP para Jaeger (dev) ou Grafana Tempo (prod)
 - [x] Configurar logs estruturados em JSON (`logstash-logback-encoder` + `JsonMascaradoProvider` integrado ao Logback)
 - [ ] Configurar dashboards Grafana com alertas de SLO
 
@@ -1165,5 +1232,6 @@ POSTGRES_PASSWORD=keycloak
 - [x] Implementar testes unitários de serviços de aplicação (`ProcessaTransacaoServiceTest`, `CriaTransacaoServiceTest`, `ConsultaTransacaoServiceTest`, `EstornoTransacaoServiceTest`, `LimiteServiceTest`, `SaldoServiceTest`)
 - [x] Implementar testes unitários de estratégias (`PixTransacaoStrategyTest`, `TedTransacaoStrategyTest`, `TefTransacaoStrategyTest`, `StrategyResolverTest`)
 - [x] Implementar testes de integração com Testcontainers (`IntegrationTestBase`, `ProcessaTransacaoIntegrationTest`, `EstornoIntegrationTest`, `SaldoIntegrationTest`, `OutboxEventoIntegrationTest`)
+- [x] Implementar testes de métricas (`TransacaoMetricasTest`, `OutboxMetricasTest`)
 - [x] Implementar testes arquiteturais com ArchUnit (`ArquiteturaHexagonalTest`, `CamadaSegurancaTest`, `NamingConventionTest`)
 - [x] Configurar relatório de cobertura de código (JaCoCo)
