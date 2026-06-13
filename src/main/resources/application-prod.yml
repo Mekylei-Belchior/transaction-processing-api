@@ -77,4 +77,3 @@ management:
       export:
         otlp:
           endpoint: ${OTLP_TRACING_ENDPOINT}
-          transport: http

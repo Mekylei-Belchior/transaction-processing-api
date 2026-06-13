@@ -106,5 +106,4 @@ management:
     tracing:
       export:
         otlp:
-          endpoint: ${OTLP_TRACING_ENDPOINT:https://otlp-jaeger.lab.home/v1/traces}
           transport: http

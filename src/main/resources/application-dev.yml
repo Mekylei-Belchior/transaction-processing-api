@@ -102,6 +102,11 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:https://otlp-jaeger.lab.home/v1/traces}
 
 antifraude:
   limite-aprovacao-automatica: ${ANTIFRAUDE_LIMITE_APROVACAO_AUTOMATICA:10000.00}
