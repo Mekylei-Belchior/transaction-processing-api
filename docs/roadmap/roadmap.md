@@ -14,8 +14,8 @@ Este roadmap reflete o estado documentado e observado no projeto. Ele diferencia
 | Kafka | ✅ Implementado | Configuração, produtor, consumidores, roteamento por tipo de transação, DLQ e idempotência de consumo. |
 | Segurança | ✅ Implementado | OAuth2 Resource Server com JWT, RBAC, rate limiting, HMAC, criptografia e tratamento de erros de segurança. |
 | Observabilidade | ✅ Implementado | Métricas Micrometer/Prometheus, rastreamento OpenTelemetry/Jaeger, correlação e mascaramento de logs. |
-| Documentação operacional de execução local | 🔄 Em andamento | Documento existe, mas ainda está em construção. |
-| Documentação de variáveis de ambiente | 🔄 Em andamento | Documento existe, mas ainda está em construção. |
+| Documentação operacional de execução local | ✅ Implementado | Documento operacional de execução local concluído. |
+| Documentação de variáveis de ambiente | ✅ Implementado | Documento de variáveis de ambiente concluído. |
 | Bounded context PIX dedicado | 📋 Planejado | Evolução para isolar regras específicas de PIX fora do core genérico de `transacao`. |
 | Bounded context TED dedicado | 📋 Planejado | Evolução para isolar regras específicas de TED fora do core genérico de `transacao`. |
 | Bounded context TEF dedicado | 📋 Planejado | Evolução para isolar regras específicas de TEF fora do core genérico de `transacao`. |
