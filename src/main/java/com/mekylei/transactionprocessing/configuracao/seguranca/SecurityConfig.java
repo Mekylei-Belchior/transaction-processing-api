@@ -46,6 +46,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ENDPOINTS_PUBLICOS).permitAll()
+                        .requestMatchers("/actuator/prometheus").hasAuthority("ROLE_METRICAS.LEITURA")
                         .anyRequest().authenticated())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
