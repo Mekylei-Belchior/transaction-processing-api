@@ -18,8 +18,8 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 | --- | --- |
 | Java | 21 |
 | Spring Boot | 4.0.6 |
-| PostgreSQL | 42.7.11 |
-| Spring Kafka | Gerenciada pelo Spring Boot 4.0.6 |
+| PostgreSQL | 16 |
+| Kafka | Gerenciada pelo Spring Boot 4.0.6 |
 | Flyway | 12.6.2 |
 | OAuth2/JWT | Gerenciada pelo Spring Boot 4.0.6 |
 | JaCoCo | 0.8.15 |
@@ -27,7 +27,7 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 
 ## Como executar localmente
 
-1. Crie o arquivo `.env` a partir das variáveis esperadas pelo ambiente local.
+1. Crie o arquivo `.env` com as variáveis do ambiente local.
 2. Suba as dependências com `docker-compose up -d`.
 3. Execute a aplicação com `./mvnw spring-boot:run -Pdev`.
 
@@ -46,7 +46,20 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 
 ## Documentação
 
-Nenhum documento encontrado em `docs/` neste checkout.
+- [Índice geral](docs/INDEX.md)
+- [ADRs](docs/adr/README.md)
+- [Endpoints](docs/api/endpoints.md)
+- [Domain-Driven Design](docs/arquitetura/ddd.md)
+- [Arquitetura Hexagonal](docs/arquitetura/hexagonal.md)
+- [Visão geral](docs/arquitetura/visao-geral.md)
+- [Modelo de dados](docs/banco-de-dados/modelo-dados.md)
+- [Execução local](docs/desenvolvimento/execucao-local.md)
+- [Kafka e Outbox](docs/mensageria/kafka-outbox.md)
+- [Métricas](docs/observabilidade/metricas.md)
+- [Rastreamento](docs/observabilidade/rastreamento.md)
+- [Variáveis de ambiente](docs/operacao/variaveis-ambiente.md)
+- [Roadmap](docs/roadmap/roadmap.md)
+- [Autenticação e autorização](docs/seguranca/autenticacao-autorizacao.md)
 
 ## Como contribuir
 
