@@ -1,2 +1,476 @@
-# Endpoints
-Em construção — ver [código](../../src/main/java/com/mekylei/transactionprocessing/transacao/controle).
+# Endpoints da API
+
+Documentação dos endpoints REST expostos por `TransacaoController`, no pacote `com.mekylei.transactionprocessing.transacao.controle`.
+
+Base path: `/api/v1/transacoes`
+
+Autenticação: Bearer JWT via OAuth2 Resource Server.
+
+## Visão geral
+
+| Método | Path | Descrição | Roles |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/transacoes/pix` | Processa uma transação PIX. Usa `contaDestino` como chave PIX. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/ted` | Processa uma TED. Disponível apenas em horário bancário, das 06h às 17h BRT. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/tef` | Processa uma TEF entre contas do mesmo banco. Requer autorização antifraude. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `GET` | `/api/v1/transacoes/{id}` | Consulta o estado atual de uma transação por ID. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/{id}/estorno` | Estorna uma transação concluída. | `GERENTE`, `ADMIN` |
+
+## Headers
+
+| Header | Tipo | Obrigatoriedade | Observação |
+| --- | --- | --- | --- |
+| `Authorization` | `Bearer <token JWT>` | Obrigatório em todos os endpoints | O token deve conter uma role autorizada para a operação. |
+| `X-Idempotency-Key` | `UUID` | Obrigatório em `POST /pix`, `POST /ted` e `POST /tef` | Usado para evitar processamento duplicado da mesma requisição de transação. |
+| `X-Correlation-Id` | `UUID` | Recomendado em todos os endpoints | Usado para rastreamento. Quando ausente, a aplicação gera um UUID internamente; quando inválido, o valor é ignorado. |
+
+## Modelo de erro
+
+As respostas de erro seguem `ProblemDetail`. Dependendo da origem do erro, o `Content-Type` pode ser `application/problem+json` ou `application/json`.
+
+Exemplo:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Violação de Regra de Negócio",
+  "status": 422,
+  "detail": "TED fora do horário permitido",
+  "codigoErro": "TED_FORA_DO_HORARIO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## `POST /api/v1/transacoes/pix`
+
+Processa uma transação PIX. O tipo da transação é definido pelo endpoint como `PIX`; não há campo `tipo` no body.
+
+### Headers obrigatórios
+
+| Header | Valor |
+| --- | --- |
+| `Authorization` | `Bearer <token JWT>` |
+| `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
+
+Header de rastreamento recomendado:
+
+| Header | Valor |
+| --- | --- |
+| `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
+
+### Body da requisição
+
+DTO: `TransacaoRequisicao`
+
+| Campo | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
+| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
+| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta ou chave de destino. Para PIX, representa a chave PIX. |
+
+Exemplo:
+
+```json
+{
+  "valor": 150.00,
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "contaDestino": "cliente@email.com"
+}
+```
+
+### Respostas
+
+#### `201 Created`
+
+DTO: `TransacaoResposta`
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "valor": 150.00,
+  "tipo": "PIX",
+  "status": "COMPLETADA",
+  "idCorrelacao": "33333333-3333-3333-3333-333333333333",
+  "idIdempotencia": "44444444-4444-4444-4444-444444444444",
+  "criadoEm": "2026-06-03T12:00:00Z"
+}
+```
+
+#### Erros
+
+Possíveis status: `400`, `401`, `403`, `409`, `422`, `429` e `500`.
+
+Exemplo de body inválido:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Dados Inválidos",
+  "status": 400,
+  "Campos": [
+    "valor: Valor deve ser maior que zero",
+    "idContaOrigem: Conta de origem é obrigatória",
+    "contaDestino: Conta de destino é obrigatória"
+  ],
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+Exemplo de saldo insuficiente:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Saldo insuficiente",
+  "status": 422,
+  "detail": "Saldo insuficiente para a operação.",
+  "codigoErro": "SALDO_INSUFICIENTE",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## `POST /api/v1/transacoes/ted`
+
+Processa uma TED. O tipo da transação é definido pelo endpoint como `TED`; não há campo `tipo` no body. A regra de negócio informa disponibilidade apenas em horário bancário, das 06h às 17h BRT.
+
+### Headers obrigatórios
+
+| Header | Valor |
+| --- | --- |
+| `Authorization` | `Bearer <token JWT>` |
+| `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
+
+Header de rastreamento recomendado:
+
+| Header | Valor |
+| --- | --- |
+| `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
+
+### Body da requisição
+
+DTO: `TransacaoRequisicao`
+
+| Campo | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
+| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
+| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta de destino da TED. |
+
+Exemplo:
+
+```json
+{
+  "valor": 150.00,
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "contaDestino": "12345-6"
+}
+```
+
+### Respostas
+
+#### `201 Created`
+
+DTO: `TransacaoResposta`
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "valor": 150.00,
+  "tipo": "TED",
+  "status": "COMPLETADA",
+  "idCorrelacao": "33333333-3333-3333-3333-333333333333",
+  "idIdempotencia": "44444444-4444-4444-4444-444444444444",
+  "criadoEm": "2026-06-03T12:00:00Z"
+}
+```
+
+#### Erros
+
+Possíveis status: `400`, `401`, `403`, `409`, `422`, `429` e `500`.
+
+Exemplo de TED fora do horário:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Violação de Regra de Negócio",
+  "status": 422,
+  "detail": "TED fora do horário permitido",
+  "codigoErro": "TED_FORA_DO_HORARIO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## `POST /api/v1/transacoes/tef`
+
+Processa uma TEF entre contas do mesmo banco. O tipo da transação é definido pelo endpoint como `TEF`; não há campo `tipo` no body.
+
+### Headers obrigatórios
+
+| Header | Valor |
+| --- | --- |
+| `Authorization` | `Bearer <token JWT>` |
+| `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
+
+Header de rastreamento recomendado:
+
+| Header | Valor |
+| --- | --- |
+| `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
+
+### Body da requisição
+
+DTO: `TransacaoRequisicao`
+
+| Campo | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
+| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
+| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta de destino da TEF. |
+
+Exemplo:
+
+```json
+{
+  "valor": 150.00,
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "contaDestino": "98765-4"
+}
+```
+
+### Respostas
+
+#### `201 Created`
+
+DTO: `TransacaoResposta`
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "valor": 150.00,
+  "tipo": "TEF",
+  "status": "COMPLETADA",
+  "idCorrelacao": "33333333-3333-3333-3333-333333333333",
+  "idIdempotencia": "44444444-4444-4444-4444-444444444444",
+  "criadoEm": "2026-06-03T12:00:00Z"
+}
+```
+
+#### Erros
+
+Possíveis status: `400`, `401`, `403`, `409`, `422`, `429` e `500`.
+
+Exemplo de regra de negócio:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Violação de Regra de Negócio",
+  "status": 422,
+  "detail": "Regra violada",
+  "codigoErro": "REGRA_NEGOCIO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## `GET /api/v1/transacoes/{id}`
+
+Consulta o estado atual de uma transação pelo identificador.
+
+### Path parameters
+
+| Parâmetro | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `id` | UUID | Obrigatório | Identificador da transação. |
+
+### Headers obrigatórios
+
+| Header | Valor |
+| --- | --- |
+| `Authorization` | `Bearer <token JWT>` |
+
+Header de rastreamento recomendado:
+
+| Header | Valor |
+| --- | --- |
+| `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
+
+### Body da requisição
+
+Não há body.
+
+### Respostas
+
+#### `200 OK`
+
+DTO: `TransacaoResposta`
+
+```json
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "valor": 150.00,
+  "tipo": "PIX",
+  "status": "COMPLETADA",
+  "idCorrelacao": "33333333-3333-3333-3333-333333333333",
+  "idIdempotencia": "44444444-4444-4444-4444-444444444444",
+  "criadoEm": "2026-06-03T12:00:00Z"
+}
+```
+
+#### Erros
+
+Possíveis status: `401`, `403`, `404`, `429` e `500`.
+
+Exemplo de transação não encontrada:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Recurso não encontrado",
+  "status": 404,
+  "detail": "Transação não encontrada para o id: 11111111-1111-1111-1111-111111111111",
+  "codigoErro": "TRANSACAO_NAO_ENCONTRADA",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## `POST /api/v1/transacoes/{id}/estorno`
+
+Estorna uma transação concluída. O estorno só é aceito para transações com status `COMPLETADA`; a transação passa para `ESTORNADA`, o valor é creditado de volta na conta de origem e um evento de estorno é publicado.
+
+### Path parameters
+
+| Parâmetro | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `id` | UUID | Obrigatório | Identificador da transação original. |
+
+### Headers obrigatórios
+
+| Header | Valor |
+| --- | --- |
+| `Authorization` | `Bearer <token JWT>` |
+
+Header de rastreamento recomendado:
+
+| Header | Valor |
+| --- | --- |
+| `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
+
+### Body da requisição
+
+DTO: `EstornoRequisicao`
+
+| Campo | Tipo | Validações | Descrição |
+| --- | --- | --- | --- |
+| `motivo` | string | Obrigatório; não pode ser vazio | Motivo do estorno. |
+
+Exemplo:
+
+```json
+{
+  "motivo": "Transação não reconhecida pelo cliente"
+}
+```
+
+### Respostas
+
+#### `200 OK`
+
+DTO: `EstornoResposta`
+
+```json
+{
+  "idTransacaoOriginal": "11111111-1111-1111-1111-111111111111",
+  "status": "ESTORNADA",
+  "valorEstornado": 150.00,
+  "estornadoEm": "2026-06-03T12:00:00Z"
+}
+```
+
+#### Erros
+
+Possíveis status: `400`, `401`, `403`, `404`, `409`, `422`, `429` e `500`.
+
+Exemplo de transação não elegível para estorno:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Violação de Regra de Negócio",
+  "status": 422,
+  "detail": "Apenas transações com status COMPLETADA podem ser estornadas. Status atual: PENDENTE",
+  "codigoErro": "ESTORNO_INVALIDO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+Exemplo de conflito de concorrência:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Conflito de Concorrência",
+  "status": 409,
+  "detail": "O recurso foi atualizado por outra requisição concorrente. Tente consultar o estado atual antes de repetir a operação.",
+  "codigoErro": "CONFLITO_CONCORRENCIA",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## Códigos de erro padrão
+
+| HTTP | Título | `codigoErro` | Quando ocorre |
+| --- | --- | --- | --- |
+| `400` | `Dados Inválidos` | Não se aplica | Validações de DTO falham, por exemplo `valor` nulo, `valor` menor que `0.01`, `idContaOrigem` nulo ou `contaDestino`/`motivo` vazio. |
+| `400` | `Cabeçalho obrigatório ausente` | `CABECALHO_AUSENTE` | Header obrigatório ausente, como `X-Idempotency-Key` nos endpoints de processamento. |
+| `401` | `Não autenticado` | Não se aplica | Token ausente, inválido ou expirado. |
+| `403` | `Acesso negado` | `ACESSO_NEGADO` | Token autenticado, mas sem role suficiente para a operação. |
+| `404` | `Recurso não encontrado` | Código definido pela exceção, por exemplo `TRANSACAO_NAO_ENCONTRADA` | Transação não encontrada pelo ID informado. |
+| `409` | `Conflito de Dados` | `CONFLITO_DADOS` | Conflito de integridade de dados, incluindo chave de idempotência já registrada em cenário conflitante. |
+| `409` | `Conflito de Concorrência` | `CONFLITO_CONCORRENCIA` | Atualização concorrente detectada por locking otimista. |
+| `422` | `Violação de Regra de Negócio` | Código definido pela exceção, por exemplo `TED_FORA_DO_HORARIO`, `ESTORNO_INVALIDO`, `CONTA_INVALIDA` | Regra de negócio violada. |
+| `422` | `Saldo insuficiente` | `SALDO_INSUFICIENTE` | Saldo disponível menor que o valor solicitado. |
+| `429` | `Limite excedido` | `LIMITE_EXCEDIDO` | Limite de requisições excedido. A resposta inclui `Retry-After: 60`. |
+| `500` | `Erro Interno` | `ERRO_INTERNO_SERVIDOR` | Erro inesperado não tratado por handlers específicos. |
+
+Exemplos adicionais:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Não autenticado",
+  "status": 401,
+  "detail": "Token ausente, inválido ou expirado.",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+```json
+{
+  "type": "about:blank",
+  "title": "Acesso negado",
+  "status": 403,
+  "detail": "Sem permissão para executar esta operação.",
+  "codigoErro": "ACESSO_NEGADO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+```json
+{
+  "type": "about:blank",
+  "title": "Limite excedido",
+  "status": 429,
+  "detail": "Limite de requisições excedido. Tente novamente em instantes.",
+  "codigoErro": "LIMITE_EXCEDIDO",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+## Swagger UI
+
+No perfil `dev`, a Swagger UI fica disponível em `/swagger-ui.html`.
