@@ -30,3 +30,6 @@ O `ContextoRequisicaoFilter` propaga `idCorrelacao` para o MDC, e os logs inclue
 - Traces dependem da disponibilidade e configuração correta do endpoint OTLP.
 - Sampling de 10% em produção pode não capturar todas as ocorrências.
 - Dados em spans e logs precisam continuar respeitando políticas de mascaramento.
+
+## Ver também
+- [Dependências Externas](../infraestrutura/dependencias-externas.md)

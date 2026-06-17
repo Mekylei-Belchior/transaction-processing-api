@@ -36,3 +36,7 @@ O produtor usa `acks=all`, `enable.idempotence=true` e chave Kafka baseada no `i
 - A operação passa a depender de broker Kafka, certificados, truststore e secrets.
 - A semântica prática é at-least-once, então consumidores precisam ser idempotentes.
 - Diagnóstico de falhas exige correlacionar API, outbox, Kafka, DLQ e consumidores.
+
+## Ver também
+- [Certificados e Truststore](../infraestrutura/certificados-truststore.md)
+- [Dependências Externas](../infraestrutura/dependencias-externas.md)

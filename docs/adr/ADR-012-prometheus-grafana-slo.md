@@ -38,3 +38,6 @@ Os SLOs implementados para PIX são:
 - Métricas precisam ser mantidas quando novos fluxos ou status forem adicionados.
 - SLOs iniciais podem precisar de ajuste após observar tráfego real.
 - O endpoint de métricas exige proteção e gestão adequada de credenciais.
+
+## Ver também
+- [Dependências Externas](../infraestrutura/dependencias-externas.md)

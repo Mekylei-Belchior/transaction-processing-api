@@ -29,3 +29,6 @@ Endpoints públicos incluem `/actuator/health`, `/actuator/info`, `/v3/api-docs/
 - A disponibilidade da validação JWT depende de configuração correta de issuer, JWKS e confiança TLS.
 - Mudanças em claims ou roles no Keycloak exigem alinhamento com `JwtClaimsConverter` e `@PreAuthorize`.
 - Testes de controller precisam simular authorities corretamente.
+
+## Ver também
+- [Homelab](../infraestrutura/homelab.md)
