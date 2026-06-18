@@ -31,6 +31,8 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 2. Suba as dependências com `docker-compose up -d`.
 3. Execute a aplicação com `./mvnw spring-boot:run -Pdev`.
 
+**Importante:** Para maiores detalhes de como executar localmente, consulte a documentação `Execução local`.
+
 ## Estrutura simplificada
 
 | Pacote | Descrição |

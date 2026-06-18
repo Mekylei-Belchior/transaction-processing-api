@@ -174,25 +174,111 @@ docker compose ps
 
 ## Seed da base de dados
 
-O diretório `seed-db` está no `.gitignore` e não é versionado. Use-o apenas para arquivos locais de carga manual.
+Use o ‘script’ abaixo para popular a base de dados, após esta ter sido criada ao executar a aplicação.
 
-Exemplo de organização local:
+```sql
 
-```bash
-mkdir -p seed-db
+-- ============================================================
+-- SEED — Transaction Processing API — Fase 1
+-- Executar APÓS subir a aplicação (para que o JPA crie as tabelas)
+-- ============================================================
+
+-- IDs fixos para uso direto nos testes via curl
+-- Alice  → ATIVA,    saldo R$ 10.000  (fluxos normais + limite)
+-- Bob    → ATIVA,    saldo R$    100  (cenário saldo insuficiente)
+-- Carol  → BLOQUEADA, saldo R$  2.000 (cenário conta inativa)
+
+-- -------------------------------------------------------
+-- CONTAS
+-- agencia: 0001
+-- 1 - número conta: 00001-9
+-- 2 - número conta: 00002-7
+-- 3 - número conta: 00003-5
+-- -------------------------------------------------------
+INSERT INTO public.conta (id, agencia, agencia_hmac, criado_em, id_cliente, numero_conta, numero_conta_hmac, status, tipo)
+VALUES
+    ('aaaaaaaa-0000-0000-0000-000000000001', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d',  NOW(), '11111111-0000-0000-0000-000000000001', 'Gp9UEf+hVdymVh+gxKDVI6v9dD2n6XfOPY+duIq5rTCt2Xc=', '74e38e5e3a9e1f61d36f22e6b59c1f7b33a2db18f4d0a4d876c0a1d8a2d3f2e9',  'ATIVA',      'CORRENTE'),
+    ('bbbbbbbb-0000-0000-0000-000000000002', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d', NOW(), '22222222-0000-0000-0000-000000000002', 'cawdBLoH00mTeqODJhn9Dh3iAZfbUcbeP4VdkA7pAwATP2U=', '2dcf0d48f7a2a4bb3f59cb34d1e08c89f0cf57c65bc46a52f9b2f67a15a42a87',  'ATIVA',      'CORRENTE'),
+    ('cccccccc-0000-0000-0000-000000000003', 'ndmQxuQoMUN8023lOFhONmW+cTAwTG/ob04lM9i8WQk=', '4f3baf8df9c85e5a9d56f3df7f6c4a9efdb8f3c13f3d0b4c4cbfdcf05a4a9c0d', NOW(), '33333333-0000-0000-0000-000000000003', 'GY+ApqCbh1PBcfZ8OGr+x7x33X6OREvAYV+Njd2d+PuHJ3E=', '6f81db6c2ecfd0f3d0a7a3cb8f0dfd8cb4eec0b02a9e67b09cf4f4aef16cb8a3',  'BLOQUEADA',  'CORRENTE');
+
+-- -------------------------------------------------------
+-- SALDOS
+-- -------------------------------------------------------
+INSERT INTO public.saldo (id, atualizado_em, bloqueado, disponivel, id_conta, versao)
+VALUES
+    ('a1a1a1a1-0000-0000-0000-000000000001', NOW(), 0.00, 10000.00, 'aaaaaaaa-0000-0000-0000-000000000001', 0),
+    ('b2b2b2b2-0000-0000-0000-000000000002', NOW(), 0.00,   100.00, 'bbbbbbbb-0000-0000-0000-000000000002', 0),
+    ('c3c3c3c3-0000-0000-0000-000000000003', NOW(), 0.00,  2000.00, 'cccccccc-0000-0000-0000-000000000003', 0);
+
+-- -------------------------------------------------------
+-- LIMITES TRANSACIONAIS
+--   limite_utilizado = limite por transação (campo mal nomeado na DDL)
+--   limite_diario    = teto acumulado no dia
+--   utilizado_hoje   = quanto já foi consumido hoje
+--
+-- Alice — limites normais, zerado hoje
+-- Bob   — limites normais, zerado hoje (saldo é o gargalo)
+-- Carol — bloqueada, limites irrelevantes mas necessários para consistência
+-- -------------------------------------------------------
+
+-- Alice — PIX: até R$ 2.000 por transação, R$ 5.000/dia
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('a1000001-0000-0000-0000-000000000001', CURRENT_DATE, 'aaaaaaaa-0000-0000-0000-000000000001', 5000.00,  2000.00, 'PIX', 0.00);
+
+-- Alice — TED: até R$ 5.000 por transação, R$ 10.000/dia
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('a1000002-0000-0000-0000-000000000001', CURRENT_DATE, 'aaaaaaaa-0000-0000-0000-000000000001', 10000.00, 5000.00, 'TED', 0.00);
+
+-- Alice — TEF: até R$ 500 por transação, R$ 1.500/dia
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('a1000003-0000-0000-0000-000000000001', CURRENT_DATE, 'aaaaaaaa-0000-0000-0000-000000000001', 1500.00,   500.00, 'TEF', 0.00);
+
+-- Bob — PIX
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('b2000001-0000-0000-0000-000000000002', CURRENT_DATE, 'bbbbbbbb-0000-0000-0000-000000000002', 5000.00,  2000.00, 'PIX', 0.00);
+
+-- Bob — TED
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('b2000002-0000-0000-0000-000000000002', CURRENT_DATE, 'bbbbbbbb-0000-0000-0000-000000000002', 10000.00, 5000.00, 'TED', 0.00);
+
+-- Bob — TEF
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('b2000003-0000-0000-0000-000000000002', CURRENT_DATE, 'bbbbbbbb-0000-0000-0000-000000000002', 1500.00,   500.00, 'TEF', 0.00);
+
+-- Carol — PIX (bloqueada, mas inserção mantém consistência)
+INSERT INTO public.limite (id, data_referencia, id_conta, limite_diario, limite_utilizado, tipo, utilizado_hoje)
+VALUES ('c3000001-0000-0000-0000-000000000003', CURRENT_DATE, 'cccccccc-0000-0000-0000-000000000003', 5000.00,  2000.00, 'PIX', 0.00);
+
+-- -------------------------------------------------------
+-- VERIFICAÇÃO
+-- -------------------------------------------------------
+select c.id as idconta,
+       c.numero_conta,
+	   c.status as status_conta,
+	   s.disponivel,
+	   s.bloqueado,
+	   l.tipo as limite_tipo,
+	   l.limite_utilizado as limite_por_transacao,
+	   l.limite_diario,
+	   l.utilizado_hoje
+  from conta c
+       join saldo s on s.id_conta = c.id
+       join limite l on l.id_conta = c.id
+ order by c.numero_conta, l.tipo;
+
 ```
 
-Salve seu script local como:
-
-```text
-seed-db/seed.sql
-```
-
-O seed documentado no `OLD_README.md` cobre três cenários principais:
+O seed de exemplo cobre três cenários principais:
 
 - **Alice**: conta ativa com saldo normal para fluxos positivos e validação de limites.
 - **Bob**: conta ativa com saldo baixo para cenário de saldo insuficiente.
 - **Carol**: conta bloqueada para cenário de conta inativa/bloqueada.
+
+Salve seu script como:
+
+```text
+seed-db/seed.sql
+```
 
 Com os containers do Compose em execução, copie o seed para o container PostgreSQL:
 
