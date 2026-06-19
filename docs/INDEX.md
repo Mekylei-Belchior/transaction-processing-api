@@ -28,6 +28,7 @@ O `transaction-processing-api` é uma API Java/Spring Boot para processamento de
 | Banco de dados | [Modelo de Dados](banco-de-dados/modelo-dados.md) | Descreve o modelo relacional PostgreSQL, tabelas, constraints, índices e migrations Flyway. |
 | Mensageria | [Kafka e Outbox](mensageria/kafka-outbox.md) | Documenta publicação assíncrona, Outbox Pattern, tópicos Kafka, DLQ e idempotência de consumo. |
 | Desenvolvimento | [Execução Local](desenvolvimento/execucao-local.md) | Centraliza orientações para executar o projeto em ambiente local. |
+| Desenvolvimento | [Fluxos de Negócio](desenvolvimento/fluxos-negocio.md) | Regras de PIX, TED, TEF e estorno em linguagem de negócio. |
 | Infraestrutura | [Visão Geral](infraestrutura/visao-geral.md) | Apresenta os serviços de suporte da aplicação e sua relação com o ambiente do docker-compose e o homelab. |
 | Infraestrutura | [Dependências Externas](infraestrutura/dependencias-externas.md) | Descreve cada serviço externo: PostgreSQL, Keycloak, Kafka, Prometheus, Grafana, Jaeger e Traefik. |
 | Infraestrutura | [Homelab](infraestrutura/homelab.md) | Explica o ambiente homelab onde rodam os serviços de suporte externos ao docker-compose da app. |

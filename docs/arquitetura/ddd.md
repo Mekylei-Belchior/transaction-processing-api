@@ -26,7 +26,7 @@ O `transaction-processing-api` organiza o domínio em bounded contexts para sepa
 
 | Termo | Definição em linguagem de negócio | Classe Java correspondente |
 | --- | --- | --- |
-| Transação | Operação financeira solicitada para movimentar valor entre uma conta de origem e uma conta de destino, usando PIX, TED ou TEF. | `com.mekylei.transactionprocessing.transacao.dominio.Transacao` |
+| Transação | Operação financeira solicitada para movimentar valor entre uma conta de origem e uma conta de destino, usando PIX, TED ou TEF. Consulte os [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md) para conhecer as regras de cada modalidade. | `com.mekylei.transactionprocessing.transacao.dominio.Transacao` |
 | Conta | Conta bancária de um cliente, com agência, número, tipo e situação operacional. | `com.mekylei.transactionprocessing.conta.dominio.Conta` |
 | Saldo | Valor disponível e valor bloqueado associados a uma conta. Protege a regra de que o saldo disponível não pode ficar negativo. | `com.mekylei.transactionprocessing.conta.dominio.Saldo` |
 | Limite transacional | Limite configurado por conta e tipo de transação, usado para validar valor por operação e uso diário. | `com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional` |

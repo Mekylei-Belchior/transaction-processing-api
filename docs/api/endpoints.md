@@ -89,6 +89,8 @@ Exemplo:
 
 ## `POST /api/v1/transacoes/pix`
 
+> Para as regras de negócio detalhadas, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#pix).
+
 Processa uma transação PIX. O tipo da transação é definido pelo endpoint como `PIX`; não há campo `tipo` no body.
 
 ### Headers obrigatórios
@@ -178,6 +180,8 @@ Exemplo de saldo insuficiente:
 
 ## `POST /api/v1/transacoes/ted`
 
+> Para as regras de negócio detalhadas, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#ted).
+
 Processa uma TED. O tipo da transação é definido pelo endpoint como `TED`; não há campo `tipo` no body. A regra de negócio informa disponibilidade apenas em horário bancário, das 06h às 17h BRT.
 
 ### Headers obrigatórios
@@ -250,6 +254,8 @@ Exemplo de TED fora do horário:
 ```
 
 ## `POST /api/v1/transacoes/tef`
+
+> Para as regras de negócio detalhadas, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#tef).
 
 Processa uma TEF entre contas do mesmo banco. O tipo da transação é definido pelo endpoint como `TEF`; não há campo `tipo` no body.
 
@@ -385,6 +391,8 @@ Exemplo de transação não encontrada:
 ```
 
 ## `POST /api/v1/transacoes/{id}/estorno`
+
+> Para as regras de negócio detalhadas, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#estorno).
 
 Estorna uma transação concluída. O estorno só é aceito para transações com status `COMPLETADA`; a transação passa para `ESTORNADA`, o valor é creditado de volta na conta de origem e um evento de estorno é publicado.
 
