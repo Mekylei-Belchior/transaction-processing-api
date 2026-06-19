@@ -62,3 +62,5 @@ C4Context
 | Logstash Logback Encoder | 9.0 |
 | ArchUnit | 1.4.2 |
 | JaCoCo | 0.8.15 |
+
+Para o fluxo detalhado de processamento, consulte [Fluxo de Transação](fluxo-transacao.md).

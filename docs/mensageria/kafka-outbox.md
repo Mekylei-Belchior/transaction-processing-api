@@ -4,6 +4,8 @@ Este documento descreve a arquitetura de mensageria do `transaction-processing-a
 
 O Kafka é acessado via `SASL_SSL` com `SCRAM-SHA-256` e truststore, usando o broker `kafka.lab.home:9094` como padrão. A publicação dos eventos passa pela tabela `outbox_evento`; consumidores Kafka processam eventos confirmados e usam a tabela `evento_processado` para idempotência de consumo.
 
+Para o diagrama de sequência completo, consulte [Fluxo de Transação](../arquitetura/fluxo-transacao.md).
+
 ## Visão Geral
 
 ```mermaid

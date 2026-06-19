@@ -20,6 +20,7 @@ O `transaction-processing-api` é uma API Java/Spring Boot para processamento de
 | Arquitetura | [Visão Geral](arquitetura/visao-geral.md) | Apresenta o contexto do sistema, objetivos de negócio, componentes principais e integrações externas. |
 | Arquitetura | [Arquitetura Hexagonal](arquitetura/hexagonal.md) | Explica a separação entre domínio, aplicação, portas, adaptadores e infraestrutura. |
 | Arquitetura | [Domain-Driven Design](arquitetura/ddd.md) | Descreve bounded contexts, aggregates, value objects, eventos de domínio e glossário. |
+| Arquitetura | [Fluxo de Transação](arquitetura/fluxo-transacao.md) | Sequência completa do fluxo PIX/TED/TEF e estorno. |
 | API | [Endpoints da API](api/endpoints.md) | Lista endpoints REST de transações, headers, payloads, respostas e modelo de erro. |
 | Segurança | [Autenticação e Autorização](seguranca/autenticacao-autorizacao.md) | Documenta OAuth2 Resource Server, JWT, RBAC, criptografia, HMAC, rate limiting e mascaramento. |
 | Observabilidade | [Métricas](observabilidade/metricas.md) | Detalha métricas Prometheus/Micrometer, SLOs e consultas operacionais. |
