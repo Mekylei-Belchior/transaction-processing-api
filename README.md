@@ -62,7 +62,7 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 - [Variáveis de ambiente](docs/operacao/variaveis-ambiente.md)
 - [Roadmap](docs/roadmap/roadmap.md)
 - [Autenticação e autorização](docs/seguranca/autenticacao-autorizacao.md)
-- Reporte de vulnerabilidades: consulte [SECURITY.md](SECURITY.md).
+- [Reporte de vulnerabilidades](SECURITY.md).
 
 ## Como contribuir
 
