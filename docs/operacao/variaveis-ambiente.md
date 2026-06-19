@@ -80,6 +80,30 @@ MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
 Em produção, não há default seguro. Gere a chave com fonte criptograficamente segura, armazene em mecanismo de secrets e planeje rotação com cuidado, pois dados já persistidos dependem da chave usada para descriptografia.
 
+### Gerando as chaves locais
+
+As chaves devem ser geradas localmente e mantidas em segredo. Nunca compartilhe ou versione seus valores reais.
+
+Para `APP_CRIPTOGRAFIA_CHAVE`:
+
+```bash
+# Gera 32 bytes aleatórios em Base64 (compatível com AES-256-GCM)
+openssl rand -base64 32
+# Exemplo de saída: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+```
+
+Para `APP_HMAC_CHAVE`:
+
+```bash
+# Gera uma chave HMAC-SHA256 aleatória em hex
+openssl rand -hex 32
+# Exemplo de saída: 7a3f1b9c2d8e4a6f0b5c1d3e7f9a2b4c6d8e0f1a2b3c4d5e6f7a8b9c0d1e2f3
+```
+
+⚠️ Nunca versione valores reais no repositório. Adicione `.env` ao `.gitignore`.
+
+Consulte também o [.env.example](../../.env.example) na raiz do projeto para o formato esperado.
+
 ## HMAC-SHA256
 
 | Variável | Descrição | Observações |
