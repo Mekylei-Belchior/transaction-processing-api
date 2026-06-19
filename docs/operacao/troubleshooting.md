@@ -63,3 +63,29 @@ order by criado_em;
 | Kafka TLS | `KAFKA_SSL_TRUSTSTORE_LOCATION`, `KAFKA_SSL_TRUSTSTORE_PASSWORD`, `KAFKA_SSL_TRUSTSTORE_TYPE` |
 | Outbox | `EVENTOS_OUTBOX_INTERVALO_REPROCESSAMENTO`, `EVENTOS_OUTBOX_INTERVALO_PUBLICACAO_MS`, `EVENTOS_OUTBOX_TIMEOUT_ENVIO_MS` |
 | Observabilidade | `OTLP_TRACING_ENDPOINT`, `management.endpoints.web.exposure.include` |
+
+## Diagnóstico local sem acesso ao homelab
+
+Quando o homelab não está disponível, use os endpoints do Spring Boot Actuator para diagnóstico básico.
+
+| Endpoint | Descrição | Autenticação |
+| --- | --- | --- |
+| `GET /actuator/health` | Estado geral (DB, Kafka, Disk) | Pública (detalhes requerem role) |
+| `GET /actuator/info` | Versão da build e git | Pública |
+| `GET /actuator/prometheus` | Métricas no formato Prometheus | Requer `ROLE_METRICAS.LEITURA` |
+| `GET /actuator/env` | Variáveis de ambiente ativas | Requer `ADMIN` |
+| `GET /actuator/beans` | Beans Spring carregados | Requer `ADMIN` |
+
+### Filtrando logs por correlação
+
+```bash
+# Executar e filtrar logs por idCorrelacao
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev 2>&1 | grep '"idCorrelacao"'
+
+# Filtrar por traceId específico
+./mvnw spring-boot:run ... 2>&1 | grep "seu-trace-id-aqui"
+```
+
+> **Nota:** Para observabilidade completa com Grafana e Jaeger, consulte [metricas.md](../observabilidade/metricas.md) e [rastreamento.md](../observabilidade/rastreamento.md).
+
+Para configurar o ambiente sem homelab, consulte [Execução sem acesso ao homelab](../desenvolvimento/execucao-local.md#execução-sem-acesso-ao-homelab).
