@@ -172,6 +172,15 @@ Verifique os containers:
 docker compose ps
 ```
 
+### Documentação interativa da API
+
+Com a aplicação em execução, acesse:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui/index.html
+- **OpenAPI JSON:** http://localhost:8080/v3/api-docs
+
+> ℹ️ O Swagger UI exige autenticação para testar endpoints protegidos. Consulte Como obter um token de acesso.
+
 ## Execução sem acesso ao homelab
 
 O perfil `dev` aponta por padrão para os serviços do homelab do autor. Para executar a aplicação sem acesso a esse ambiente, use um Keycloak local e desabilite as integrações externas que não forem necessárias.

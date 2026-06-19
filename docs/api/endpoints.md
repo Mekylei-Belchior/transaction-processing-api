@@ -16,6 +16,8 @@ Autenticação: Bearer JWT via OAuth2 Resource Server.
 | `GET` | `/api/v1/transacoes/{id}` | Consulta o estado atual de uma transação por ID. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
 | `POST` | `/api/v1/transacoes/{id}/estorno` | Estorna uma transação concluída. | `GERENTE`, `ADMIN` |
 
+> **Documentação interativa:** http://localhost:8080/swagger-ui/index.html | OpenAPI JSON: http://localhost:8080/v3/api-docs
+
 ## Como obter um token de acesso
 
 Todos os endpoints requerem um token JWT obtido via Keycloak.
