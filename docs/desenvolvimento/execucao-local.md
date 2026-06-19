@@ -318,6 +318,24 @@ select c.id as idconta,
 
 ```
 
+### Dados de teste disponíveis após o seed
+
+O seed cria três contas de teste com valores pré-criptografados. Os valores em texto claro são:
+
+| Titular | ID da Conta | Agência | Número da Conta | Saldo | Status |
+| --- | --- | --- | --- | --- | --- |
+| Alice | aaaaaaaa-0000-0000-0000-000000000001 | 0001 | 00001-9 | R$ 10.000,00 | ATIVA |
+| Bob | aaaaaaaa-0000-0000-0000-000000000002 | 0001 | 00002-7 | R$ 100,00 | ATIVA |
+| Carol | aaaaaaaa-0000-0000-0000-000000000003 | 0001 | 00003-5 | R$ 2.000,00 | BLOQUEADA |
+
+✅ **Cenário normal:** Use `idContaOrigem: aaaaaaaa-0000-0000-0000-000000000001` (Alice) para o fluxo padrão.
+
+⚠️ **Saldo insuficiente:** Use `idContaOrigem: aaaaaaaa-0000-0000-0000-000000000002` (Bob) para testar rejeição.
+
+🚫 **Conta bloqueada:** Use `idContaOrigem: aaaaaaaa-0000-0000-0000-000000000003` (Carol) para testar bloqueio.
+
+Veja exemplos de chamadas completas em docs/api/endpoints.md.
+
 O seed de exemplo cobre três cenários principais:
 
 - **Alice**: conta ativa com saldo normal para fluxos positivos e validação de limites.
