@@ -16,6 +16,52 @@ Autenticação: Bearer JWT via OAuth2 Resource Server.
 | `GET` | `/api/v1/transacoes/{id}` | Consulta o estado atual de uma transação por ID. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
 | `POST` | `/api/v1/transacoes/{id}/estorno` | Estorna uma transação concluída. | `GERENTE`, `ADMIN` |
 
+## Como obter um token de acesso
+
+Todos os endpoints requerem um token JWT obtido via Keycloak.
+
+Para obter um token usando o Keycloak do homelab, informe o usuário e a senha do usuário de teste:
+
+```bash
+TOKEN=$(curl -s \
+  -X POST "https://keycloak.lab.home/realms/bancario/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=password" \
+  --data-urlencode "client_id=transaction-api-client" \
+  --data-urlencode "username=<usuario-de-teste>" \
+  --data-urlencode "password=<senha-do-usuario>" \
+  | jq -r '.access_token')
+```
+
+Para obter um token usando o Keycloak local:
+
+```bash
+TOKEN=$(curl -s \
+  -X POST "http://localhost:8180/realms/bancario/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=password" \
+  --data-urlencode "client_id=transaction-api-client" \
+  --data-urlencode "username=<usuario-de-teste>" \
+  --data-urlencode "password=<senha-do-usuario>" \
+  | jq -r '.access_token')
+```
+
+Use o token salvo em `$TOKEN` no header `Authorization`:
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/transacoes/11111111-1111-1111-1111-111111111111" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+| Operação | Role mínima |
+| --- | --- |
+| Iniciar PIX/TED/TEF | `CLIENTE` ou `OPERADOR` |
+| Consultar transação | `CLIENTE` (próprias) ou `OPERADOR` |
+| Solicitar estorno | `GERENTE` |
+| Ler métricas | role `METRICAS.LEITURA` |
+
+> Para configurar o Keycloak local, consulte [Execução sem acesso ao homelab](../desenvolvimento/execucao-local.md#execução-sem-acesso-ao-homelab).
+
 ## Headers
 
 | Header | Tipo | Obrigatoriedade | Observação |
