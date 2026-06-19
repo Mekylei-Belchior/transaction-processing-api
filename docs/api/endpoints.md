@@ -392,64 +392,83 @@ Exemplo de transação não encontrada:
 
 ## `POST /api/v1/transacoes/{id}/estorno`
 
-> Para as regras de negócio detalhadas, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#estorno).
+> Para as regras de negócio completas do estorno, consulte [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md#estorno).
 
 Estorna uma transação concluída. O estorno só é aceito para transações com status `COMPLETADA`; a transação passa para `ESTORNADA`, o valor é creditado de volta na conta de origem e um evento de estorno é publicado.
+
+### Pré-condições
+
+- A transação deve existir.
+- A transação deve estar no status `COMPLETADA`.
+- O solicitante deve estar autenticado com, no mínimo, a role `GERENTE`.
 
 ### Path parameters
 
 | Parâmetro | Tipo | Validações | Descrição |
 | --- | --- | --- | --- |
-| `id` | UUID | Obrigatório | Identificador da transação original. |
+| `id` | UUID | Obrigatório | UUID da transação a estornar. |
 
 ### Headers obrigatórios
 
 | Header | Valor |
 | --- | --- |
-| `Authorization` | `Bearer <token JWT>` |
-
-Header de rastreamento recomendado:
-
-| Header | Valor |
-| --- | --- |
+| `Authorization` | `Bearer <token JWT>` com, no mínimo, a role `GERENTE` |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
 
-DTO: `EstornoRequisicao`
-
-| Campo | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `motivo` | string | Obrigatório; não pode ser vazio | Motivo do estorno. |
-
-Exemplo:
-
-```json
-{
-  "motivo": "Transação não reconhecida pelo cliente"
-}
-```
+Não há body.
 
 ### Respostas
 
 #### `200 OK`
 
-DTO: `EstornoResposta`
+DTO: `TransacaoResposta`
 
 ```json
 {
-  "idTransacaoOriginal": "11111111-1111-1111-1111-111111111111",
+  "id": "11111111-1111-1111-1111-111111111111",
+  "idContaOrigem": "22222222-2222-2222-2222-222222222222",
+  "valor": 150.00,
+  "tipo": "PIX",
   "status": "ESTORNADA",
-  "valorEstornado": 150.00,
-  "estornadoEm": "2026-06-03T12:00:00Z"
+  "idCorrelacao": "33333333-3333-3333-3333-333333333333",
+  "idIdempotencia": "44444444-4444-4444-4444-444444444444",
+  "criadoEm": "2026-06-03T12:00:00Z"
 }
 ```
 
 #### Erros
 
-Possíveis status: `400`, `401`, `403`, `404`, `409`, `422`, `429` e `500`.
+Possíveis status: `401`, `403`, `404`, `409`, `422`, `429` e `500`.
 
-Exemplo de transação não elegível para estorno:
+##### `404 Not Found` — `TRANSACAO_NAO_ENCONTRADA`
+
+```json
+{
+  "type": "about:blank",
+  "title": "Recurso não encontrado",
+  "status": 404,
+  "detail": "Transação não encontrada para o id: 11111111-1111-1111-1111-111111111111",
+  "codigoErro": "TRANSACAO_NAO_ENCONTRADA",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+##### `409 Conflict` — `TRANSACAO_JA_ESTORNADA`
+
+```json
+{
+  "type": "about:blank",
+  "title": "Conflito de Dados",
+  "status": 409,
+  "detail": "A transação 11111111-1111-1111-1111-111111111111 já foi estornada",
+  "codigoErro": "TRANSACAO_JA_ESTORNADA",
+  "horario": "17/06/2026 14:30:00"
+}
+```
+
+##### `422 Unprocessable Entity` — `TRANSACAO_NAO_ESTORNAVEL`
 
 ```json
 {
@@ -457,36 +476,28 @@ Exemplo de transação não elegível para estorno:
   "title": "Violação de Regra de Negócio",
   "status": 422,
   "detail": "Apenas transações com status COMPLETADA podem ser estornadas. Status atual: PENDENTE",
-  "codigoErro": "ESTORNO_INVALIDO",
+  "codigoErro": "TRANSACAO_NAO_ESTORNAVEL",
   "horario": "17/06/2026 14:30:00"
 }
 ```
 
-Exemplo de conflito de concorrência:
+### Pós-condições
 
-```json
-{
-  "type": "about:blank",
-  "title": "Conflito de Concorrência",
-  "status": 409,
-  "detail": "O recurso foi atualizado por outra requisição concorrente. Tente consultar o estado atual antes de repetir a operação.",
-  "codigoErro": "CONFLITO_CONCORRENCIA",
-  "horario": "17/06/2026 14:30:00"
-}
-```
+- O valor da transação é creditado no saldo da conta de origem.
+- O evento `TransacaoEstornadaEvento` é publicado na outbox.
 
 ## Códigos de erro padrão
 
 | HTTP | Título | `codigoErro` | Quando ocorre |
 | --- | --- | --- | --- |
-| `400` | `Dados Inválidos` | Não se aplica | Validações de DTO falham, por exemplo `valor` nulo, `valor` menor que `0.01`, `idContaOrigem` nulo ou `contaDestino`/`motivo` vazio. |
+| `400` | `Dados Inválidos` | Não se aplica | Validações de DTO falham, por exemplo `valor` nulo, `valor` menor que `0.01`, `idContaOrigem` nulo ou `contaDestino` vazio. |
 | `400` | `Cabeçalho obrigatório ausente` | `CABECALHO_AUSENTE` | Header obrigatório ausente, como `X-Idempotency-Key` nos endpoints de processamento. |
 | `401` | `Não autenticado` | Não se aplica | Token ausente, inválido ou expirado. |
 | `403` | `Acesso negado` | `ACESSO_NEGADO` | Token autenticado, mas sem role suficiente para a operação. |
 | `404` | `Recurso não encontrado` | Código definido pela exceção, por exemplo `TRANSACAO_NAO_ENCONTRADA` | Transação não encontrada pelo ID informado. |
 | `409` | `Conflito de Dados` | `CONFLITO_DADOS` | Conflito de integridade de dados, incluindo chave de idempotência já registrada em cenário conflitante. |
 | `409` | `Conflito de Concorrência` | `CONFLITO_CONCORRENCIA` | Atualização concorrente detectada por locking otimista. |
-| `422` | `Violação de Regra de Negócio` | Código definido pela exceção, por exemplo `TED_FORA_DO_HORARIO`, `ESTORNO_INVALIDO`, `CONTA_INVALIDA` | Regra de negócio violada. |
+| `422` | `Violação de Regra de Negócio` | Código definido pela exceção, por exemplo `TED_FORA_DO_HORARIO`, `TRANSACAO_NAO_ESTORNAVEL`, `CONTA_INVALIDA` | Regra de negócio violada. |
 | `422` | `Saldo insuficiente` | `SALDO_INSUFICIENTE` | Saldo disponível menor que o valor solicitado. |
 | `429` | `Limite excedido` | `LIMITE_EXCEDIDO` | Limite de requisições excedido. A resposta inclui `Retry-After: 60`. |
 | `500` | `Erro Interno` | `ERRO_INTERNO_SERVIDOR` | Erro inesperado não tratado por handlers específicos. |
