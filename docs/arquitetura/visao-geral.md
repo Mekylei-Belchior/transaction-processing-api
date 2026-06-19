@@ -31,6 +31,51 @@ C4Context
     Rel(api, jaeger, "Exporta traces", "OTLP HTTP")
 ```
 
+## Diagrama de Containers (C4 Nível 2)
+
+O diagrama abaixo detalha os containers que compõem a solução e suas comunicações.
+
+```mermaid
+graph TB
+    cliente["Cliente HTTP<br/>(app bancária)"]
+    downstream["Serviços Downstream<br/>(consumidores Kafka)"]
+
+    subgraph solucao["transaction-processing-api"]
+        api["transaction-processing-api<br/>Spring Boot :8080"]
+        postgresql[("PostgreSQL<br/>:5432")]
+        kafka["Kafka<br/>:9092/:9093"]
+    end
+
+    subgraph homelab["Infraestrutura externa (homelab)"]
+        keycloak["Keycloak<br/>:8443"]
+        jaeger["Jaeger<br/>:4317"]
+        prometheus["Prometheus"]
+        grafana["Grafana"]
+    end
+
+    cliente -->|"HTTPS :8080"| api
+    api -->|"JDBC :5432"| postgresql
+    api -->|"SASL_SSL :9092"| kafka
+    api -->|"OIDC/HTTPS"| keycloak
+    api -->|"OTLP gRPC :4317"| jaeger
+    prometheus -->|"HTTP scrape /actuator/prometheus"| api
+    grafana -->|"PromQL"| prometheus
+    kafka -->|"consume"| downstream
+```
+
+| De | Para | Protocolo | Porta | Finalidade |
+| --- | --- | --- | --- | --- |
+| Cliente HTTP | transaction-processing-api | HTTPS | 8080 | Enviar requisições bancárias à API. |
+| transaction-processing-api | PostgreSQL | JDBC | 5432 | Persistir transações, contas, auditoria e outbox. |
+| transaction-processing-api | Kafka | SASL_SSL (SCRAM-SHA-256) | 9092 | Publicar eventos transacionais. |
+| transaction-processing-api | Keycloak | OIDC/HTTPS | 8443 | Validar autenticação e autorização por tokens. |
+| transaction-processing-api | Jaeger | OTLP gRPC | 4317 | Exportar traces distribuídos. |
+| Prometheus | transaction-processing-api | HTTP scrape | 8080 | Coletar métricas em `/actuator/prometheus`. |
+| Grafana | Prometheus | PromQL | N/A | Consultar métricas para dashboards. |
+| Kafka | Serviços Downstream | Kafka consume (SASL_SSL) | 9092/9093 | Disponibilizar eventos para consumo por serviços downstream. |
+
+Para o diagrama de sequência do fluxo interno, consulte [Fluxo de Transação](fluxo-transacao.md).
+
 ## Dependências externas reais
 
 | Dependência | Uso no projeto |
