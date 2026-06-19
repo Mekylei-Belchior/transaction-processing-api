@@ -172,6 +172,56 @@ Verifique os containers:
 docker compose ps
 ```
 
+## Execução sem acesso ao homelab
+
+O perfil `dev` aponta por padrão para os serviços do homelab do autor. Para executar a aplicação sem acesso a esse ambiente, use um Keycloak local e desabilite as integrações externas que não forem necessárias.
+
+Adicione manualmente o serviço abaixo ao bloco `services` do `docker-compose.yml`:
+
+```yaml
+  keycloak-local:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+```
+
+Depois, suba o serviço:
+
+```bash
+docker compose up -d keycloak-local
+```
+
+Configure o Keycloak pela Admin Console:
+
+1. Acesse [http://localhost:8180](http://localhost:8180) e abra a **Administration Console**.
+2. Entre com o usuário `admin` e a senha `admin`, definidos no serviço acima.
+3. No seletor de realms, escolha **Create realm**, informe `bancario` em **Realm name** e conclua a criação.
+4. Em **Clients**, escolha **Create client**, mantenha o protocolo **OpenID Connect**, informe `transaction-api-client` em **Client ID** e salve. Configure-o como público, desabilitando **Client authentication**, ou como confidential, habilitando essa opção e usando a credencial gerada nas aplicações clientes.
+5. Em **Realm roles**, crie individualmente as roles `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN` e `SERVICO_INTERNO`.
+6. Em **Users**, crie um usuário de teste. Na aba **Credentials**, defina uma senha e desabilite **Temporary** caso não queira exigir a troca no primeiro login.
+7. Na aba **Role mapping** do usuário, escolha **Assign role** e atribua a role `CLIENTE`.
+
+No `.env`, substitua as configurações de OAuth2 pelos endpoints do Keycloak local:
+
+```env
+OAUTH2_JWKS_URI=http://localhost:8180/realms/bancario/protocol/openid-connect/certs
+OAUTH2_ISSUER_URI=http://localhost:8180/realms/bancario
+```
+
+Para executar sem um broker Kafka, defina também:
+
+```env
+EVENTOS_KAFKA_ENABLED=false
+```
+
+O Jaeger pode ser ignorado durante a execução local sem impacto funcional na API. Caso o coletor não esteja acessível, o envio de traces falhará silenciosamente.
+
+Para detalhes de cada variável, consulte [docs/operacao/variaveis-ambiente.md](../operacao/variaveis-ambiente.md).
+
 ## Seed da base de dados
 
 Use o ‘script’ abaixo para popular a base de dados, após esta ter sido criada ao executar a aplicação.
@@ -371,3 +421,5 @@ jdbc:postgresql://postgres-transacao:5432/${POSTGRES_DB}
 ### Porta `5433` já ocupada
 
 O PostgreSQL do Compose mapeia `5433:5432` no host. Se a porta `5433` já estiver em uso, libere a porta ou ajuste o mapeamento no `docker-compose.yml`.
+
+[Voltar ao README principal](../../README.md)
