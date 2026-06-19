@@ -2,7 +2,7 @@
 
 O homelab é uma infraestrutura local gerenciada separadamente do repositório da `transaction-processing-api`. Ele concentra serviços de borda, identidade, mensageria, observabilidade, CI e certificados usados pela aplicação em cenários locais próximos de produção.
 
-Os arquivos `docker-compose.yml` do homelab não fazem parte deste repositório.
+Os arquivos `docker-compose.yml` do homelab não fazem parte deste repositório, mas no diretório `homelab` da raiz do projeto contém os ‘scripts’ para replicar a estrutura base utilizada durante o desenvolvimento desta API.
 
 ## Serviços
 
