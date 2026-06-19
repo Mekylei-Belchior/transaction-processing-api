@@ -135,3 +135,4 @@ PRs que removam testes ou reduzam a cobertura deverão ser corrigidos antes do m
 - Consulte [`docs/INDEX.md`](docs/INDEX.md) para navegar pela documentação.
 - Para decisões de arquitetura, leia os ADRs em [`docs/adr/`](docs/adr/).
 - Para executar o projeto localmente, consulte [`docs/desenvolvimento/execucao-local.md`](docs/desenvolvimento/execucao-local.md).
+- Para vulnerabilidades de segurança, consulte a [política de segurança](SECURITY.md) — **não abra issues públicas**.
