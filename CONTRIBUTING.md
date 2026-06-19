@@ -4,6 +4,25 @@ Obrigado pelo interesse em contribuir com a **transaction-processing-api**. Este
 
 Os principais bounded contexts são `transacao`, `conta`, `compartilhado`, `auditoria`, `mensageria` e `observabilidade`. Preserve seus limites e responsabilidades ao propor mudanças.
 
+## Fluxo resumido de contribuição
+
+Novo no projeto? Siga estes passos para fazer sua primeira contribuição:
+
+1. **Clone o repositório** e configure o ambiente local conforme [Execução Local](docs/desenvolvimento/execucao-local.md).
+2. **Crie uma branch** a partir de `main`: `git checkout -b feature/minha-funcionalidade`.
+3. **Implemente** sua alteração seguindo as convenções de código.
+4. **Execute a verificação completa** antes de commitar:
+   ```bash
+   ./mvnw verify
+   ```
+   Todos os testes (unidade, integração, arquitetura) e gates de cobertura devem passar.
+5. **Faça o commit** usando [Conventional Commits](https://www.conventionalcommits.org/):
+   ```text
+   feat(transacao): adiciona validação de horário para TED
+   ```
+6. **Abra o Pull Request** descrevendo: o problema que resolve, a mudança feita e como testar.
+7. Aguarde o **code review** — veja os critérios em [Code Review](#code-review).
+
 ## Pré-requisitos
 
 Antes de começar, tenha instalado:
