@@ -27,9 +27,9 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 
 ## Como executar localmente
 
-1. Crie o arquivo `.env` com as variáveis do ambiente local.
-2. Suba as dependências com `docker-compose up -d`.
-3. Execute a aplicação com `./mvnw spring-boot:run -Pdev`.
+2. Copie e configure as variáveis de ambiente: `cp .env.example .env` e edite `.env`.
+3. Suba as dependências com `docker-compose up -d`.
+4. Execute a aplicação com `./mvnw spring-boot:run -Pdev`.
 
 **Importante:** Para maiores detalhes de como executar localmente, consulte a documentação `Execução local`.
 

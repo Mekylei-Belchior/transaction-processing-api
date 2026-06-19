@@ -13,11 +13,11 @@ Este documento descreve como executar a `transaction-processing-api` em ambiente
 
 ## Configuração do ambiente
 
-Crie um arquivo `.env` na raiz do projeto:
+Copie o arquivo `.env.example` para `.env` na raiz do projeto:
 
 ```bash
 cd transaction-processing-api
-touch .env
+cp .env.example .env
 ```
 
 O arquivo `.env` é usado automaticamente pelo `docker compose`. Para execução direta via `./mvnw`, exporte as variáveis no shell ou configure-as na IDE, pois o Spring Boot não carrega `.env` automaticamente por padrão.
