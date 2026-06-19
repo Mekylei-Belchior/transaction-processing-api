@@ -4,9 +4,11 @@
 **Status:** Aceito
 
 ## Contexto
+
 O sistema possui regras de negócio relevantes para processamento transacional, saldo, limite, auditoria, rastreabilidade e idempotência. Era necessário organizar essas regras em uma linguagem explícita, reduzir acoplamento entre áreas do domínio e evitar que regras financeiras ficassem espalhadas por controllers, entidades JPA ou consumidores Kafka.
 
 ## Decisão
+
 Foi adotado Domain-Driven Design como abordagem de modelagem. O projeto organiza responsabilidades em bounded contexts:
 
 - `transacao`: core domain de processamento de PIX, TED e TEF.
@@ -22,13 +24,16 @@ O value object `ValorMonetario` centraliza validação de valor positivo, moeda 
 Eventos de domínio implementam `EventoDominio`, incluindo `TransacaoIniciadaEvento`, `TransacaoConcluidaEvento`, `TransacaoFalhouEvento` e `TransacaoEstornadaEvento`. Esses eventos carregam dados como `idEvento`, `idAgregado`, `idCorrelacao`, `idIdempotencia`, tipo, valor, moeda e ocorrência, sendo publicados por meio da porta `EventoPublicador`.
 
 ## Consequências
+
 ### Positivas
+
 - A linguagem de negócio fica explícita no código e na documentação.
 - Invariantes como saldo não negativo, limite transacional e transições de status ficam concentradas em objetos de domínio e serviços de aplicação.
 - Eventos de domínio permitem rastreabilidade e integração assíncrona sem acoplar o domínio ao Kafka.
 - O shared kernel evita duplicação de conceitos comuns.
 
 ### Negativas / Trade-offs
+
 - A modelagem exige manutenção contínua do glossário e dos limites dos contexts.
 - O shared kernel pode crescer indevidamente se conceitos específicos forem promovidos cedo demais.
 - A separação entre modelo de domínio e modelo de persistência exige mapeamento adicional nos adaptadores.

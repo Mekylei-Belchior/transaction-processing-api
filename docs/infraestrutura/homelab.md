@@ -6,18 +6,18 @@ Os arquivos `docker-compose.yml` do homelab não fazem parte deste repositório,
 
 ## Serviços
 
-| Serviço | Função no homelab | Relação com a aplicação |
-| --- | --- | --- |
-| `arcane` | Serviço operacional do homelab para gestão e apoio da infraestrutura local. | Não é dependência direta da API. |
-| `database` | Bancos e serviços de dados compartilhados do homelab. | Pode apoiar serviços externos, mas o PostgreSQL da app é provisionado pelo Compose deste repositório. |
-| `gitlab` | Git remoto e interface de gestão de repositórios. | Apoia o ciclo de desenvolvimento e entrega. |
-| `gitlab-runner` | Executor de pipelines do GitLab CI. | Executa jobs de build, testes e entrega quando configurado. |
-| `jaeger` | Backend de rastreamento distribuído. | Recebe traces da API via OTLP HTTP. |
-| `kafka` | Broker de eventos. | Recebe e entrega eventos transacionais quando `EVENTOS_KAFKA_ENABLED=true`. |
-| `keycloak` | Authorization Server OAuth2/OIDC. | Emite JWTs e expõe issuer/JWKS para validação pela API. |
-| `observabilidade/prometheus-grafana` | Stack de métricas e dashboards. | Prometheus coleta `/actuator/prometheus`; Grafana exibe dashboards e SLOs. |
-| `step-ca` | Unidade certificadora local. | Emite a `root_ca.crt` usada pela JVM e pelos certificados do Kafka. |
-| `traefik` | Reverse proxy do homelab. | Faz terminação TLS e roteia requisições para Keycloak, API e demais serviços. |
+| Serviço                              | Função no homelab                                                           | Relação com a aplicação                                                                               |
+| ------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `arcane`                             | Serviço operacional do homelab para gestão e apoio da infraestrutura local. | Não é dependência direta da API.                                                                      |
+| `database`                           | Bancos e serviços de dados compartilhados do homelab.                       | Pode apoiar serviços externos, mas o PostgreSQL da app é provisionado pelo Compose deste repositório. |
+| `gitlab`                             | Git remoto e interface de gestão de repositórios.                           | Apoia o ciclo de desenvolvimento e entrega.                                                           |
+| `gitlab-runner`                      | Executor de pipelines do GitLab CI.                                         | Executa jobs de build, testes e entrega quando configurado.                                           |
+| `jaeger`                             | Backend de rastreamento distribuído.                                        | Recebe traces da API via OTLP HTTP.                                                                   |
+| `kafka`                              | Broker de eventos.                                                          | Recebe e entrega eventos transacionais quando `EVENTOS_KAFKA_ENABLED=true`.                           |
+| `keycloak`                           | Authorization Server OAuth2/OIDC.                                           | Emite JWTs e expõe issuer/JWKS para validação pela API.                                               |
+| `observabilidade/prometheus-grafana` | Stack de métricas e dashboards.                                             | Prometheus coleta `/actuator/prometheus`; Grafana exibe dashboards e SLOs.                            |
+| `step-ca`                            | Unidade certificadora local.                                                | Emite a `root_ca.crt` usada pela JVM e pelos certificados do Kafka.                                   |
+| `traefik`                            | Reverse proxy do homelab.                                                   | Faz terminação TLS e roteia requisições para Keycloak, API e demais serviços.                         |
 
 ## Certificados locais
 

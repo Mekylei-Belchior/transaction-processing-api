@@ -4,14 +4,14 @@ O `transaction-processing-api` expõe métricas pelo Spring Boot Actuator em `/a
 
 ## Métricas customizadas
 
-| Nome | Tipo | Tags | Descrição |
-| --- | --- | --- | --- |
-| `transacao.criada` | Counter | `tipo=PIX\|TED\|TEF` | Conta transações criadas pela API, separadas por modalidade. |
-| `transacao.processada` | Counter | `tipo=PIX\|TED\|TEF`, `status=COMPLETADA\|FALHOU` | Conta transações processadas, separando sucesso e falha por modalidade. |
-| `transacao.duracao` | Histogram/Timer | `tipo=PIX\|TED\|TEF` | Mede a duração do processamento da transação. Publica histograma e percentis `p50`, `p95` e `p99`. |
-| `outbox.pendente` | Gauge | Nenhuma | Informa a quantidade atual de eventos pendentes na outbox. |
-| `outbox.publicado` | Counter | Nenhuma | Conta eventos publicados com sucesso a partir da outbox. |
-| `outbox.falhou` | Counter | Nenhuma | Conta falhas ao publicar eventos a partir da outbox. |
+| Nome                   | Tipo            | Tags                                              | Descrição                                                                                          |
+| ---------------------- | --------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `transacao.criada`     | Counter         | `tipo=PIX\|TED\|TEF`                              | Conta transações criadas pela API, separadas por modalidade.                                       |
+| `transacao.processada` | Counter         | `tipo=PIX\|TED\|TEF`, `status=COMPLETADA\|FALHOU` | Conta transações processadas, separando sucesso e falha por modalidade.                            |
+| `transacao.duracao`    | Histogram/Timer | `tipo=PIX\|TED\|TEF`                              | Mede a duração do processamento da transação. Publica histograma e percentis `p50`, `p95` e `p99`. |
+| `outbox.pendente`      | Gauge           | Nenhuma                                           | Informa a quantidade atual de eventos pendentes na outbox.                                         |
+| `outbox.publicado`     | Counter         | Nenhuma                                           | Conta eventos publicados com sucesso a partir da outbox.                                           |
+| `outbox.falhou`        | Counter         | Nenhuma                                           | Conta falhas ao publicar eventos a partir da outbox.                                               |
 
 No formato Prometheus, o Micrometer normaliza nomes com ponto para underscore. Counters recebem o sufixo `_total`, e timers/histogramas publicam séries auxiliares como buckets, contagem e soma. Exemplos:
 
@@ -58,12 +58,12 @@ https://prometheus.lab.home
 
 Ele coleta as métricas da API pelo job `transaction-processing-api`, em `/actuator/prometheus`, com intervalo de scrape de `15s`. O scrape é autenticado via OAuth2 com:
 
-| Campo | Valor |
-| --- | --- |
-| Client | `transaction-api-prometheus` |
-| Realm | `bancario` |
-| Endpoint coletado | `/actuator/prometheus` |
-| Target | `192.168.0.105:8080` |
+| Campo             | Valor                        |
+| ----------------- | ---------------------------- |
+| Client            | `transaction-api-prometheus` |
+| Realm             | `bancario`                   |
+| Endpoint coletado | `/actuator/prometheus`       |
+| Target            | `192.168.0.105:8080`         |
 
 No Prometheus, use a tela de targets para confirmar se o alvo da API está `UP` e a tela de consulta para executar PromQL sobre as séries `transacao_*` e `outbox_*`.
 
@@ -85,10 +85,10 @@ Esse dashboard acompanha taxa de falha, latência P95, volume de transações PI
 
 ## SLOs implementados
 
-| SLO | Indicador | Limiar | Alerta | Severidade |
-| --- | --- | --- | --- | --- |
-| Taxa de falha PIX | Percentual de transações PIX com `status="FALHOU"` sobre o total de transações PIX processadas | `< 2%` | `PIXTaxaFalhaAlta` | `warning` |
-| Latência P95 PIX | Percentil 95 da duração de processamento de transações PIX | `< 8s` | `PIXLatenciaP95Alta` | `critical` |
+| SLO               | Indicador                                                                                      | Limiar | Alerta               | Severidade |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ------ | -------------------- | ---------- |
+| Taxa de falha PIX | Percentual de transações PIX com `status="FALHOU"` sobre o total de transações PIX processadas | `< 2%` | `PIXTaxaFalhaAlta`   | `warning`  |
+| Latência P95 PIX  | Percentil 95 da duração de processamento de transações PIX                                     | `< 8s` | `PIXLatenciaP95Alta` | `critical` |
 
 PromQL de referência para taxa de falha PIX:
 

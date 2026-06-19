@@ -26,15 +26,15 @@ O arquivo `.env` nunca deve ser versionado. O repositório já mantém `.env` e 
 
 ### Variáveis mínimas para desenvolvimento
 
-| Variável | Obrigatória para | Descrição |
-| --- | --- | --- |
-| `POSTGRES_DB` | Compose | Nome do banco criado no container PostgreSQL. |
-| `DB_USERNAME` | Maven e Compose | Usuário de conexão com o PostgreSQL. |
-| `DB_PASSWORD` | Maven e Compose | Senha de conexão com o PostgreSQL. |
-| `OAUTH2_JWKS_URI` | Maven e Compose | Endpoint JWKS do provedor OAuth2/OIDC. |
-| `OAUTH2_ISSUER_URI` | Maven e Compose | Issuer esperado nos tokens JWT. |
-| `APP_CRIPTOGRAFIA_CHAVE` | Maven e Compose | Chave Base64 usada pela criptografia AES-256-GCM. |
-| `APP_HMAC_CHAVE` | Maven e Compose | Chave usada para HMAC-SHA256 de dados sensíveis pesquisáveis. |
+| Variável                 | Obrigatória para | Descrição                                                     |
+| ------------------------ | ---------------- | ------------------------------------------------------------- |
+| `POSTGRES_DB`            | Compose          | Nome do banco criado no container PostgreSQL.                 |
+| `DB_USERNAME`            | Maven e Compose  | Usuário de conexão com o PostgreSQL.                          |
+| `DB_PASSWORD`            | Maven e Compose  | Senha de conexão com o PostgreSQL.                            |
+| `OAUTH2_JWKS_URI`        | Maven e Compose  | Endpoint JWKS do provedor OAuth2/OIDC.                        |
+| `OAUTH2_ISSUER_URI`      | Maven e Compose  | Issuer esperado nos tokens JWT.                               |
+| `APP_CRIPTOGRAFIA_CHAVE` | Maven e Compose  | Chave Base64 usada pela criptografia AES-256-GCM.             |
+| `APP_HMAC_CHAVE`         | Maven e Compose  | Chave usada para HMAC-SHA256 de dados sensíveis pesquisáveis. |
 
 Exemplo seguro com placeholders:
 
@@ -188,14 +188,14 @@ O perfil `dev` aponta por padrão para os serviços do homelab do autor. Para ex
 Adicione manualmente o serviço abaixo ao bloco `services` do `docker-compose.yml`:
 
 ```yaml
-  keycloak-local:
-    image: quay.io/keycloak/keycloak:24.0
-    command: start-dev
-    ports:
-      - "8180:8080"
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+keycloak-local:
+  image: quay.io/keycloak/keycloak:24.0
+  command: start-dev
+  ports:
+    - "8180:8080"
+  environment:
+    KEYCLOAK_ADMIN: admin
+    KEYCLOAK_ADMIN_PASSWORD: admin
 ```
 
 Depois, suba o serviço:
@@ -331,11 +331,11 @@ select c.id as idconta,
 
 O seed cria três contas de teste com valores pré-criptografados. Os valores em texto claro são:
 
-| Titular | ID da Conta | Agência | Número da Conta | Saldo | Status |
-| --- | --- | --- | --- | --- | --- |
-| Alice | aaaaaaaa-0000-0000-0000-000000000001 | 0001 | 00001-9 | R$ 10.000,00 | ATIVA |
-| Bob | aaaaaaaa-0000-0000-0000-000000000002 | 0001 | 00002-7 | R$ 100,00 | ATIVA |
-| Carol | aaaaaaaa-0000-0000-0000-000000000003 | 0001 | 00003-5 | R$ 2.000,00 | BLOQUEADA |
+| Titular | ID da Conta                          | Agência | Número da Conta | Saldo        | Status    |
+| ------- | ------------------------------------ | ------- | --------------- | ------------ | --------- |
+| Alice   | aaaaaaaa-0000-0000-0000-000000000001 | 0001    | 00001-9         | R$ 10.000,00 | ATIVA     |
+| Bob     | aaaaaaaa-0000-0000-0000-000000000002 | 0001    | 00002-7         | R$ 100,00    | ATIVA     |
+| Carol   | aaaaaaaa-0000-0000-0000-000000000003 | 0001    | 00003-5         | R$ 2.000,00  | BLOQUEADA |
 
 ✅ **Cenário normal:** Use `idContaOrigem: aaaaaaaa-0000-0000-0000-000000000001` (Alice) para o fluxo padrão.
 

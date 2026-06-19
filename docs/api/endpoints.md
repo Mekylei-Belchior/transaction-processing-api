@@ -8,13 +8,13 @@ Autenticação: Bearer JWT via OAuth2 Resource Server.
 
 ## Visão geral
 
-| Método | Path | Descrição | Roles |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/transacoes/pix` | Processa uma transação PIX. Usa `contaDestino` como chave PIX. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
-| `POST` | `/api/v1/transacoes/ted` | Processa uma TED. Disponível apenas em horário bancário, das 06h às 17h BRT. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
-| `POST` | `/api/v1/transacoes/tef` | Processa uma TEF entre contas do mesmo banco. Requer autorização antifraude. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
-| `GET` | `/api/v1/transacoes/{id}` | Consulta o estado atual de uma transação por ID. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
-| `POST` | `/api/v1/transacoes/{id}/estorno` | Estorna uma transação concluída. | `GERENTE`, `ADMIN` |
+| Método | Path                              | Descrição                                                                    | Roles                                                        |
+| ------ | --------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `POST` | `/api/v1/transacoes/pix`          | Processa uma transação PIX. Usa `contaDestino` como chave PIX.               | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/ted`          | Processa uma TED. Disponível apenas em horário bancário, das 06h às 17h BRT. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/tef`          | Processa uma TEF entre contas do mesmo banco. Requer autorização antifraude. | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `GET`  | `/api/v1/transacoes/{id}`         | Consulta o estado atual de uma transação por ID.                             | `CLIENTE`, `OPERADOR`, `GERENTE`, `ADMIN`, `SERVICO_INTERNO` |
+| `POST` | `/api/v1/transacoes/{id}/estorno` | Estorna uma transação concluída.                                             | `GERENTE`, `ADMIN`                                           |
 
 > **Documentação interativa:** http://localhost:8080/swagger-ui/index.html | OpenAPI JSON: http://localhost:8080/v3/api-docs
 
@@ -55,22 +55,22 @@ curl -X GET "http://localhost:8080/api/v1/transacoes/11111111-1111-1111-1111-111
   -H "Authorization: Bearer $TOKEN"
 ```
 
-| Operação | Role mínima |
-| --- | --- |
-| Iniciar PIX/TED/TEF | `CLIENTE` ou `OPERADOR` |
+| Operação            | Role mínima                        |
+| ------------------- | ---------------------------------- |
+| Iniciar PIX/TED/TEF | `CLIENTE` ou `OPERADOR`            |
 | Consultar transação | `CLIENTE` (próprias) ou `OPERADOR` |
-| Solicitar estorno | `GERENTE` |
-| Ler métricas | role `METRICAS.LEITURA` |
+| Solicitar estorno   | `GERENTE`                          |
+| Ler métricas        | role `METRICAS.LEITURA`            |
 
 > Para configurar o Keycloak local, consulte [Execução sem acesso ao homelab](../desenvolvimento/execucao-local.md#execução-sem-acesso-ao-homelab).
 
 ## Headers
 
-| Header | Tipo | Obrigatoriedade | Observação |
-| --- | --- | --- | --- |
-| `Authorization` | `Bearer <token JWT>` | Obrigatório em todos os endpoints | O token deve conter uma role autorizada para a operação. |
-| `X-Idempotency-Key` | `UUID` | Obrigatório em `POST /pix`, `POST /ted` e `POST /tef` | Usado para evitar processamento duplicado da mesma requisição de transação. |
-| `X-Correlation-Id` | `UUID` | Recomendado em todos os endpoints | Usado para rastreamento. Quando ausente, a aplicação gera um UUID internamente; quando inválido, o valor é ignorado. |
+| Header              | Tipo                 | Obrigatoriedade                                       | Observação                                                                                                           |
+| ------------------- | -------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Authorization`     | `Bearer <token JWT>` | Obrigatório em todos os endpoints                     | O token deve conter uma role autorizada para a operação.                                                             |
+| `X-Idempotency-Key` | `UUID`               | Obrigatório em `POST /pix`, `POST /ted` e `POST /tef` | Usado para evitar processamento duplicado da mesma requisição de transação.                                          |
+| `X-Correlation-Id`  | `UUID`               | Recomendado em todos os endpoints                     | Usado para rastreamento. Quando ausente, a aplicação gera um UUID internamente; quando inválido, o valor é ignorado. |
 
 ## Modelo de erro
 
@@ -97,32 +97,32 @@ Processa uma transação PIX. O tipo da transação é definido pelo endpoint co
 
 ### Headers obrigatórios
 
-| Header | Valor |
-| --- | --- |
-| `Authorization` | `Bearer <token JWT>` |
+| Header              | Valor                                                    |
+| ------------------- | -------------------------------------------------------- |
+| `Authorization`     | `Bearer <token JWT>`                                     |
 | `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
 
 Header de rastreamento recomendado:
 
-| Header | Valor |
-| --- | --- |
+| Header             | Valor                                                    |
+| ------------------ | -------------------------------------------------------- |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
 
 DTO: `TransacaoRequisicao`
 
-| Campo | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
-| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
-| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta ou chave de destino. Para PIX, representa a chave PIX. |
+| Campo           | Tipo    | Validações                      | Descrição                                                    |
+| --------------- | ------- | ------------------------------- | ------------------------------------------------------------ |
+| `valor`         | decimal | Obrigatório; mínimo `0.01`      | Valor da transação em BRL.                                   |
+| `idContaOrigem` | UUID    | Obrigatório                     | UUID da conta de origem cadastrada no sistema.               |
+| `contaDestino`  | string  | Obrigatório; não pode ser vazio | Conta ou chave de destino. Para PIX, representa a chave PIX. |
 
 Exemplo:
 
 ```json
 {
-  "valor": 150.00,
+  "valor": 150.0,
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
   "contaDestino": "cliente@email.com"
 }
@@ -138,7 +138,7 @@ DTO: `TransacaoResposta`
 {
   "id": "11111111-1111-1111-1111-111111111111",
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
-  "valor": 150.00,
+  "valor": 150.0,
   "tipo": "PIX",
   "status": "COMPLETADA",
   "idCorrelacao": "33333333-3333-3333-3333-333333333333",
@@ -188,32 +188,32 @@ Processa uma TED. O tipo da transação é definido pelo endpoint como `TED`; n�
 
 ### Headers obrigatórios
 
-| Header | Valor |
-| --- | --- |
-| `Authorization` | `Bearer <token JWT>` |
+| Header              | Valor                                                    |
+| ------------------- | -------------------------------------------------------- |
+| `Authorization`     | `Bearer <token JWT>`                                     |
 | `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
 
 Header de rastreamento recomendado:
 
-| Header | Valor |
-| --- | --- |
+| Header             | Valor                                                    |
+| ------------------ | -------------------------------------------------------- |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
 
 DTO: `TransacaoRequisicao`
 
-| Campo | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
-| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
-| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta de destino da TED. |
+| Campo           | Tipo    | Validações                      | Descrição                                      |
+| --------------- | ------- | ------------------------------- | ---------------------------------------------- |
+| `valor`         | decimal | Obrigatório; mínimo `0.01`      | Valor da transação em BRL.                     |
+| `idContaOrigem` | UUID    | Obrigatório                     | UUID da conta de origem cadastrada no sistema. |
+| `contaDestino`  | string  | Obrigatório; não pode ser vazio | Conta de destino da TED.                       |
 
 Exemplo:
 
 ```json
 {
-  "valor": 150.00,
+  "valor": 150.0,
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
   "contaDestino": "12345-6"
 }
@@ -229,7 +229,7 @@ DTO: `TransacaoResposta`
 {
   "id": "11111111-1111-1111-1111-111111111111",
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
-  "valor": 150.00,
+  "valor": 150.0,
   "tipo": "TED",
   "status": "COMPLETADA",
   "idCorrelacao": "33333333-3333-3333-3333-333333333333",
@@ -263,32 +263,32 @@ Processa uma TEF entre contas do mesmo banco. O tipo da transação é definido 
 
 ### Headers obrigatórios
 
-| Header | Valor |
-| --- | --- |
-| `Authorization` | `Bearer <token JWT>` |
+| Header              | Valor                                                    |
+| ------------------- | -------------------------------------------------------- |
+| `Authorization`     | `Bearer <token JWT>`                                     |
 | `X-Idempotency-Key` | UUID, por exemplo `44444444-4444-4444-4444-444444444444` |
 
 Header de rastreamento recomendado:
 
-| Header | Valor |
-| --- | --- |
+| Header             | Valor                                                    |
+| ------------------ | -------------------------------------------------------- |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
 
 DTO: `TransacaoRequisicao`
 
-| Campo | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `valor` | decimal | Obrigatório; mínimo `0.01` | Valor da transação em BRL. |
-| `idContaOrigem` | UUID | Obrigatório | UUID da conta de origem cadastrada no sistema. |
-| `contaDestino` | string | Obrigatório; não pode ser vazio | Conta de destino da TEF. |
+| Campo           | Tipo    | Validações                      | Descrição                                      |
+| --------------- | ------- | ------------------------------- | ---------------------------------------------- |
+| `valor`         | decimal | Obrigatório; mínimo `0.01`      | Valor da transação em BRL.                     |
+| `idContaOrigem` | UUID    | Obrigatório                     | UUID da conta de origem cadastrada no sistema. |
+| `contaDestino`  | string  | Obrigatório; não pode ser vazio | Conta de destino da TEF.                       |
 
 Exemplo:
 
 ```json
 {
-  "valor": 150.00,
+  "valor": 150.0,
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
   "contaDestino": "98765-4"
 }
@@ -304,7 +304,7 @@ DTO: `TransacaoResposta`
 {
   "id": "11111111-1111-1111-1111-111111111111",
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
-  "valor": 150.00,
+  "valor": 150.0,
   "tipo": "TEF",
   "status": "COMPLETADA",
   "idCorrelacao": "33333333-3333-3333-3333-333333333333",
@@ -336,20 +336,20 @@ Consulta o estado atual de uma transação pelo identificador.
 
 ### Path parameters
 
-| Parâmetro | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `id` | UUID | Obrigatório | Identificador da transação. |
+| Parâmetro | Tipo | Validações  | Descrição                   |
+| --------- | ---- | ----------- | --------------------------- |
+| `id`      | UUID | Obrigatório | Identificador da transação. |
 
 ### Headers obrigatórios
 
-| Header | Valor |
-| --- | --- |
+| Header          | Valor                |
+| --------------- | -------------------- |
 | `Authorization` | `Bearer <token JWT>` |
 
 Header de rastreamento recomendado:
 
-| Header | Valor |
-| --- | --- |
+| Header             | Valor                                                    |
+| ------------------ | -------------------------------------------------------- |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
@@ -366,7 +366,7 @@ DTO: `TransacaoResposta`
 {
   "id": "11111111-1111-1111-1111-111111111111",
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
-  "valor": 150.00,
+  "valor": 150.0,
   "tipo": "PIX",
   "status": "COMPLETADA",
   "idCorrelacao": "33333333-3333-3333-3333-333333333333",
@@ -406,15 +406,15 @@ Estorna uma transação concluída. O estorno só é aceito para transações co
 
 ### Path parameters
 
-| Parâmetro | Tipo | Validações | Descrição |
-| --- | --- | --- | --- |
-| `id` | UUID | Obrigatório | UUID da transação a estornar. |
+| Parâmetro | Tipo | Validações  | Descrição                     |
+| --------- | ---- | ----------- | ----------------------------- |
+| `id`      | UUID | Obrigatório | UUID da transação a estornar. |
 
 ### Headers obrigatórios
 
-| Header | Valor |
-| --- | --- |
-| `Authorization` | `Bearer <token JWT>` com, no mínimo, a role `GERENTE` |
+| Header             | Valor                                                    |
+| ------------------ | -------------------------------------------------------- |
+| `Authorization`    | `Bearer <token JWT>` com, no mínimo, a role `GERENTE`    |
 | `X-Correlation-Id` | UUID, por exemplo `33333333-3333-3333-3333-333333333333` |
 
 ### Body da requisição
@@ -431,7 +431,7 @@ DTO: `TransacaoResposta`
 {
   "id": "11111111-1111-1111-1111-111111111111",
   "idContaOrigem": "22222222-2222-2222-2222-222222222222",
-  "valor": 150.00,
+  "valor": 150.0,
   "tipo": "PIX",
   "status": "ESTORNADA",
   "idCorrelacao": "33333333-3333-3333-3333-333333333333",
@@ -490,19 +490,19 @@ Possíveis status: `401`, `403`, `404`, `409`, `422`, `429` e `500`.
 
 ## Códigos de erro padrão
 
-| HTTP | Título | `codigoErro` | Quando ocorre |
-| --- | --- | --- | --- |
-| `400` | `Dados Inválidos` | Não se aplica | Validações de DTO falham, por exemplo `valor` nulo, `valor` menor que `0.01`, `idContaOrigem` nulo ou `contaDestino` vazio. |
-| `400` | `Cabeçalho obrigatório ausente` | `CABECALHO_AUSENTE` | Header obrigatório ausente, como `X-Idempotency-Key` nos endpoints de processamento. |
-| `401` | `Não autenticado` | Não se aplica | Token ausente, inválido ou expirado. |
-| `403` | `Acesso negado` | `ACESSO_NEGADO` | Token autenticado, mas sem role suficiente para a operação. |
-| `404` | `Recurso não encontrado` | Código definido pela exceção, por exemplo `TRANSACAO_NAO_ENCONTRADA` | Transação não encontrada pelo ID informado. |
-| `409` | `Conflito de Dados` | `CONFLITO_DADOS` | Conflito de integridade de dados, incluindo chave de idempotência já registrada em cenário conflitante. |
-| `409` | `Conflito de Concorrência` | `CONFLITO_CONCORRENCIA` | Atualização concorrente detectada por locking otimista. |
-| `422` | `Violação de Regra de Negócio` | Código definido pela exceção, por exemplo `TED_FORA_DO_HORARIO`, `TRANSACAO_NAO_ESTORNAVEL`, `CONTA_INVALIDA` | Regra de negócio violada. |
-| `422` | `Saldo insuficiente` | `SALDO_INSUFICIENTE` | Saldo disponível menor que o valor solicitado. |
-| `429` | `Limite excedido` | `LIMITE_EXCEDIDO` | Limite de requisições excedido. A resposta inclui `Retry-After: 60`. |
-| `500` | `Erro Interno` | `ERRO_INTERNO_SERVIDOR` | Erro inesperado não tratado por handlers específicos. |
+| HTTP  | Título                          | `codigoErro`                                                                                                  | Quando ocorre                                                                                                               |
+| ----- | ------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `400` | `Dados Inválidos`               | Não se aplica                                                                                                 | Validações de DTO falham, por exemplo `valor` nulo, `valor` menor que `0.01`, `idContaOrigem` nulo ou `contaDestino` vazio. |
+| `400` | `Cabeçalho obrigatório ausente` | `CABECALHO_AUSENTE`                                                                                           | Header obrigatório ausente, como `X-Idempotency-Key` nos endpoints de processamento.                                        |
+| `401` | `Não autenticado`               | Não se aplica                                                                                                 | Token ausente, inválido ou expirado.                                                                                        |
+| `403` | `Acesso negado`                 | `ACESSO_NEGADO`                                                                                               | Token autenticado, mas sem role suficiente para a operação.                                                                 |
+| `404` | `Recurso não encontrado`        | Código definido pela exceção, por exemplo `TRANSACAO_NAO_ENCONTRADA`                                          | Transação não encontrada pelo ID informado.                                                                                 |
+| `409` | `Conflito de Dados`             | `CONFLITO_DADOS`                                                                                              | Conflito de integridade de dados, incluindo chave de idempotência já registrada em cenário conflitante.                     |
+| `409` | `Conflito de Concorrência`      | `CONFLITO_CONCORRENCIA`                                                                                       | Atualização concorrente detectada por locking otimista.                                                                     |
+| `422` | `Violação de Regra de Negócio`  | Código definido pela exceção, por exemplo `TED_FORA_DO_HORARIO`, `TRANSACAO_NAO_ESTORNAVEL`, `CONTA_INVALIDA` | Regra de negócio violada.                                                                                                   |
+| `422` | `Saldo insuficiente`            | `SALDO_INSUFICIENTE`                                                                                          | Saldo disponível menor que o valor solicitado.                                                                              |
+| `429` | `Limite excedido`               | `LIMITE_EXCEDIDO`                                                                                             | Limite de requisições excedido. A resposta inclui `Retry-After: 60`.                                                        |
+| `500` | `Erro Interno`                  | `ERRO_INTERNO_SERVIDOR`                                                                                       | Erro inesperado não tratado por handlers específicos.                                                                       |
 
 Exemplos adicionais:
 

@@ -4,39 +4,39 @@ O `transaction-processing-api` é uma API Java/Spring Boot para processamento de
 
 ## Quick Links
 
-| Quero... | Documento |
-| --- | --- |
-| Quero executar localmente | [Execução Local](desenvolvimento/execucao-local.md) |
-| Quero entender a arquitetura | [Visão Geral](arquitetura/visao-geral.md), [Arquitetura Hexagonal](arquitetura/hexagonal.md) e [DDD](arquitetura/ddd.md) |
-| Quero entender a infraestrutura de suporte | [Infraestrutura](infraestrutura/visao-geral.md) |
-| Quero ver as APIs | [Endpoints da API](api/endpoints.md) |
-| Quero resolver um problema em produção | [Troubleshooting](operacao/troubleshooting.md) |
-| Quero ver decisões arquiteturais | [Índice de ADRs](adr/README.md) |
+| Quero...                                   | Documento                                                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Quero executar localmente                  | [Execução Local](desenvolvimento/execucao-local.md)                                                                      |
+| Quero entender a arquitetura               | [Visão Geral](arquitetura/visao-geral.md), [Arquitetura Hexagonal](arquitetura/hexagonal.md) e [DDD](arquitetura/ddd.md) |
+| Quero entender a infraestrutura de suporte | [Infraestrutura](infraestrutura/visao-geral.md)                                                                          |
+| Quero ver as APIs                          | [Endpoints da API](api/endpoints.md)                                                                                     |
+| Quero resolver um problema em produção     | [Troubleshooting](operacao/troubleshooting.md)                                                                           |
+| Quero ver decisões arquiteturais           | [Índice de ADRs](adr/README.md)                                                                                          |
 
 ## Documentos por Área
 
-| Área | Documento | Descrição |
-| --- | --- | --- |
-| Arquitetura | [Visão Geral](arquitetura/visao-geral.md) | Apresenta o contexto do sistema, objetivos de negócio, componentes principais e integrações externas. |
-| Arquitetura | [Arquitetura Hexagonal](arquitetura/hexagonal.md) | Explica a separação entre domínio, aplicação, portas, adaptadores e infraestrutura. |
-| Arquitetura | [Domain-Driven Design](arquitetura/ddd.md) | Descreve bounded contexts, aggregates, value objects, eventos de domínio e glossário. |
-| Arquitetura | [Fluxo de Transação](arquitetura/fluxo-transacao.md) | Sequência completa do fluxo PIX/TED/TEF e estorno. |
-| API | [Endpoints da API](api/endpoints.md) | Lista endpoints REST de transações, headers, payloads, respostas e modelo de erro. |
-| Segurança | [Autenticação e Autorização](seguranca/autenticacao-autorizacao.md) | Documenta OAuth2 Resource Server, JWT, RBAC, criptografia, HMAC, rate limiting e mascaramento. |
-| Observabilidade | [Métricas](observabilidade/metricas.md) | Detalha métricas Prometheus/Micrometer, SLOs e consultas operacionais. |
-| Observabilidade | [Rastreamento](observabilidade/rastreamento.md) | Explica traces com Micrometer Tracing, OpenTelemetry, OTLP, Jaeger e correlação. |
-| Banco de dados | [Modelo de Dados](banco-de-dados/modelo-dados.md) | Descreve o modelo relacional PostgreSQL, tabelas, constraints, índices e migrations Flyway. |
-| Mensageria | [Kafka e Outbox](mensageria/kafka-outbox.md) | Documenta publicação assíncrona, Outbox Pattern, tópicos Kafka, DLQ e idempotência de consumo. |
-| Desenvolvimento | [Execução Local](desenvolvimento/execucao-local.md) | Centraliza orientações para executar o projeto em ambiente local. |
-| Desenvolvimento | [Fluxos de Negócio](desenvolvimento/fluxos-negocio.md) | Regras de PIX, TED, TEF e estorno em linguagem de negócio. |
-| Infraestrutura | [Visão Geral](infraestrutura/visao-geral.md) | Apresenta os serviços de suporte da aplicação e sua relação com o ambiente do docker-compose e o homelab. |
-| Infraestrutura | [Dependências Externas](infraestrutura/dependencias-externas.md) | Descreve cada serviço externo: PostgreSQL, Keycloak, Kafka, Prometheus, Grafana, Jaeger e Traefik. |
-| Infraestrutura | [Homelab](infraestrutura/homelab.md) | Explica o ambiente homelab onde rodam os serviços de suporte externos ao docker-compose da app. |
-| Infraestrutura | [Certificados e Truststore](infraestrutura/certificados-truststore.md) | Descreve o uso da root CA local, importação para a JVM no Dockerfile e criação do truststore Kafka. |
-| Operação | [Variáveis de Ambiente](operacao/variaveis-ambiente.md) | Lista configurações e variáveis necessárias para os ambientes da aplicação. |
-| Operação | [Troubleshooting](operacao/troubleshooting.md) | Guia de diagnóstico para problemas operacionais comuns: banco, Flyway, JWT, Kafka, Outbox, DLQ, métricas e traces. |
-| Roadmap | [Roadmap](roadmap/roadmap.md) | Resume funcionalidades implementadas, em andamento e planejadas. |
-| ADR | [Índice de ADRs](adr/README.md) | Lista as decisões arquiteturais registradas no projeto. |
+| Área            | Documento                                                              | Descrição                                                                                                          |
+| --------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Arquitetura     | [Visão Geral](arquitetura/visao-geral.md)                              | Apresenta o contexto do sistema, objetivos de negócio, componentes principais e integrações externas.              |
+| Arquitetura     | [Arquitetura Hexagonal](arquitetura/hexagonal.md)                      | Explica a separação entre domínio, aplicação, portas, adaptadores e infraestrutura.                                |
+| Arquitetura     | [Domain-Driven Design](arquitetura/ddd.md)                             | Descreve bounded contexts, aggregates, value objects, eventos de domínio e glossário.                              |
+| Arquitetura     | [Fluxo de Transação](arquitetura/fluxo-transacao.md)                   | Sequência completa do fluxo PIX/TED/TEF e estorno.                                                                 |
+| API             | [Endpoints da API](api/endpoints.md)                                   | Lista endpoints REST de transações, headers, payloads, respostas e modelo de erro.                                 |
+| Segurança       | [Autenticação e Autorização](seguranca/autenticacao-autorizacao.md)    | Documenta OAuth2 Resource Server, JWT, RBAC, criptografia, HMAC, rate limiting e mascaramento.                     |
+| Observabilidade | [Métricas](observabilidade/metricas.md)                                | Detalha métricas Prometheus/Micrometer, SLOs e consultas operacionais.                                             |
+| Observabilidade | [Rastreamento](observabilidade/rastreamento.md)                        | Explica traces com Micrometer Tracing, OpenTelemetry, OTLP, Jaeger e correlação.                                   |
+| Banco de dados  | [Modelo de Dados](banco-de-dados/modelo-dados.md)                      | Descreve o modelo relacional PostgreSQL, tabelas, constraints, índices e migrations Flyway.                        |
+| Mensageria      | [Kafka e Outbox](mensageria/kafka-outbox.md)                           | Documenta publicação assíncrona, Outbox Pattern, tópicos Kafka, DLQ e idempotência de consumo.                     |
+| Desenvolvimento | [Execução Local](desenvolvimento/execucao-local.md)                    | Centraliza orientações para executar o projeto em ambiente local.                                                  |
+| Desenvolvimento | [Fluxos de Negócio](desenvolvimento/fluxos-negocio.md)                 | Regras de PIX, TED, TEF e estorno em linguagem de negócio.                                                         |
+| Infraestrutura  | [Visão Geral](infraestrutura/visao-geral.md)                           | Apresenta os serviços de suporte da aplicação e sua relação com o ambiente do docker-compose e o homelab.          |
+| Infraestrutura  | [Dependências Externas](infraestrutura/dependencias-externas.md)       | Descreve cada serviço externo: PostgreSQL, Keycloak, Kafka, Prometheus, Grafana, Jaeger e Traefik.                 |
+| Infraestrutura  | [Homelab](infraestrutura/homelab.md)                                   | Explica o ambiente homelab onde rodam os serviços de suporte externos ao docker-compose da app.                    |
+| Infraestrutura  | [Certificados e Truststore](infraestrutura/certificados-truststore.md) | Descreve o uso da root CA local, importação para a JVM no Dockerfile e criação do truststore Kafka.                |
+| Operação        | [Variáveis de Ambiente](operacao/variaveis-ambiente.md)                | Lista configurações e variáveis necessárias para os ambientes da aplicação.                                        |
+| Operação        | [Troubleshooting](operacao/troubleshooting.md)                         | Guia de diagnóstico para problemas operacionais comuns: banco, Flyway, JWT, Kafka, Outbox, DLQ, métricas e traces. |
+| Roadmap         | [Roadmap](roadmap/roadmap.md)                                          | Resume funcionalidades implementadas, em andamento e planejadas.                                                   |
+| ADR             | [Índice de ADRs](adr/README.md)                                        | Lista as decisões arquiteturais registradas no projeto.                                                            |
 
 ## ADRs
 

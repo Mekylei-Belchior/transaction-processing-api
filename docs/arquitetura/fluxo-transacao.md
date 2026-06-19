@@ -62,11 +62,11 @@ As gravações da transação e dos eventos na outbox participam da mesma fronte
 
 ## Variações por Tipo de Transação
 
-| Tipo | Restrição adicional | Validação específica |
-| --- | --- | --- |
-| PIX | Sem restrição de horário. | Limite configurado em `LimiteTransacional`. |
-| TED | Apenas em horário bancário, das 06h às 17h BRT. | Fora da janela, retorna HTTP 422 com o código `TED_FORA_DO_HORARIO`. |
-| TEF | Entre contas internas, sem restrição de horário. | Valida se a transferência ocorre entre contas internas. |
+| Tipo | Restrição adicional                              | Validação específica                                                 |
+| ---- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| PIX  | Sem restrição de horário.                        | Limite configurado em `LimiteTransacional`.                          |
+| TED  | Apenas em horário bancário, das 06h às 17h BRT.  | Fora da janela, retorna HTTP 422 com o código `TED_FORA_DO_HORARIO`. |
+| TEF  | Entre contas internas, sem restrição de horário. | Valida se a transferência ocorre entre contas internas.              |
 
 ## Fluxo de Estorno
 

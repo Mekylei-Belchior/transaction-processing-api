@@ -14,16 +14,16 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 
 ## Tecnologias principais
 
-| Tecnologia | Versão |
-| --- | --- |
-| Java | 21 |
-| Spring Boot | 4.0.6 |
-| PostgreSQL | 16 |
-| Kafka | Gerenciada pelo Spring Boot 4.0.6 |
-| Flyway | 12.6.2 |
-| OAuth2/JWT | Gerenciada pelo Spring Boot 4.0.6 |
-| JaCoCo | 0.8.15 |
-| ArchUnit | 1.4.2 |
+| Tecnologia  | Versão                            |
+| ----------- | --------------------------------- |
+| Java        | 21                                |
+| Spring Boot | 4.0.6                             |
+| PostgreSQL  | 16                                |
+| Kafka       | Gerenciada pelo Spring Boot 4.0.6 |
+| Flyway      | 12.6.2                            |
+| OAuth2/JWT  | Gerenciada pelo Spring Boot 4.0.6 |
+| JaCoCo      | 0.8.15                            |
+| ArchUnit    | 1.4.2                             |
 
 ## Como executar localmente
 
@@ -35,16 +35,16 @@ Processar transações PIX, TED e TEF com consistência transacional, garantindo
 
 ## Estrutura simplificada
 
-| Pacote | Descrição |
-| --- | --- |
-| `auditoria` | Registro e consulta de eventos auditáveis. |
-| `cliente` | Dados e operações relacionadas a clientes. |
-| `conta` | Regras e casos de uso de contas. |
-| `transacao` | Fluxo principal de processamento transacional. |
-| `pix` | Contexto de pagamentos PIX. |
-| `ted` | Contexto de transferências TED. |
-| `tef` | Contexto de transferências TEF. |
-| `compartilhado` | Tipos, exceções e utilitários comuns. |
+| Pacote          | Descrição                                      |
+| --------------- | ---------------------------------------------- |
+| `auditoria`     | Registro e consulta de eventos auditáveis.     |
+| `cliente`       | Dados e operações relacionadas a clientes.     |
+| `conta`         | Regras e casos de uso de contas.               |
+| `transacao`     | Fluxo principal de processamento transacional. |
+| `pix`           | Contexto de pagamentos PIX.                    |
+| `ted`           | Contexto de transferências TED.                |
+| `tef`           | Contexto de transferências TEF.                |
+| `compartilhado` | Tipos, exceções e utilitários comuns.          |
 
 ## Documentação
 

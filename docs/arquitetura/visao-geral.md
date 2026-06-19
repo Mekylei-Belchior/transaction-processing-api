@@ -63,49 +63,49 @@ graph TB
     kafka -->|"consume"| downstream
 ```
 
-| De | Para | Protocolo | Porta | Finalidade |
-| --- | --- | --- | --- | --- |
-| Cliente HTTP | transaction-processing-api | HTTPS | 8080 | Enviar requisições bancárias à API. |
-| transaction-processing-api | PostgreSQL | JDBC | 5432 | Persistir transações, contas, auditoria e outbox. |
-| transaction-processing-api | Kafka | SASL_SSL (SCRAM-SHA-256) | 9092 | Publicar eventos transacionais. |
-| transaction-processing-api | Keycloak | OIDC/HTTPS | 8443 | Validar autenticação e autorização por tokens. |
-| transaction-processing-api | Jaeger | OTLP gRPC | 4317 | Exportar traces distribuídos. |
-| Prometheus | transaction-processing-api | HTTP scrape | 8080 | Coletar métricas em `/actuator/prometheus`. |
-| Grafana | Prometheus | PromQL | N/A | Consultar métricas para dashboards. |
-| Kafka | Serviços Downstream | Kafka consume (SASL_SSL) | 9092/9093 | Disponibilizar eventos para consumo por serviços downstream. |
+| De                         | Para                       | Protocolo                | Porta     | Finalidade                                                   |
+| -------------------------- | -------------------------- | ------------------------ | --------- | ------------------------------------------------------------ |
+| Cliente HTTP               | transaction-processing-api | HTTPS                    | 8080      | Enviar requisições bancárias à API.                          |
+| transaction-processing-api | PostgreSQL                 | JDBC                     | 5432      | Persistir transações, contas, auditoria e outbox.            |
+| transaction-processing-api | Kafka                      | SASL_SSL (SCRAM-SHA-256) | 9092      | Publicar eventos transacionais.                              |
+| transaction-processing-api | Keycloak                   | OIDC/HTTPS               | 8443      | Validar autenticação e autorização por tokens.               |
+| transaction-processing-api | Jaeger                     | OTLP gRPC                | 4317      | Exportar traces distribuídos.                                |
+| Prometheus                 | transaction-processing-api | HTTP scrape              | 8080      | Coletar métricas em `/actuator/prometheus`.                  |
+| Grafana                    | Prometheus                 | PromQL                   | N/A       | Consultar métricas para dashboards.                          |
+| Kafka                      | Serviços Downstream        | Kafka consume (SASL_SSL) | 9092/9093 | Disponibilizar eventos para consumo por serviços downstream. |
 
 Para o diagrama de sequência do fluxo interno, consulte [Fluxo de Transação](fluxo-transacao.md).
 
 ## Dependências externas reais
 
-| Dependência | Uso no projeto |
-| --- | --- |
-| Keycloak | Emissor e JWKS OAuth2/JWT configurados por `OAUTH2_ISSUER_URI` e `OAUTH2_JWKS_URI`. |
-| Kafka | Broker de eventos, com tópicos de transações iniciadas, concluídas, falhas, estornadas e DLQ. |
-| PostgreSQL | Banco relacional principal, acessado por Spring Data JPA e migrado por Flyway. |
+| Dependência        | Uso no projeto                                                                                        |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| Keycloak           | Emissor e JWKS OAuth2/JWT configurados por `OAUTH2_ISSUER_URI` e `OAUTH2_JWKS_URI`.                   |
+| Kafka              | Broker de eventos, com tópicos de transações iniciadas, concluídas, falhas, estornadas e DLQ.         |
+| PostgreSQL         | Banco relacional principal, acessado por Spring Data JPA e migrado por Flyway.                        |
 | Prometheus/Grafana | Prometheus coleta métricas em `/actuator/prometheus`; Grafana consome essas métricas para dashboards. |
-| Jaeger | Backend de traces recebido via endpoint OTLP configurado por `OTLP_TRACING_ENDPOINT`. |
+| Jaeger             | Backend de traces recebido via endpoint OTLP configurado por `OTLP_TRACING_ENDPOINT`.                 |
 
 ## Tecnologias e versões
 
-| Tecnologia | Versão/configuração |
-| --- | --- |
-| Java | 21 |
-| Spring Boot | 4.0.6 |
-| PostgreSQL | Driver `42.7.11`; imagem local `postgres:16-alpine` no `docker-compose.yml` |
-| Flyway | 12.6.2 |
-| Spring Kafka | Versão gerenciada pelo Spring Boot 4.0.6 |
-| OAuth2 Resource Server | Versão gerenciada pelo Spring Boot 4.0.6 |
-| Spring Data JPA | Versão gerenciada pelo Spring Boot 4.0.6 |
-| Spring Web MVC | Versão gerenciada pelo Spring Boot 4.0.6 |
-| Spring Validation | Versão gerenciada pelo Spring Boot 4.0.6 |
-| Spring Actuator | Versão gerenciada pelo Spring Boot 4.0.6 |
-| Micrometer Prometheus Registry | Versão gerenciada pelo Spring Boot 4.0.6 |
-| OpenTelemetry/OTLP | Versão gerenciada pelo Spring Boot 4.0.6 |
-| springdoc-openapi | 3.0.3 |
-| Bucket4j | 8.19.0 |
-| Logstash Logback Encoder | 9.0 |
-| ArchUnit | 1.4.2 |
-| JaCoCo | 0.8.15 |
+| Tecnologia                     | Versão/configuração                                                         |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| Java                           | 21                                                                          |
+| Spring Boot                    | 4.0.6                                                                       |
+| PostgreSQL                     | Driver `42.7.11`; imagem local `postgres:16-alpine` no `docker-compose.yml` |
+| Flyway                         | 12.6.2                                                                      |
+| Spring Kafka                   | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| OAuth2 Resource Server         | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| Spring Data JPA                | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| Spring Web MVC                 | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| Spring Validation              | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| Spring Actuator                | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| Micrometer Prometheus Registry | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| OpenTelemetry/OTLP             | Versão gerenciada pelo Spring Boot 4.0.6                                    |
+| springdoc-openapi              | 3.0.3                                                                       |
+| Bucket4j                       | 8.19.0                                                                      |
+| Logstash Logback Encoder       | 9.0                                                                         |
+| ArchUnit                       | 1.4.2                                                                       |
+| JaCoCo                         | 0.8.15                                                                      |
 
 Para o fluxo detalhado de processamento, consulte [Fluxo de Transação](fluxo-transacao.md).

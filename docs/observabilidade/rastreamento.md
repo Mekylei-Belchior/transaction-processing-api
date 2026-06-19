@@ -24,11 +24,11 @@ O Spring Boot auto-configura a instrumentação a partir de `spring.application.
 
 A correlação usa três identificadores complementares:
 
-| Campo | Origem | Uso |
-| --- | --- | --- |
-| `idCorrelacao` | Header HTTP `X-Correlation-Id` ou UUID gerado pela aplicação | Identificador funcional da requisição. Propaga para MDC, transação, auditoria e eventos. |
-| `traceId` | Micrometer Tracing/OpenTelemetry | Identificador técnico do trace distribuído no Jaeger. Agrupa todos os spans de uma execução rastreada. |
-| `spanId` | Micrometer Tracing/OpenTelemetry | Identificador técnico de um span específico dentro do trace. Ajuda a localizar a operação exata. |
+| Campo          | Origem                                                       | Uso                                                                                                    |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `idCorrelacao` | Header HTTP `X-Correlation-Id` ou UUID gerado pela aplicação | Identificador funcional da requisição. Propaga para MDC, transação, auditoria e eventos.               |
+| `traceId`      | Micrometer Tracing/OpenTelemetry                             | Identificador técnico do trace distribuído no Jaeger. Agrupa todos os spans de uma execução rastreada. |
+| `spanId`       | Micrometer Tracing/OpenTelemetry                             | Identificador técnico de um span específico dentro do trace. Ajuda a localizar a operação exata.       |
 
 O filtro de contexto lê o header `X-Correlation-Id`. Quando o header está ausente ou inválido, a aplicação gera um novo UUID. O valor efetivo é colocado no MDC com a chave `idCorrelacao`, permitindo que todos os logs emitidos durante a requisição carreguem o mesmo identificador.
 
@@ -36,10 +36,10 @@ Em produção, os logs são emitidos em JSON estruturado com mascaramento autom�
 
 ## Sampling por perfil
 
-| Perfil | Probabilidade | Uso esperado |
-| --- | --- | --- |
-| `dev` | `1.0` | Amostra 100% das requisições para facilitar depuração local e validação de instrumentação. |
-| `prod` | `0.10` | Amostra 10% das requisições para reduzir custo e volume mantendo visibilidade operacional. |
+| Perfil | Probabilidade | Uso esperado                                                                               |
+| ------ | ------------- | ------------------------------------------------------------------------------------------ |
+| `dev`  | `1.0`         | Amostra 100% das requisições para facilitar depuração local e validação de instrumentação. |
+| `prod` | `0.10`        | Amostra 10% das requisições para reduzir custo e volume mantendo visibilidade operacional. |
 
 Em desenvolvimento, o endpoint OTLP padrão é:
 

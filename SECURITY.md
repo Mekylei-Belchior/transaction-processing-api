@@ -2,10 +2,10 @@
 
 ## Versões suportadas
 
-| Versão | Suporte de segurança |
-| --- | --- |
-| `main` (atual) | ✅ Suportada |
-| Branches antigas | ❌ Sem suporte |
+| Versão           | Suporte de segurança |
+| ---------------- | -------------------- |
+| `main` (atual)   | ✅ Suportada         |
+| Branches antigas | ❌ Sem suporte       |
 
 ## Reportando uma vulnerabilidade
 

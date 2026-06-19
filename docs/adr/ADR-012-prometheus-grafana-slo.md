@@ -4,9 +4,11 @@
 **Status:** Aceito
 
 ## Contexto
+
 A operação da API precisa acompanhar saúde, volume, falhas, latência e backlog de publicação de eventos. Para o fluxo PIX, que é crítico para experiência do usuário, era necessário transformar métricas em SLOs e alertas observáveis.
 
 ## Decisão
+
 Foi adotado Spring Boot Actuator com Micrometer e registry Prometheus. A API expõe métricas em `/actuator/prometheus`, protegido por `ROLE_METRICAS.LEITURA`.
 
 As métricas customizadas incluem:
@@ -28,16 +30,20 @@ Os SLOs implementados para PIX são:
 - Latência P95 PIX menor que `8s`, com alerta `PIXLatenciaP95Alta`.
 
 ## Consequências
+
 ### Positivas
+
 - A operação passa a ter sinais objetivos de volume, falha, latência e outbox.
 - SLOs de PIX deixam claro o nível de serviço esperado.
 - Prometheus e Grafana permitem dashboards e alertas usando PromQL.
 - Métricas por tags de tipo e status facilitam análise por modalidade.
 
 ### Negativas / Trade-offs
+
 - Métricas precisam ser mantidas quando novos fluxos ou status forem adicionados.
 - SLOs iniciais podem precisar de ajuste após observar tráfego real.
 - O endpoint de métricas exige proteção e gestão adequada de credenciais.
 
 ## Ver também
+
 - [Dependências Externas](../infraestrutura/dependencias-externas.md)

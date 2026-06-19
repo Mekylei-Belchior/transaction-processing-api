@@ -4,40 +4,40 @@ O `transaction-processing-api` organiza o domínio em bounded contexts para sepa
 
 ## Bounded Contexts
 
-| Bounded Context | Pacote | Status | Responsabilidade |
-| --- | --- | --- | --- |
-| Transação | `com.mekylei.transactionprocessing.transacao` | Implementado | Core domain. Processa PIX, TED e TEF, controla ciclo de vida da transação e publica eventos. |
-| Conta | `com.mekylei.transactionprocessing.conta` | Implementado | Supporting domain. Mantém conta, saldo e limite transacional usados no processamento. |
-| Auditoria | `com.mekylei.transactionprocessing.auditoria` | Implementado | Supporting domain. Registra dados e eventos auditáveis. |
-| Compartilhado | `com.mekylei.transactionprocessing.compartilhado` | Implementado | Shared Kernel. Contém value objects, eventos-base, exceções, segurança e utilitários comuns. |
-| Mensageria | `com.mekylei.transactionprocessing.mensageria` | Implementado | Suporte técnico ao domínio para outbox, roteamento, produção e consumo de eventos. |
-| Observabilidade | `com.mekylei.transactionprocessing.observabilidade` | Implementado | Métricas, mascaramento de dados sensíveis, logs e rastreamento. |
-| Configuração | `com.mekylei.transactionprocessing.configuracao` | Implementado | Configuração de Spring, Kafka, segurança, persistência e filtros. |
-| Infraestrutura | `com.mekylei.transactionprocessing.infraestrutura` | Implementado | Adaptadores JPA, entidades e repositórios Spring Data. |
-| PIX | `com.mekylei.transactionprocessing.pix` | Planejado | Evolução do domínio específico de pagamentos PIX. |
-| TED | `com.mekylei.transactionprocessing.ted` | Planejado | Evolução do domínio específico de transferências TED. |
-| TEF | `com.mekylei.transactionprocessing.tef` | Planejado | Evolução do domínio específico de transferências TEF. |
-| Cliente | `com.mekylei.transactionprocessing.cliente` | Planejado | Evolução de dados e regras relacionadas a clientes. |
-| Integração BACEN | `com.mekylei.transactionprocessing.integracao.bacen` | Planejado | Integrações futuras com serviços do BACEN. |
-| Integração SPB | `com.mekylei.transactionprocessing.integracao.spb` | Planejado | Integrações futuras com o Sistema de Pagamentos Brasileiro. |
-| Integração STR | `com.mekylei.transactionprocessing.integracao.str` | Planejado | Integrações futuras com STR. |
+| Bounded Context  | Pacote                                               | Status       | Responsabilidade                                                                             |
+| ---------------- | ---------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------- |
+| Transação        | `com.mekylei.transactionprocessing.transacao`        | Implementado | Core domain. Processa PIX, TED e TEF, controla ciclo de vida da transação e publica eventos. |
+| Conta            | `com.mekylei.transactionprocessing.conta`            | Implementado | Supporting domain. Mantém conta, saldo e limite transacional usados no processamento.        |
+| Auditoria        | `com.mekylei.transactionprocessing.auditoria`        | Implementado | Supporting domain. Registra dados e eventos auditáveis.                                      |
+| Compartilhado    | `com.mekylei.transactionprocessing.compartilhado`    | Implementado | Shared Kernel. Contém value objects, eventos-base, exceções, segurança e utilitários comuns. |
+| Mensageria       | `com.mekylei.transactionprocessing.mensageria`       | Implementado | Suporte técnico ao domínio para outbox, roteamento, produção e consumo de eventos.           |
+| Observabilidade  | `com.mekylei.transactionprocessing.observabilidade`  | Implementado | Métricas, mascaramento de dados sensíveis, logs e rastreamento.                              |
+| Configuração     | `com.mekylei.transactionprocessing.configuracao`     | Implementado | Configuração de Spring, Kafka, segurança, persistência e filtros.                            |
+| Infraestrutura   | `com.mekylei.transactionprocessing.infraestrutura`   | Implementado | Adaptadores JPA, entidades e repositórios Spring Data.                                       |
+| PIX              | `com.mekylei.transactionprocessing.pix`              | Planejado    | Evolução do domínio específico de pagamentos PIX.                                            |
+| TED              | `com.mekylei.transactionprocessing.ted`              | Planejado    | Evolução do domínio específico de transferências TED.                                        |
+| TEF              | `com.mekylei.transactionprocessing.tef`              | Planejado    | Evolução do domínio específico de transferências TEF.                                        |
+| Cliente          | `com.mekylei.transactionprocessing.cliente`          | Planejado    | Evolução de dados e regras relacionadas a clientes.                                          |
+| Integração BACEN | `com.mekylei.transactionprocessing.integracao.bacen` | Planejado    | Integrações futuras com serviços do BACEN.                                                   |
+| Integração SPB   | `com.mekylei.transactionprocessing.integracao.spb`   | Planejado    | Integrações futuras com o Sistema de Pagamentos Brasileiro.                                  |
+| Integração STR   | `com.mekylei.transactionprocessing.integracao.str`   | Planejado    | Integrações futuras com STR.                                                                 |
 
 ## Glossário do Domínio
 
-| Termo | Definição em linguagem de negócio | Classe Java correspondente |
-| --- | --- | --- |
-| Transação | Operação financeira solicitada para movimentar valor entre uma conta de origem e uma conta de destino, usando PIX, TED ou TEF. Consulte os [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md) para conhecer as regras de cada modalidade. | `com.mekylei.transactionprocessing.transacao.dominio.Transacao` |
-| Conta | Conta bancária de um cliente, com agência, número, tipo e situação operacional. | `com.mekylei.transactionprocessing.conta.dominio.Conta` |
-| Saldo | Valor disponível e valor bloqueado associados a uma conta. Protege a regra de que o saldo disponível não pode ficar negativo. | `com.mekylei.transactionprocessing.conta.dominio.Saldo` |
-| Limite transacional | Limite configurado por conta e tipo de transação, usado para validar valor por operação e uso diário. | `com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional` |
-| Valor monetário | Valor financeiro com moeda, normalizado para duas casas decimais e aceito apenas quando positivo. | `com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario` |
-| Status da transação | Estado de vida da transação: `PENDENTE`, `PROCESSANDO`, `COMPLETADA`, `FALHOU` ou `ESTORNADA`. | `com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao` |
-| Status da conta | Situação operacional da conta, usada para permitir ou bloquear processamento. | `com.mekylei.transactionprocessing.conta.dominio.StatusConta` |
-| Tipo de transação | Modalidade de processamento financeiro: `PIX`, `TED` ou `TEF`. | `com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao` |
-| Tipo de conta | Classificação da conta bancária, como `CORRENTE`, `POUPANCA` ou `PAGAMENTO`. | `com.mekylei.transactionprocessing.conta.dominio.TipoConta` |
-| Ação de auditoria | Tipo de ação registrada em auditoria: `INSERIR`, `ATUALIZAR` ou `CONSULTAR`. | `com.mekylei.transactionprocessing.auditoria.dominio.AcaoAuditoria` |
-| `idCorrelacao` | Identificador usado para rastrear uma requisição, logs e eventos ao longo do fluxo. | Campo em `Transacao` e contrato `com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio` |
-| `idIdempotencia` | Identificador usado para deduplicar requisições e evitar que a mesma solicitação processe duas vezes. | Campo em `Transacao` e `com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService` |
+| Termo               | Definição em linguagem de negócio                                                                                                                                                                                                                | Classe Java correspondente                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Transação           | Operação financeira solicitada para movimentar valor entre uma conta de origem e uma conta de destino, usando PIX, TED ou TEF. Consulte os [Fluxos de Negócio](../desenvolvimento/fluxos-negocio.md) para conhecer as regras de cada modalidade. | `com.mekylei.transactionprocessing.transacao.dominio.Transacao`                                           |
+| Conta               | Conta bancária de um cliente, com agência, número, tipo e situação operacional.                                                                                                                                                                  | `com.mekylei.transactionprocessing.conta.dominio.Conta`                                                   |
+| Saldo               | Valor disponível e valor bloqueado associados a uma conta. Protege a regra de que o saldo disponível não pode ficar negativo.                                                                                                                    | `com.mekylei.transactionprocessing.conta.dominio.Saldo`                                                   |
+| Limite transacional | Limite configurado por conta e tipo de transação, usado para validar valor por operação e uso diário.                                                                                                                                            | `com.mekylei.transactionprocessing.conta.dominio.LimiteTransacional`                                      |
+| Valor monetário     | Valor financeiro com moeda, normalizado para duas casas decimais e aceito apenas quando positivo.                                                                                                                                                | `com.mekylei.transactionprocessing.compartilhado.dominio.ValorMonetario`                                  |
+| Status da transação | Estado de vida da transação: `PENDENTE`, `PROCESSANDO`, `COMPLETADA`, `FALHOU` ou `ESTORNADA`.                                                                                                                                                   | `com.mekylei.transactionprocessing.transacao.dominio.StatusTransacao`                                     |
+| Status da conta     | Situação operacional da conta, usada para permitir ou bloquear processamento.                                                                                                                                                                    | `com.mekylei.transactionprocessing.conta.dominio.StatusConta`                                             |
+| Tipo de transação   | Modalidade de processamento financeiro: `PIX`, `TED` ou `TEF`.                                                                                                                                                                                   | `com.mekylei.transactionprocessing.compartilhado.dominio.TipoTransacao`                                   |
+| Tipo de conta       | Classificação da conta bancária, como `CORRENTE`, `POUPANCA` ou `PAGAMENTO`.                                                                                                                                                                     | `com.mekylei.transactionprocessing.conta.dominio.TipoConta`                                               |
+| Ação de auditoria   | Tipo de ação registrada em auditoria: `INSERIR`, `ATUALIZAR` ou `CONSULTAR`.                                                                                                                                                                     | `com.mekylei.transactionprocessing.auditoria.dominio.AcaoAuditoria`                                       |
+| `idCorrelacao`      | Identificador usado para rastrear uma requisição, logs e eventos ao longo do fluxo.                                                                                                                                                              | Campo em `Transacao` e contrato `com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio`    |
+| `idIdempotencia`    | Identificador usado para deduplicar requisições e evitar que a mesma solicitação processe duas vezes.                                                                                                                                            | Campo em `Transacao` e `com.mekylei.transactionprocessing.compartilhado.idempotencia.IdempotenciaService` |
 
 ## Aggregates
 
@@ -119,12 +119,12 @@ Esse tipo é compartilhado pelos contexts `transacao` e `conta`, sendo usado par
 
 ## Domain Events
 
-| Evento | Pacote | Quando é usado |
-| --- | --- | --- |
-| `TransacaoIniciadaEvento` | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Criado em `CriaTransacaoService` após persistir a transação pendente. |
+| Evento                     | Pacote                                                       | Quando é usado                                                                                        |
+| -------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `TransacaoIniciadaEvento`  | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Criado em `CriaTransacaoService` após persistir a transação pendente.                                 |
 | `TransacaoConcluidaEvento` | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Publicado por `ProcessaTransacaoService` quando a transação termina com `StatusTransacao.COMPLETADA`. |
-| `TransacaoFalhouEvento` | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Publicado por `ProcessaTransacaoService` quando a transação termina com `StatusTransacao.FALHOU`. |
-| `TransacaoEstornadaEvento` | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Publicado no fluxo de estorno para registrar a reversão da transação. |
+| `TransacaoFalhouEvento`    | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Publicado por `ProcessaTransacaoService` quando a transação termina com `StatusTransacao.FALHOU`.     |
+| `TransacaoEstornadaEvento` | `com.mekylei.transactionprocessing.transacao.dominio.evento` | Publicado no fluxo de estorno para registrar a reversão da transação.                                 |
 
 Todos os eventos implementam `com.mekylei.transactionprocessing.compartilhado.evento.EventoDominio`, carregam `idEvento`, `idAgregado`, `idCorrelacao`, `idIdempotencia`, dados da conta, tipo, valor, moeda e data de ocorrência. Eventos de falha e estorno também carregam o motivo.
 
@@ -226,12 +226,12 @@ Descrição do fluxo:
 
 ## Integrations Map
 
-| Bounded Context | Integração externa | Porta ou ponto de integração | Implementação atual | Tipo | Observação |
-| --- | --- | --- | --- | --- | --- |
-| Transação / PIX | SPI/BACEN | `PixTransacaoStrategy.enviaParaSpiBacen` e porta planejada `PixGateway` | Simulação interna na strategy | Stub | O fluxo registra log de envio ao SPI/BACEN e conclui a transação; não há adaptador externo concreto para `PixGateway`. |
-| Transação / TED | STR | `TedTransacaoStrategy.enviarParaSistemaTransferenciaReserva` | Simulação interna na strategy | Stub | O fluxo valida dia útil e horário permitido antes de simular envio ao STR. |
-| Transação / TED | Calendário BACEN | `CalendarioStubBacenService` | Serviço local com feriados fixos e móveis | Stub | Usado para validar dia útil bancário no processamento de TED. |
-| Transação / TEF | Antifraude | `AntiFraudeGateway` | `AntiFraudeStubAdapter` | Stub configurável | Autoriza TEF até `antifraude.limite-aprovacao-automatica` e recusa valores acima do limite configurado. |
-| Mensageria | Kafka | `KafkaEventoProdutor` | `KafkaTemplate` condicionado por `app.eventos.kafka.enabled=true` | Real quando habilitado | Publica eventos gravados na outbox nos tópicos resolvidos por `TransacaoEventoRouter`. |
-| Mensageria | Outbox | `EventoPublicador` / `DominioEventoOutboxPublicador` | Persistência via `OutboxEventoRepository` | Real | Garante persistência dos eventos de domínio antes da publicação assíncrona. |
-| Auditoria | Banco de dados | `AuditoriaRepository` | Adaptador JPA de auditoria | Real | Persiste eventos auditáveis com `idCorrelacao` e dados associados à ação. |
+| Bounded Context | Integração externa | Porta ou ponto de integração                                            | Implementação atual                                               | Tipo                   | Observação                                                                                                             |
+| --------------- | ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Transação / PIX | SPI/BACEN          | `PixTransacaoStrategy.enviaParaSpiBacen` e porta planejada `PixGateway` | Simulação interna na strategy                                     | Stub                   | O fluxo registra log de envio ao SPI/BACEN e conclui a transação; não há adaptador externo concreto para `PixGateway`. |
+| Transação / TED | STR                | `TedTransacaoStrategy.enviarParaSistemaTransferenciaReserva`            | Simulação interna na strategy                                     | Stub                   | O fluxo valida dia útil e horário permitido antes de simular envio ao STR.                                             |
+| Transação / TED | Calendário BACEN   | `CalendarioStubBacenService`                                            | Serviço local com feriados fixos e móveis                         | Stub                   | Usado para validar dia útil bancário no processamento de TED.                                                          |
+| Transação / TEF | Antifraude         | `AntiFraudeGateway`                                                     | `AntiFraudeStubAdapter`                                           | Stub configurável      | Autoriza TEF até `antifraude.limite-aprovacao-automatica` e recusa valores acima do limite configurado.                |
+| Mensageria      | Kafka              | `KafkaEventoProdutor`                                                   | `KafkaTemplate` condicionado por `app.eventos.kafka.enabled=true` | Real quando habilitado | Publica eventos gravados na outbox nos tópicos resolvidos por `TransacaoEventoRouter`.                                 |
+| Mensageria      | Outbox             | `EventoPublicador` / `DominioEventoOutboxPublicador`                    | Persistência via `OutboxEventoRepository`                         | Real                   | Garante persistência dos eventos de domínio antes da publicação assíncrona.                                            |
+| Auditoria       | Banco de dados     | `AuditoriaRepository`                                                   | Adaptador JPA de auditoria                                        | Real                   | Persiste eventos auditáveis com `idCorrelacao` e dados associados à ação.                                              |

@@ -4,9 +4,11 @@
 **Status:** Aceito
 
 ## Contexto
+
 A API expõe operações financeiras que exigem autenticação forte, autorização por perfil e integração com um provedor de identidade. O domínio não deve conhecer detalhes de segurança, mas endpoints HTTP precisam bloquear acessos indevidos e produzir respostas padronizadas para falhas de autenticação e autorização.
 
 ## Decisão
+
 A aplicação atua como OAuth2 Resource Server com JWT emitido pelo Keycloak no realm `bancario`. A validação usa:
 
 - `spring.security.oauth2.resourceserver.jwt.jwks-uri`, configurado por `OAUTH2_JWKS_URI`
@@ -19,16 +21,20 @@ As regras HTTP e de segurança ficam em `SecurityConfig`, enquanto as permissõe
 Endpoints públicos incluem `/actuator/health`, `/actuator/info`, `/v3/api-docs/**`, `/swagger-ui/**` e `/swagger-ui.html`. O endpoint `/actuator/prometheus` exige `ROLE_METRICAS.LEITURA`.
 
 ## Consequências
+
 ### Positivas
+
 - A API delega autenticação ao Keycloak e valida JWT de forma padronizada.
 - RBAC deixa permissões explícitas por operação.
 - O domínio permanece livre de anotações e dependências de segurança.
 - Erros de autenticação e autorização têm respostas consistentes.
 
 ### Negativas / Trade-offs
+
 - A disponibilidade da validação JWT depende de configuração correta de issuer, JWKS e confiança TLS.
 - Mudanças em claims ou roles no Keycloak exigem alinhamento com `JwtClaimsConverter` e `@PreAuthorize`.
 - Testes de controller precisam simular authorities corretamente.
 
 ## Ver também
+
 - [Homelab](../infraestrutura/homelab.md)
