@@ -233,7 +233,7 @@ Para detalhes de cada variável, consulte [docs/operacao/variaveis-ambiente.md](
 
 ## Seed da base de dados
 
-Use o ‘script’ abaixo para popular a base de dados, após esta ter sido criada ao executar a aplicação.
+Use o script abaixo para popular a base de dados, após esta ter sido criada ao executar a aplicação.
 
 ```sql
 

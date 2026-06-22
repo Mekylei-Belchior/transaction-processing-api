@@ -2,7 +2,7 @@
 
 O homelab é uma infraestrutura local gerenciada separadamente do repositório da `transaction-processing-api`. Ele concentra serviços de borda, identidade, mensageria, observabilidade, CI e certificados usados pela aplicação em cenários locais próximos de produção.
 
-Os arquivos `docker-compose.yml` do homelab não fazem parte deste repositório, mas no diretório `homelab` da raiz do projeto contém os ‘scripts’ para replicar a estrutura base utilizada durante o desenvolvimento desta API.
+Os arquivos `docker-compose.yml` do homelab não fazem parte deste repositório. Os arquivos e configurações utilizados para replicar a estrutura base do homelab estão alocados no repositório [Mekylei-Belchior/homelab](https://github.com/Mekylei-Belchior/homelab) no GitHub.
 
 ## Serviços
 
@@ -33,6 +33,6 @@ A responsabilidade de criar routers, services, middlewares, certificados e secre
 
 ## Segredos
 
-Os segredos de configuração do homelab, como passwords, client secrets, senhas de truststore, credenciais SASL/SCRAM e chaves privadas, não devem ser versionados neste repositório.
+Os segredos de configuração do homelab, como senhas, segredos de cliente OAuth2, senhas de truststore, credenciais SASL/SCRAM e chaves privadas, não devem ser versionados neste repositório.
 
 Use variáveis de ambiente, secret manager, arquivos locais ignorados pelo Git ou mecanismo equivalente para fornecer esses valores em execução.
